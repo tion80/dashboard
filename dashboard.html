@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Productivity</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='4' y='2' width='24' height='28' rx='4' fill='%23faf9f5' stroke='%23D97757' stroke-width='2'/%3E%3Crect x='8' y='0' width='16' height='5' rx='2.5' fill='%23D97757'/%3E%3Cpath d='M9 13l3 3 5-5' fill='none' stroke='%23D97757' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Crect x='20' y='12' width='5' height='2' rx='1' fill='%23c4c4c2'/%3E%3Crect x='9' y='20' width='10' height='2' rx='1' fill='%23c4c4c2'/%3E%3Crect x='9' y='25' width='7' height='2' rx='1' fill='%23c4c4c2'/%3E%3C/svg%3E">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -2377,6 +2378,133 @@
     let weekOffset = 0;  // 0 = this week, -1 = last week, etc.
 
     // ============================================================
+    // SUPABASE SETUP
+    // ============================================================
+    const SUPABASE_URL = 'https://cuqvmtpmubawuedfcmyd.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN1cXZtdHBtdWJhd3VlZGZjbXlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE1NjAxMDcsImV4cCI6MjA4NzEzNjEwN30.u6ai_HWzGo5SHeHHb96bZDVwcvyMz9yxqft3ZnvRTqo';
+    let sb = null;
+    try { sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null; }
+    catch(e) { console.log('Supabase init failed:', e); }
+    let supabaseSaveTimeout = null;
+
+    async function saveToSupabase() {
+      if (!sb) return;
+      try {
+        // 1) sections 저장 (upsert)
+        const sectionRows = sections.map((s, i) => ({ id: s.id, name: s.name, position: i }));
+        if (sectionRows.length > 0) {
+          await sb.from('sections').upsert(sectionRows, { onConflict: 'id' });
+        }
+        // DB에 있지만 현재 sections에 없는 것 삭제
+        const currentIds = sections.map(s => s.id);
+        const { data: dbSections } = await sb.from('sections').select('id');
+        if (dbSections) {
+          const toDelete = dbSections.filter(s => !currentIds.includes(s.id)).map(s => s.id);
+          if (toDelete.length > 0) {
+            await sb.from('tasks').delete().in('section', toDelete);
+            await sb.from('sections').delete().in('id', toDelete);
+          }
+        }
+
+        // 2) tasks + subtasks 저장
+        const allTasks = [];
+        const allSubtasks = [];
+        for (const secId of Object.keys(tasks)) {
+          (tasks[secId] || []).forEach((t, i) => {
+            allTasks.push({
+              id: Math.round(t.id),
+              title: t.title || '',
+              section: t.section || secId,
+              checked: !!t.checked,
+              note: t.note || '',
+              user_note: t.userNote || '',
+              tags: t.tags || [],
+              url: t.url || '',
+              scheduled_date: t.scheduledDate || null,
+              plan_bucket: t.planBucket || null,
+              position: i
+            });
+            (t.subtasks || []).forEach((st, si) => {
+              allSubtasks.push({
+                task_id: Math.round(t.id),
+                text: st.text,
+                checked: !!st.checked,
+                position: si
+              });
+            });
+          });
+        }
+
+        // 기존 데이터 삭제 후 삽입 (깔끔한 동기화)
+        await sb.from('subtasks').delete().gte('id', 0);
+        await sb.from('tasks').delete().gte('id', 0);
+        if (allTasks.length > 0) {
+          await sb.from('tasks').insert(allTasks);
+        }
+        if (allSubtasks.length > 0) {
+          await sb.from('subtasks').insert(allSubtasks);
+        }
+
+        console.log('Supabase synced');
+      } catch (e) { console.log('Supabase save error:', e); }
+    }
+
+    function scheduleSyncToSupabase() {
+      if (supabaseSaveTimeout) clearTimeout(supabaseSaveTimeout);
+      supabaseSaveTimeout = setTimeout(saveToSupabase, 2000);
+    }
+
+    async function loadFromSupabase() {
+      if (!sb) return false;
+      try {
+        const { data: dbSections, error: secErr } = await sb
+          .from('sections').select('*').order('position');
+        if (secErr || !dbSections || dbSections.length === 0) return false;
+
+        const { data: dbTasks, error: taskErr } = await sb
+          .from('tasks').select('*').order('position');
+        if (taskErr) return false;
+
+        const { data: dbSubtasks } = await sb
+          .from('subtasks').select('*').order('position');
+
+        // subtasks를 task_id로 그룹핑
+        const subtaskMap = {};
+        (dbSubtasks || []).forEach(st => {
+          if (!subtaskMap[st.task_id]) subtaskMap[st.task_id] = [];
+          subtaskMap[st.task_id].push({ text: st.text, checked: st.checked });
+        });
+
+        // sections 복원
+        sections = dbSections.map(s => ({ id: s.id, name: s.name }));
+
+        // tasks 복원
+        tasks = {};
+        sections.forEach(s => tasks[s.id] = []);
+        (dbTasks || []).forEach(t => {
+          const task = {
+            id: t.id,
+            title: t.title,
+            section: t.section,
+            checked: t.checked,
+            note: t.note || '',
+            userNote: t.user_note || '',
+            tags: t.tags || [],
+            url: t.url || '',
+            scheduledDate: t.scheduled_date || '',
+            planBucket: t.plan_bucket || '',
+            subtasks: subtaskMap[t.id] || []
+          };
+          if (!tasks[t.section]) tasks[t.section] = [];
+          tasks[t.section].push(task);
+        });
+
+        filePathEl.textContent = 'Supabase (cloud)';
+        return true;
+      } catch (e) { console.log('Supabase load error:', e); return false; }
+    }
+
+    // ============================================================
     // LOCAL STORAGE PERSISTENCE
     // ============================================================
     const LS_KEY_SECTIONS = 'dashboard_sections';
@@ -3087,6 +3215,7 @@
       hasChanges = true;
       saveBtn.disabled = false;
       saveToLocalStorage();
+      scheduleSyncToSupabase();
       if (saveTimeout) clearTimeout(saveTimeout);
       saveTimeout = setTimeout(autoSave, 500);
     }
@@ -4844,11 +4973,19 @@
     openTaskBtn.addEventListener('click', openTaskFile);
     document.getElementById('openBtnLarge')?.addEventListener('click', openTaskFile);
 
-    // Auto-restore from localStorage on page load
-    if (loadFromLocalStorage()) {
-      switchTaskView(currentView);
-      showStatus('Restored from cache');
-    }
+    // 임베딩/localStorage 로드 후, Supabase에서 최신 데이터 비동기 로드
+    (async () => {
+      if (!sb) return;
+      try {
+        const loaded = await loadFromSupabase();
+        if (loaded) {
+          saveToLocalStorage();
+          renderTasks();
+          switchTaskView(currentView);
+          showStatus('Loaded from cloud');
+        }
+      } catch(e) { console.log('Supabase auto-load error:', e); }
+    })();
 
     saveBtn.addEventListener('click', async () => {
       if (!taskFileHandle) return;
@@ -5606,6 +5743,38 @@
 - [ ] **데모 버전 2 제안** - To 개발팀 #VD {{https://www.notion.so/2f4ba9422534801c8592de1b2943c310}}
 - [ ] **스케일 업 단계 고민** - 개발 10%, Demo1 완료 후 방향 #VD {{https://www.notion.so/2fbba94225348048aaeadb798ed34a14}}
 - [ ] **유명 게임 대표 레퍼런스 부탁** - 림버스, 펍지, 데더다, 타파스, 마녀의샘 #VD #BIZ
+
+## SecondBrain TODO (Notion)
+- [ ] **퍼블리셔 확정** - 명료화: 일정 (3/12) #BIZ [[schedule]] {{https://www.notion.so/1a5ba942-2534-81a2-9a27-c12a1da11faf}}
+- [ ] **변호사들한테 30일에** - 명료화: 다음행동 #BIZ [[asap]] {{https://www.notion.so/1a5ba942-2534-81ed-9ba3-d8adb3327a78}}
+- [ ] **온보딩** - 명료화 미지정 {{https://www.notion.so/1a5ba942-2534-81c9-ae3e-d8c72eba0e3e}}
+- [ ] **샤론 등록** - 명료화 미지정 {{https://www.notion.so/1a5ba942-2534-8152-9370-c99b9b39a4b2}}
+- [ ] **빌드업 해보기 >> 중헌** - 명료화: 위임 #VD {{https://www.notion.so/1a5ba942-2534-8103-b3e1-c1e68f24ddf1}}
+- [ ] **네오위즈 콘택** - 명료화 미지정 #BIZ {{https://www.notion.so/1a5ba942-2534-81c7-a4b8-e24f3bec9a44}}
+- [ ] **연말정산 마감** - 명료화: 일정 (1/21) #PERSONAL [[schedule]] {{https://www.notion.so/1a5ba942-2534-8185-a7c3-c6e2eaeb14b2}}
+- [ ] **다흥님 납치** - 명료화: 일정 (1/6) #BIZ [[schedule]] {{https://www.notion.so/1a5ba942-2534-8183-b4f4-cb33e9e75d99}}
+- [ ] **제안서 작성** - 명료화: 일정 (2/28) #BIZ [[schedule]] {{https://www.notion.so/1a5ba942-2534-81a3-95e7-db78e06b498d}}
+- [ ] **기존 포폴 검토** - 명료화 미지정 {{https://www.notion.so/1a5ba942-2534-81f5-8d78-f25acd5c2f2b}}
+- [ ] **정기 회의 만들기** - 명료화: 일정 (1/8) #TEAM [[schedule]] {{https://www.notion.so/1a5ba942-2534-81d7-bf19-f2b80e1b8af0}}
+- [ ] **주간,월간회의 조정** - 명료화: 일정 #TEAM [[schedule]] {{https://www.notion.so/1a5ba942-2534-8161-926e-f3e98ce28aa4}}
+- [ ] **호영미팅잡기** - 명료화: 일정 (1/21) #VD [[schedule]] {{https://www.notion.so/1a5ba942-2534-81c5-8a0c-e49ef208e0c4}}
+- [ ] **디볼버 피치 준비** - 명료화: Maybe #VD [[maybe]] {{https://www.notion.so/1a5ba942-2534-81db-b04d-c64e66b61d85}}
+- [ ] **지표들 확인** - 명료화 미지정 #VD {{https://www.notion.so/1a5ba942-2534-810c-8da6-c11b7e3e7ad1}}
+- [ ] **수정 지표 요청 대응** - 명료화 미지정 #BIZ {{https://www.notion.so/1a5ba942-2534-810e-9a0b-eaaab5e9adf6}}
+- [ ] **기획자들 역할확인 & 면담** - 명료화: 일정 (1/8) #TEAM [[schedule]] {{https://www.notion.so/1a5ba942-2534-81a1-b3f1-e58ceea1113b}}
+- [ ] **ai 공부하자 n8n부터!** - 명료화: 일정 #AI [[schedule]] {{https://www.notion.so/1a5ba942-2534-817a-a8e2-d1fefc97f6e2}}
+- [ ] **피드백 폼 호영 전달** - 명료화 미지정 #VD {{https://www.notion.so/1a5ba942-2534-8180-9e8e-e2ec2e0f6f89}}
+- [ ] **ai de 요청** - 명료화 미지정 #AI {{https://www.notion.so/1a5ba942-2534-816c-8aff-ed4f61e63dc3}}
+- [ ] **게임 소개 자료 만들기 보이드 다이버** - 명료화 미지정 #VD {{https://www.notion.so/1a5ba942-2534-8117-816c-ea2e8b67f7b1}}
+- [x] **리뷰어500확보** {{https://www.notion.so/1a5ba942-2534-8130-8917-cc4b1fa8bbc3}}
+- [x] **후원** {{https://www.notion.so/1a5ba942-2534-81db-a80a-c2d8e4e06f3e}}
+- [x] **TGS신청** {{https://www.notion.so/1a5ba942-2534-81cd-a178-e3a2f3be4840}}
+- [x] **클로드코워크** {{https://www.notion.so/1a5ba942-2534-81ab-b8f8-d94e67e7a1d5}}
+- [x] **습관화** {{https://www.notion.so/1a5ba942-2534-81aa-b43a-e93f24b8d2f8}}
+- [x] **계획서** {{https://www.notion.so/1a5ba942-2534-8122-9f96-c3217e0b7e50}}
+- [x] **VD이름확정** {{https://www.notion.so/1a5ba942-2534-819d-ab2e-c2f0a2d6fc54}}
+- [x] **포지션확인** {{https://www.notion.so/1a5ba942-2534-8184-a4c1-f7e8b01e97e3}}
+- [x] **진성님고민** {{https://www.notion.so/1a5ba942-2534-8154-a43b-c4bce32b52f1}}
 
 ## Done
 - [x] **커밍아웃 - 퍼블리셔 명 교체** - 완료 (2/23), 스팀 내 공지 후 이름 교체 #VD {{https://www.notion.so/305ba9422534802486c7cc52bc33e86b}}
