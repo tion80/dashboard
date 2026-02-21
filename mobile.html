@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Locus">
+  <meta name="theme-color" content="#D97757">
+  <title>Locus</title>
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='4' y='2' width='24' height='28' rx='4' fill='%23faf9f5' stroke='%23D97757' stroke-width='2'/%3E%3Crect x='8' y='0' width='16' height='5' rx='2.5' fill='%23D97757'/%3E%3Cpath d='M9 13l3 3 5-5' fill='none' stroke='%23D97757' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Crect x='20' y='12' width='5' height='2' rx='1' fill='%23c4c4c2'/%3E%3Crect x='9' y='20' width='10' height='2' rx='1' fill='%23c4c4c2'/%3E%3Crect x='9' y='25' width='7' height='2' rx='1' fill='%23c4c4c2'/%3E%3C/svg%3E">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%23D97757'/%3E%3Ctext x='90' y='125' text-anchor='middle' font-size='100'%3E%F0%9F%94%A5%3C/text%3E%3C/svg%3E">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #faf9f5;
+      --bg-card: #ffffff;
+      --text: #141413;
+      --text-sub: #5c5c5a;
+      --text-muted: #8c8c8a;
+      --accent: #D97757;
+      --accent-hover: #c4684a;
+      --border: #e5e4df;
+      --shadow: rgba(20, 20, 19, 0.06);
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      padding: 0 20px;
+      padding-top: env(safe-area-inset-top, 16px);
+      padding-bottom: env(safe-area-inset-bottom, 16px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 20px 0 24px;
+    }
+
+    .brand-icon {
+      font-size: 28px;
+      line-height: 1;
+    }
+
+    .brand-name {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      color: var(--text);
+    }
+
+    .input-area {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .input-area input {
+      flex: 1;
+      padding: 14px 16px;
+      font-size: 16px;
+      font-family: inherit;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      background: var(--bg-card);
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.15s;
+      -webkit-appearance: none;
+    }
+
+    .input-area input:focus {
+      border-color: var(--accent);
+    }
+
+    .input-area input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .input-area button {
+      padding: 14px 20px;
+      font-size: 15px;
+      font-weight: 600;
+      font-family: inherit;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background 0.15s, transform 0.1s;
+      -webkit-appearance: none;
+    }
+
+    .input-area button:active {
+      transform: scale(0.96);
+      background: var(--accent-hover);
+    }
+
+    .input-area button:disabled {
+      opacity: 0.4;
+      pointer-events: none;
+    }
+
+    .status-toast {
+      text-align: center;
+      font-size: 13px;
+      color: var(--accent);
+      font-weight: 500;
+      height: 28px;
+      line-height: 28px;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .status-toast.visible {
+      opacity: 1;
+    }
+
+    .today-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 20px;
+      margin-bottom: 12px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+    }
+
+    .today-header-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-sub);
+    }
+
+    .today-header-count {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent);
+      background: rgba(217, 119, 87, 0.1);
+      padding: 2px 8px;
+      border-radius: 10px;
+    }
+
+    .today-list {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .today-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 14px;
+      color: var(--text);
+      animation: fadeSlideIn 0.25s ease-out;
+    }
+
+    .today-item:last-child {
+      border-bottom: none;
+    }
+
+    .today-item .bullet {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      flex-shrink: 0;
+    }
+
+    .today-item .time {
+      font-size: 12px;
+      color: var(--text-muted);
+      flex-shrink: 0;
+      margin-left: auto;
+    }
+
+    .today-empty {
+      text-align: center;
+      padding: 40px 0;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .conn-status {
+      text-align: center;
+      font-size: 11px;
+      color: var(--text-muted);
+      padding: 12px 0 4px;
+    }
+    .conn-status .dot {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      margin-right: 4px;
+      vertical-align: middle;
+    }
+    .conn-status .dot.ok { background: #059669; }
+    .conn-status .dot.err { background: #DC2626; }
+  </style>
+</head>
+<body>
+
+  <div class="brand">
+    <span class="brand-icon">🔥</span>
+    <span class="brand-name">Locus</span>
+  </div>
+
+  <div class="input-area">
+    <input type="text" id="taskInput" placeholder="할 일을 입력하세요" enterkeyhint="send" autocomplete="off" autofocus>
+    <button id="addBtn" disabled>추가</button>
+  </div>
+
+  <div class="status-toast" id="statusToast"></div>
+
+  <div class="today-header">
+    <span class="today-header-label">오늘 추가한 것</span>
+    <span class="today-header-count" id="todayCount">0</span>
+  </div>
+
+  <div class="today-list" id="todayList">
+    <div class="today-empty" id="todayEmpty">아직 추가한 태스크가 없습니다</div>
+  </div>
+
+  <div class="conn-status" id="connStatus"></div>
+
+<script>
+  // ===== Supabase =====
+  const SUPABASE_URL = 'https://cuqvmtpmubawuedfcmyd.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN1cXZtdHBtdWJhd3VlZGZjbXlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE1NjAxMDcsImV4cCI6MjA4NzEzNjEwN30.u6ai_HWzGo5SHeHHb96bZDVwcvyMz9yxqft3ZnvRTqo';
+
+  let sb = null;
+  try { sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null; }
+  catch(e) { console.log('Supabase init failed:', e); }
+
+  // ===== Elements =====
+  const taskInput = document.getElementById('taskInput');
+  const addBtn = document.getElementById('addBtn');
+  const statusToast = document.getElementById('statusToast');
+  const todayList = document.getElementById('todayList');
+  const todayCount = document.getElementById('todayCount');
+  const todayEmpty = document.getElementById('todayEmpty');
+  const connStatus = document.getElementById('connStatus');
+
+  // ===== Local state =====
+  const LS_KEY = 'locus_mobile_today';
+  let defaultSection = null;
+
+  function todayKey() {
+    const d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  }
+
+  function loadTodayItems() {
+    try {
+      const stored = JSON.parse(localStorage.getItem(LS_KEY) || '{}');
+      const key = todayKey();
+      return stored[key] || [];
+    } catch(e) { return []; }
+  }
+
+  function saveTodayItems(items) {
+    try {
+      const stored = {};
+      stored[todayKey()] = items;
+      localStorage.setItem(LS_KEY, JSON.stringify(stored));
+    } catch(e) {}
+  }
+
+  // ===== Init =====
+  async function init() {
+    renderTodayList();
+    taskInput.focus();
+
+    if (!sb) {
+      connStatus.innerHTML = '<span class="dot err"></span>오프라인 — Supabase 연결 없음';
+      return;
+    }
+
+    // Fetch first section as default target
+    try {
+      const { data: secs } = await sb.from('sections').select('id, name').order('position').limit(1);
+      if (secs && secs.length > 0) {
+        defaultSection = secs[0].id;
+        connStatus.innerHTML = '<span class="dot ok"></span>연결됨';
+      } else {
+        connStatus.innerHTML = '<span class="dot err"></span>섹션 없음 — 대시보드에서 먼저 데이터를 불러오세요';
+      }
+    } catch(e) {
+      connStatus.innerHTML = '<span class="dot err"></span>연결 실패';
+    }
+  }
+
+  // ===== Add task =====
+  async function addTask() {
+    const title = taskInput.value.trim();
+    if (!title) return;
+    if (!sb || !defaultSection) {
+      showToast('Supabase 연결이 필요합니다');
+      return;
+    }
+
+    addBtn.disabled = true;
+    taskInput.disabled = true;
+
+    const taskId = Math.round(Date.now() + Math.random() * 1000);
+    const now = new Date();
+    const timeStr = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+
+    try {
+      // Get current max position in the section
+      const { data: existing } = await sb.from('tasks').select('position').eq('section', defaultSection).order('position', { ascending: false }).limit(1);
+      const nextPos = (existing && existing.length > 0) ? existing[0].position + 1 : 0;
+
+      const { error } = await sb.from('tasks').insert({
+        id: taskId,
+        title: title,
+        section: defaultSection,
+        checked: false,
+        note: '',
+        user_note: '',
+        tags: [],
+        url: '',
+        scheduled_date: null,
+        plan_bucket: 'asap',
+        position: nextPos,
+      });
+
+      if (error) throw error;
+
+      // Save to local today list
+      const items = loadTodayItems();
+      items.unshift({ title, time: timeStr, id: taskId });
+      saveTodayItems(items);
+
+      taskInput.value = '';
+      showToast('추가 완료');
+      renderTodayList();
+    } catch(e) {
+      console.error('Save error:', e);
+      showToast('저장 실패 — 다시 시도해주세요');
+    }
+
+    taskInput.disabled = false;
+    addBtn.disabled = false;
+    taskInput.focus();
+  }
+
+  // ===== Render today list =====
+  function renderTodayList() {
+    const items = loadTodayItems();
+    todayCount.textContent = items.length;
+
+    if (items.length === 0) {
+      todayEmpty.style.display = 'block';
+      // Clear everything except the empty state
+      const existing = todayList.querySelectorAll('.today-item');
+      existing.forEach(el => el.remove());
+      return;
+    }
+
+    todayEmpty.style.display = 'none';
+    const frag = document.createDocumentFragment();
+    items.forEach(item => {
+      const row = document.createElement('div');
+      row.className = 'today-item';
+      row.innerHTML = `<span class="bullet"></span><span>${escHtml(item.title)}</span><span class="time">${item.time}</span>`;
+      frag.appendChild(row);
+    });
+
+    // Remove old items
+    const old = todayList.querySelectorAll('.today-item');
+    old.forEach(el => el.remove());
+    todayList.insertBefore(frag, todayEmpty);
+  }
+
+  function escHtml(s) {
+    const d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+  }
+
+  // ===== Toast =====
+  let toastTimer;
+  function showToast(msg) {
+    statusToast.textContent = msg;
+    statusToast.classList.add('visible');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => statusToast.classList.remove('visible'), 1800);
+  }
+
+  // ===== Events =====
+  taskInput.addEventListener('input', () => {
+    addBtn.disabled = !taskInput.value.trim();
+  });
+
+  taskInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && taskInput.value.trim()) {
+      e.preventDefault();
+      addTask();
+    }
+  });
+
+  addBtn.addEventListener('click', addTask);
+
+  // ===== PWA SW =====
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  }
+
+  init();
+</script>
+</body>
+</html>

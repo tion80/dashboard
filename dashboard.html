@@ -2398,6 +2398,1107 @@
       flex-shrink: 0;
     }
 
+    /* ===== QUICK ADD PANEL ===== */
+    .quick-add-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.35); z-index: 9998;
+      opacity: 0; transition: opacity 0.2s;
+      display: none; pointer-events: none;
+    }
+    .quick-add-overlay.show { opacity: 1; display: block; pointer-events: auto; }
+
+    .quick-add-panel {
+      position: fixed; top: 0; right: 0; bottom: 0;
+      width: 360px; max-width: 92vw;
+      background: var(--bg-primary);
+      border-left: 1px solid var(--border);
+      box-shadow: -4px 0 24px rgba(0,0,0,0.12);
+      z-index: 9999;
+      transform: translateX(100%); transition: transform 0.25s ease;
+      display: flex; flex-direction: column;
+      overflow: hidden;
+    }
+    .quick-add-panel.show { transform: translateX(0); }
+
+    .quick-add-topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 18px; border-bottom: 1px solid var(--border-light);
+      flex-shrink: 0;
+    }
+    .quick-add-topbar h3 { margin: 0; font-size: 14px; color: var(--text-muted); font-weight: 600; }
+    .quick-add-close {
+      background: none; border: none; font-size: 22px; cursor: pointer;
+      color: var(--text-muted); line-height: 1; padding: 2px 6px; border-radius: 6px;
+    }
+    .quick-add-close:hover { background: var(--bg-secondary); color: var(--text-primary); }
+
+    .quick-add-body {
+      flex: 1; overflow-y: auto; padding: 18px;
+      display: flex; flex-direction: column; gap: 16px;
+    }
+
+    .quick-add-textarea {
+      width: 100%; box-sizing: border-box;
+      min-height: 72px; max-height: 150px; resize: vertical;
+      padding: 10px 12px; border: 1px solid var(--border);
+      border-radius: 8px; background: var(--bg-card);
+      color: var(--text-primary); font-size: 14px; font-family: inherit;
+      line-height: 1.6; outline: none;
+    }
+    .quick-add-textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(249,115,22,0.15); }
+    .quick-add-textarea::placeholder { color: var(--text-muted); font-style: italic; }
+
+    .quick-add-hint {
+      font-size: 11px; color: var(--text-muted); line-height: 1.5;
+    }
+    .quick-add-hint kbd {
+      background: var(--bg-secondary); border: 1px solid var(--border);
+      border-radius: 3px; padding: 1px 5px; font-size: 10px; font-family: inherit;
+    }
+
+    .quick-add-preview {
+      display: flex; flex-direction: column; gap: 10px;
+      padding: 12px; background: var(--bg-secondary); border-radius: 8px;
+      min-height: 40px;
+    }
+    .quick-add-preview-empty {
+      font-size: 12px; color: var(--text-muted); font-style: italic;
+    }
+
+    .quick-add-preview-row {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 13px; color: var(--text-secondary);
+    }
+    .quick-add-preview-row .label {
+      font-size: 11px; font-weight: 600; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.5px;
+      min-width: 36px;
+    }
+    .quick-add-preview-row .value {
+      font-weight: 500; color: var(--text-primary);
+    }
+
+    .quick-add-preview-chips {
+      display: flex; flex-wrap: wrap; gap: 6px;
+    }
+    .quick-add-chip {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 11px; padding: 3px 10px; border-radius: 6px;
+      cursor: pointer; transition: opacity 0.15s;
+    }
+    .quick-add-chip:hover { opacity: 0.7; }
+    .quick-add-chip .chip-remove {
+      font-size: 13px; line-height: 1; opacity: 0.5; margin-left: 2px;
+    }
+    .quick-add-chip .chip-remove:hover { opacity: 1; }
+
+    .quick-add-manual {
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .quick-add-manual-label {
+      font-size: 11px; font-weight: 600; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .quick-add-manual-row {
+      display: flex; flex-wrap: wrap; gap: 6px;
+    }
+    .quick-add-manual-btn {
+      font-size: 11px; padding: 4px 10px; border-radius: 6px;
+      border: 1px solid var(--border); background: var(--bg-card);
+      color: var(--text-secondary); cursor: pointer; transition: all 0.15s;
+    }
+    .quick-add-manual-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .quick-add-manual-btn.selected {
+      border-color: var(--accent); background: rgba(217,119,87,0.08); color: var(--accent); font-weight: 600;
+    }
+
+    .quick-add-actions {
+      display: flex; gap: 8px; padding-top: 4px;
+    }
+    .quick-add-actions button {
+      flex: 1; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;
+    }
+    .quick-add-actions .qa-submit {
+      background: var(--accent); color: #fff; border: none;
+    }
+    .quick-add-actions .qa-submit:hover { background: var(--accent-hover); }
+    .quick-add-actions .qa-submit:disabled { opacity: 0.4; cursor: default; }
+    .quick-add-actions .qa-cancel {
+      background: var(--bg-card); color: var(--text-secondary); border: 1px solid var(--border);
+    }
+    .quick-add-actions .qa-cancel:hover { background: var(--bg-secondary); }
+
+    /* ===== STAR / IMPORTANCE TOGGLE ===== */
+    .star-toggle {
+      background: none; border: none; cursor: pointer; padding: 0 2px;
+      font-size: 16px; line-height: 1; color: var(--text-muted); transition: color 0.15s;
+      flex-shrink: 0;
+    }
+    .star-toggle:hover { color: #F59E0B; }
+    .star-toggle.starred { color: #F59E0B; }
+
+    .star-toggle-sm {
+      font-size: 13px; padding: 0 1px;
+    }
+
+    /* ===== DETAIL PANEL EDITABLE FIELDS ===== */
+    .plan-detail-title-input {
+      font-size: 18px; font-weight: 700; color: var(--text-primary);
+      line-height: 1.35; width: 100%; border: none; border-bottom: 2px solid var(--accent);
+      background: transparent; outline: none; font-family: inherit; padding: 2px 0;
+    }
+    .plan-detail-note-input {
+      width: 100%; box-sizing: border-box; min-height: 60px; resize: vertical;
+      padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px;
+      background: var(--bg-card); color: var(--text-primary); font-size: 13px;
+      font-family: inherit; line-height: 1.5; outline: none;
+    }
+    .plan-detail-note-input:focus { border-color: var(--accent); }
+
+    .plan-detail-edit-row {
+      display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+    }
+    .plan-detail-edit-btn {
+      font-size: 11px; padding: 4px 10px; border-radius: 6px;
+      border: 1px solid var(--border); background: var(--bg-card);
+      color: var(--text-secondary); cursor: pointer; transition: all 0.15s;
+    }
+    .plan-detail-edit-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .plan-detail-edit-btn.selected {
+      border-color: var(--accent); background: rgba(217,119,87,0.08); color: var(--accent); font-weight: 600;
+    }
+
+    .plan-detail-date-input {
+      font-size: 13px; padding: 4px 8px; border: 1px solid var(--border);
+      border-radius: 6px; background: var(--bg-card); color: var(--text-primary);
+      font-family: inherit; outline: none;
+    }
+    .plan-detail-date-input:focus { border-color: var(--accent); }
+
+    .quick-add-success {
+      font-size: 12px; color: #059669; font-weight: 500;
+      padding: 6px 10px; background: #D1FAE5; border-radius: 6px;
+      text-align: center; animation: qaFadeIn 0.2s ease;
+    }
+    @keyframes qaFadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ===== FOCUS MODE STYLES ===== */
+    .focus-view {
+      display: flex;
+      gap: 0;
+      flex: 1;
+      min-height: 0;
+      height: 100%;
+    }
+    .focus-left {
+      flex: 1;
+      min-width: 0;
+      overflow-y: auto;
+      padding: 20px 24px;
+    }
+    .focus-divider {
+      width: 5px;
+      cursor: col-resize;
+      background: var(--border);
+      flex-shrink: 0;
+      transition: background 0.15s;
+      border-radius: 3px;
+      margin: 0 2px;
+    }
+    .focus-divider:hover, .focus-divider.dragging {
+      background: var(--accent);
+    }
+    .focus-right {
+      width: 480px;
+      min-width: 280px;
+      overflow-y: auto;
+      padding: 20px;
+      background: var(--bg-secondary);
+      display: flex;
+      flex-direction: column;
+    }
+    .focus-week-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .focus-week-bar .week-nav {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .focus-week-bar .week-nav button {
+      background: transparent;
+      border: 1px solid var(--border);
+      padding: 4px 10px;
+      font-size: 13px;
+      border-radius: 6px;
+      cursor: pointer;
+      color: var(--text-secondary);
+    }
+    .focus-week-bar .week-nav button:hover {
+      background: var(--bg-secondary);
+      border-color: var(--text-muted);
+    }
+    .focus-week-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin: 0 8px;
+    }
+    .focus-days {
+      display: flex;
+      gap: 4px;
+      flex: 1;
+    }
+    .focus-day {
+      flex: 1;
+      text-align: center;
+      padding: 8px 4px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .focus-day:hover {
+      background: var(--bg-secondary);
+    }
+    .focus-day.is-today {
+      background: var(--accent);
+      color: white;
+    }
+    .focus-day.is-today .focus-day-name,
+    .focus-day.is-today .focus-day-date,
+    .focus-day.is-today .focus-day-dots {
+      color: white;
+    }
+    .focus-day.is-selected {
+      outline: 2px solid var(--accent);
+      outline-offset: -2px;
+    }
+    .focus-day-name {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+    .focus-day-date {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-top: 2px;
+    }
+    .focus-day-dots {
+      font-size: 10px;
+      color: var(--accent);
+      margin-top: 2px;
+      height: 14px;
+    }
+
+    .focus-section-title {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-secondary);
+      margin: 20px 0 10px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--border-light);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .focus-section-title .count {
+      background: var(--bg-secondary);
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .focus-event-list {
+      list-style: none;
+    }
+    .focus-event-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      margin-bottom: 4px;
+      transition: background 0.15s;
+    }
+    .focus-event-item:hover {
+      background: var(--bg-secondary);
+    }
+    .focus-event-time {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-muted);
+      white-space: nowrap;
+      min-width: 95px;
+    }
+    .focus-event-title {
+      font-size: 13px;
+      color: var(--text-primary);
+    }
+    .focus-event-allday {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 500;
+      background: #DBEAFE;
+      color: #2563EB;
+      margin-bottom: 4px;
+    }
+    @media (prefers-color-scheme: dark) {
+      .focus-event-allday { background: #1E3A5F; color: #93C5FD; }
+    }
+
+    .focus-task-list {
+      list-style: none;
+    }
+    .focus-task-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      margin-bottom: 2px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .focus-task-item:hover {
+      background: var(--bg-secondary);
+    }
+    .focus-task-item.is-checked .focus-task-title {
+      text-decoration: line-through;
+      color: var(--text-muted);
+    }
+    .focus-task-star {
+      color: var(--text-muted);
+      font-size: 14px;
+      cursor: pointer;
+      flex-shrink: 0;
+      width: 18px;
+    }
+    .focus-task-star.starred {
+      color: #F59E0B;
+    }
+    .focus-task-title {
+      font-size: 13px;
+      color: var(--text-primary);
+      flex: 1;
+    }
+    .focus-task-tags {
+      display: flex;
+      gap: 3px;
+      margin-left: auto;
+    }
+
+    .focus-no-data {
+      text-align: center;
+      padding: 20px;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    /* Weekly notes - textarea + preview */
+    .weekly-notes-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 12px;
+      flex-shrink: 0;
+    }
+    .weekly-note-textarea {
+      flex: 1;
+      width: 100%;
+      font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--text-primary);
+      background: transparent;
+      border: none;
+      outline: none;
+      resize: none;
+      overflow-y: auto;
+    }
+    .weekly-note-preview {
+      flex: 1;
+      overflow-y: auto;
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--text-primary);
+      cursor: text;
+    }
+    .weekly-note-preview h2 {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--accent);
+      margin: 16px 0 6px 0;
+      padding-bottom: 4px;
+      border-bottom: 1px solid var(--border-light);
+    }
+    .weekly-note-preview h2:first-child {
+      margin-top: 0;
+    }
+    .weekly-note-preview h3 {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin: 12px 0 4px 0;
+    }
+    .weekly-note-preview p {
+      margin: 2px 0;
+    }
+    .weekly-note-preview ul, .weekly-note-preview ol {
+      margin: 4px 0;
+      padding-left: 20px;
+    }
+    .weekly-note-preview li {
+      margin: 2px 0;
+    }
+    .weekly-note-preview li.md-task {
+      list-style: none;
+      margin-left: -20px;
+    }
+    .weekly-note-preview li.md-task input[type="checkbox"] {
+      margin-right: 6px;
+      accent-color: var(--accent);
+      pointer-events: auto;
+      cursor: pointer;
+    }
+    .weekly-note-preview code {
+      background: var(--bg-card);
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-size: 12px;
+      font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    }
+    .weekly-note-preview pre {
+      background: var(--bg-card);
+      padding: 10px 12px;
+      border-radius: 6px;
+      overflow-x: auto;
+      margin: 6px 0;
+    }
+    .weekly-note-preview pre code {
+      background: none;
+      padding: 0;
+      font-size: 12px;
+    }
+    .weekly-note-preview blockquote {
+      border-left: 3px solid var(--accent);
+      padding-left: 12px;
+      color: var(--text-secondary);
+      margin: 6px 0;
+    }
+    .weekly-note-preview strong {
+      font-weight: 600;
+    }
+    .weekly-note-preview a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .weekly-note-preview a:hover {
+      text-decoration: underline;
+    }
+    .weekly-note-preview hr {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 12px 0;
+    }
+
+    /* ===== COMPASS MODE STYLES ===== */
+    .compass-view {
+      display: flex;
+      gap: 0;
+      flex: 1;
+      min-height: 0;
+      height: 100%;
+    }
+    .compass-left {
+      flex: 1;
+      min-width: 0;
+      overflow-y: auto;
+      padding: 20px 24px;
+      border-right: 1px solid var(--border);
+    }
+    .compass-right {
+      width: 320px;
+      min-width: 320px;
+      overflow-y: auto;
+      padding: 20px;
+      background: var(--bg-secondary);
+    }
+
+    .compass-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .compass-header h2 {
+      margin: 0;
+      font-size: 18px;
+      color: var(--text-primary);
+    }
+    .compass-header button {
+      background: transparent;
+      border: 1px solid var(--border);
+      padding: 4px 10px;
+      font-size: 13px;
+      border-radius: 6px;
+      cursor: pointer;
+      color: var(--text-secondary);
+    }
+    .compass-header button:hover {
+      background: var(--bg-secondary);
+      border-color: var(--text-muted);
+    }
+
+    .compass-timeline {
+      position: relative;
+      margin-top: 16px;
+    }
+    .compass-months {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 8px;
+    }
+    .compass-month {
+      flex: 1;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      padding: 6px 0 10px;
+      text-transform: uppercase;
+    }
+    .compass-month.is-current {
+      color: var(--accent);
+    }
+
+    .compass-lane {
+      display: flex;
+      align-items: center;
+      margin-bottom: 4px;
+      min-height: 44px;
+    }
+    .compass-lane-label {
+      min-width: 64px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      padding-right: 8px;
+    }
+    .compass-lane-track {
+      flex: 1;
+      height: 36px;
+      position: relative;
+      background: var(--bg-secondary);
+      border-radius: 6px;
+    }
+    .compass-milestone {
+      position: absolute;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: all 0.15s;
+      z-index: 2;
+      border: 2px solid var(--bg-card);
+      box-shadow: 0 1px 3px var(--shadow);
+    }
+    .compass-milestone:hover {
+      transform: translate(-50%, -50%) scale(1.3);
+      box-shadow: 0 2px 8px var(--shadow-hover);
+    }
+    .compass-milestone-label {
+      position: absolute;
+      top: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 10px;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+    .compass-milestone:hover .compass-milestone-label {
+      opacity: 1;
+    }
+    .compass-today-line {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: var(--accent);
+      z-index: 1;
+      opacity: 0.6;
+    }
+    .compass-today-line::before {
+      content: 'Today';
+      position: absolute;
+      top: -18px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 9px;
+      color: var(--accent);
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .compass-add-milestone {
+      margin-top: 12px;
+    }
+    .compass-add-milestone button {
+      background: transparent;
+      border: 2px dashed var(--border);
+      color: var(--text-muted);
+      font-size: 12px;
+      padding: 6px 14px;
+      width: 100%;
+    }
+    .compass-add-milestone button:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* Goals panel */
+    .compass-goals-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 16px;
+    }
+    .compass-category {
+      margin-bottom: 16px;
+    }
+    .compass-category-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .compass-category-header:hover {
+      color: var(--text-primary);
+    }
+    .compass-category-header .toggle-icon {
+      font-size: 10px;
+      transition: transform 0.15s;
+    }
+    .compass-category-header .toggle-icon.collapsed {
+      transform: rotate(-90deg);
+    }
+    .compass-goal-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 4px 0 4px 20px;
+    }
+    .compass-goal-text {
+      flex: 1;
+      font-size: 13px;
+      color: var(--text-primary);
+      border: none;
+      background: transparent;
+      font-family: inherit;
+      padding: 2px 4px;
+      border-radius: 4px;
+      width: 100%;
+    }
+    .compass-goal-text:focus {
+      outline: none;
+      background: var(--bg-card);
+      box-shadow: 0 0 0 1px var(--accent);
+    }
+    .compass-goal-item .checkbox.checked + .compass-goal-text {
+      text-decoration: line-through;
+      color: var(--text-muted);
+    }
+    .compass-add-goal {
+      padding-left: 20px;
+      margin-top: 4px;
+    }
+    .compass-add-goal button {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 12px;
+      padding: 4px 8px;
+      cursor: pointer;
+    }
+    .compass-add-goal button:hover {
+      color: var(--accent);
+    }
+
+    .compass-okr-section {
+      margin-top: 24px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+    .compass-okr-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .compass-okr-header:hover {
+      color: var(--text-primary);
+    }
+    .compass-okr-objective {
+      padding: 4px 0 4px 12px;
+      margin-bottom: 4px;
+    }
+    .compass-okr-objective-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    .compass-okr-kr {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+      padding: 3px 0 3px 24px;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+    .compass-okr-kr input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      font-family: inherit;
+      font-size: 12px;
+      color: var(--text-secondary);
+      padding: 2px 4px;
+      border-radius: 4px;
+    }
+    .compass-okr-kr input:focus {
+      outline: none;
+      background: var(--bg-card);
+      box-shadow: 0 0 0 1px var(--accent);
+    }
+
+    .compass-milestone-tooltip {
+      position: fixed;
+      background: var(--text-primary);
+      color: var(--bg-primary);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      z-index: 100;
+      pointer-events: none;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      white-space: nowrap;
+    }
+
+    /* Milestone edit modal */
+    .compass-edit-modal {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: var(--bg-card);
+      border-radius: 12px;
+      padding: 20px;
+      z-index: 300;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+      min-width: 320px;
+    }
+    .compass-edit-modal h3 {
+      font-size: 15px;
+      margin-bottom: 12px;
+    }
+    .compass-edit-modal label {
+      font-size: 12px;
+      color: var(--text-secondary);
+      display: block;
+      margin-bottom: 4px;
+      margin-top: 10px;
+    }
+    .compass-edit-modal input,
+    .compass-edit-modal select {
+      width: 100%;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 13px;
+      background: var(--bg-card);
+      color: var(--text-primary);
+    }
+    .compass-edit-modal input:focus,
+    .compass-edit-modal select:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    .compass-edit-modal .modal-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 16px;
+      justify-content: flex-end;
+    }
+    .compass-edit-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.3);
+      z-index: 299;
+    }
+
+    /* ===== Review Tab ===== */
+    .review-view {
+      padding: 24px 0;
+      max-width: 800px;
+      margin: 0 auto;
+      overflow-y: auto;
+      height: 100%;
+    }
+    .review-week-nav {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .review-week-nav button {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 14px;
+      cursor: pointer;
+      color: var(--text-secondary);
+    }
+    .review-week-nav button:hover { color: var(--text-primary); }
+    .review-week-nav .review-week-label {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    .review-summary-stats {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    .review-stat {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 18px;
+      flex: 1;
+      min-width: 120px;
+      text-align: center;
+    }
+    .review-stat .stat-value {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .review-stat .stat-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+    .review-section {
+      margin-bottom: 20px;
+    }
+    .review-section-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+    .review-textarea {
+      width: 100%;
+      min-height: 80px;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 13px;
+      line-height: 1.6;
+      resize: vertical;
+      background: var(--bg-card);
+      color: var(--text-primary);
+    }
+    .review-textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    .review-score-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .review-score-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      border: 2px solid var(--border);
+      background: var(--bg-card);
+      font-size: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color 0.15s, transform 0.15s;
+    }
+    .review-score-btn:hover { transform: scale(1.1); }
+    .review-score-btn.active {
+      border-color: var(--accent);
+      background: rgba(217, 119, 87, 0.08);
+    }
+
+    /* ===== Settings Tab ===== */
+    .settings-view {
+      padding: 24px 0;
+      max-width: 700px;
+      margin: 0 auto;
+      overflow-y: auto;
+      height: 100%;
+    }
+    .settings-section-header {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 12px;
+      margin-top: 24px;
+    }
+    .settings-section-header:first-child { margin-top: 0; }
+    .notif-permission-banner {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 13px;
+      margin-bottom: 20px;
+    }
+    .notif-permission-banner.granted {
+      background: #ecfdf5;
+      color: #065f46;
+      border: 1px solid #a7f3d0;
+    }
+    .notif-permission-banner.denied {
+      background: #fef2f2;
+      color: #991b1b;
+      border: 1px solid #fecaca;
+    }
+    .notif-permission-banner.default {
+      background: #fffbeb;
+      color: #92400e;
+      border: 1px solid #fde68a;
+    }
+    .notif-permission-banner button {
+      margin-left: auto;
+      padding: 4px 12px;
+      font-size: 12px;
+      border-radius: 6px;
+    }
+    .routine-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .routine-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+    .routine-row .routine-emoji {
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+    .routine-row .routine-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .routine-row .routine-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    .routine-row .routine-schedule {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+    .routine-row .routine-tab-badge {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 20px;
+      background: var(--bg-secondary);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .routine-toggle {
+      position: relative;
+      width: 40px;
+      height: 22px;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+    .routine-toggle input { display: none; }
+    .routine-toggle-track {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: var(--border);
+      border-radius: 11px;
+      transition: background 0.2s;
+    }
+    .routine-toggle input:checked + .routine-toggle-track {
+      background: var(--accent);
+    }
+    .routine-toggle-thumb {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 18px;
+      height: 18px;
+      background: white;
+      border-radius: 50%;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+      transition: transform 0.2s;
+    }
+    .routine-toggle input:checked ~ .routine-toggle-thumb {
+      transform: translateX(18px);
+    }
+    .routine-edit-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 12px;
+      color: var(--text-muted);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .routine-edit-btn:hover { color: var(--text-primary); border-color: var(--text-muted); }
+
     </style>
 </head>
 <body>
@@ -2416,18 +3517,17 @@
         <div id="filePath" class="file-path"></div>
       </div>
       <div class="view-toggle" id="mainTabToggle">
-        <button id="tasksTabBtn" class="active">Tasks</button>
+        <button id="tasksTabBtn" class="active">Clarify & Plan</button>
+        <button id="focusTabBtn">Weekly Focus</button>
+        <button id="compassTabBtn">Compass</button>
         <button id="memoryTabBtn">Memory</button>
-      </div>
-      <div class="view-toggle" id="taskViewToggle">
-        <button id="tagViewBtn" class="active">계획하기</button>
-        <button id="boardViewBtn">Board</button>
-        <button id="listViewBtn">List</button>
-
-        <button id="timelineViewBtn">Timeline</button>
+        <button id="reviewTabBtn">회고</button>
+        <button id="settingsTabBtn">설정</button>
       </div>
     </div>
     <div class="buttons">
+      <button id="gcalHeaderBtn" style="padding: 6px 14px; font-size: 13px;"></button>
+      <button id="quickAddOpenBtn" class="primary" style="padding: 6px 14px; font-size: 13px;">+ Add Task</button>
       <button id="openTaskBtn">Select File</button>
       <button id="openMemoryBtn" style="display: none;">Open Folder</button>
       <button id="saveBtn" class="primary" disabled style="display: none;">Save</button>
@@ -2437,15 +3537,17 @@
   <!-- TASKS TAB PANEL -->
   <div class="tab-panel active" id="tasksPanel">
     <div class="tag-view" id="tagView" style="display: flex;"></div>
-    <div class="list-view" id="listView" style="display: none;"></div>
     <div class="week-calendar" id="weekView" style="display: none;"></div>
-    <div class="timeline-view" id="timelineView" style="display: none;"></div>
-    <div class="board" id="board" style="display: none;">
-      <div class="empty-state" id="boardEmptyState" style="width: 100%;">
-        <p style="margin-bottom: 24px; font-size: 18px; font-weight: 600; color: var(--text-primary);">Select your TASKS.md file</p>
-        <button id="openBtnLarge">Select TASKS.md</button>
-      </div>
-    </div>
+  </div>
+
+  <!-- FOCUS TAB PANEL -->
+  <div class="tab-panel" id="focusPanel">
+    <div class="focus-view" id="focusView"></div>
+  </div>
+
+  <!-- COMPASS TAB PANEL -->
+  <div class="tab-panel" id="compassPanel">
+    <div class="compass-view" id="compassView"></div>
   </div>
 
   <!-- MEMORY TAB PANEL -->
@@ -2460,6 +3562,16 @@
         <div id="memoryContentContainer"></div>
       </div>
     </div>
+  </div>
+
+  <!-- REVIEW TAB PANEL -->
+  <div class="tab-panel" id="reviewPanel">
+    <div class="review-view" id="reviewView"></div>
+  </div>
+
+  <!-- SETTINGS TAB PANEL -->
+  <div class="tab-panel" id="settingsPanel">
+    <div class="settings-view" id="settingsView"></div>
   </div>
 
   <!-- MODAL (shared for memory) -->
@@ -2477,11 +3589,55 @@
     </div>
   </div>
 
+  <!-- QUICK ADD PANEL -->
+  <div class="quick-add-overlay" id="quickAddOverlay"></div>
+  <div class="quick-add-panel" id="quickAddPanel">
+    <div class="quick-add-topbar">
+      <h3>새 태스크</h3>
+      <button class="quick-add-close" id="quickAddClose">&times;</button>
+    </div>
+    <div class="quick-add-body">
+      <div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <button class="star-toggle" id="quickAddStar" title="중요" style="font-size:20px;">☆</button>
+          <span style="font-size:12px;color:var(--text-muted);">중요</span>
+        </div>
+        <textarea class="quick-add-textarea" id="quickAddText" placeholder="태스크를 입력하세요... (예: API 문서 작성 #AI !asap @today)" rows="3"></textarea>
+        <div class="quick-add-hint" style="margin-top: 6px;">
+          <kbd>#태그</kbd> <kbd>!버킷</kbd> <kbd>@날짜</kbd> 또는 자연어로 입력 &middot; <kbd>Enter</kbd> 추가 &middot; <kbd>Esc</kbd> 닫기
+        </div>
+      </div>
+      <div>
+        <div class="quick-add-manual-label">인식 결과</div>
+        <div class="quick-add-preview" id="quickAddPreview">
+          <div class="quick-add-preview-empty">텍스트를 입력하면 자동으로 파싱됩니다</div>
+        </div>
+      </div>
+      <div class="quick-add-manual" id="quickAddManual">
+        <div class="quick-add-manual-label">태그</div>
+        <div class="quick-add-manual-row" id="quickAddTagBtns"></div>
+        <div class="quick-add-manual-label" style="margin-top: 4px;">버킷</div>
+        <div class="quick-add-manual-row" id="quickAddBucketBtns"></div>
+        <div class="quick-add-manual-label" style="margin-top: 4px;">날짜</div>
+        <div class="quick-add-manual-row" id="quickAddDateBtns"></div>
+      </div>
+      <div id="quickAddSuccessMsg"></div>
+      <div class="quick-add-actions">
+        <button class="qa-cancel" id="quickAddCancelBtn">취소</button>
+        <button class="qa-submit" id="quickAddSubmitBtn" disabled>추가</button>
+      </div>
+    </div>
+  </div>
+
   <div class="status-bar" id="status"></div>
 
   <script>
     // ===== SHARED STATE =====
     let activeMainTab = 'tasks'; // 'tasks' or 'memory'
+    let focusWeekOffset = 0;
+    let focusSelectedDate = null;
+    const LS_KEY_WEEKLY_NOTES = 'dashboard_weekly_notes';
+    let weeklyNotes = {};
 
     const statusEl = document.getElementById('status');
     const filePathEl = document.getElementById('filePath');
@@ -2494,41 +3650,92 @@
 
     // ===== MAIN TAB SWITCHING =====
     const tasksTabBtn = document.getElementById('tasksTabBtn');
+    const focusTabBtn = document.getElementById('focusTabBtn');
+    const compassTabBtn = document.getElementById('compassTabBtn');
     const memoryTabBtn = document.getElementById('memoryTabBtn');
+    const reviewTabBtn = document.getElementById('reviewTabBtn');
+    const settingsTabBtn = document.getElementById('settingsTabBtn');
     const tasksPanel = document.getElementById('tasksPanel');
+    const focusPanel = document.getElementById('focusPanel');
+    const compassPanel = document.getElementById('compassPanel');
     const memoryPanel = document.getElementById('memoryPanel');
-    const taskViewToggle = document.getElementById('taskViewToggle');
+    const reviewPanel = document.getElementById('reviewPanel');
+    const settingsPanel = document.getElementById('settingsPanel');
     const openTaskBtn = document.getElementById('openTaskBtn');
     const openMemoryBtn = document.getElementById('openMemoryBtn');
     const saveBtn = document.getElementById('saveBtn');
+    const gcalHeaderBtn = document.getElementById('gcalHeaderBtn');
+
+    function updateGcalHeaderBtn() {
+      if (!gcalHeaderBtn) return;
+      if (typeof isGcalConnected === 'function' && isGcalConnected()) {
+        gcalHeaderBtn.textContent = 'Disconnect Calendar';
+        gcalHeaderBtn.style.display = 'inline-flex';
+        gcalHeaderBtn.onclick = () => { if (typeof disconnectGoogleCalendar === 'function') { disconnectGoogleCalendar(); updateGcalHeaderBtn(); } };
+      } else {
+        gcalHeaderBtn.textContent = 'Connect Calendar';
+        gcalHeaderBtn.style.display = 'inline-flex';
+        gcalHeaderBtn.onclick = () => { if (typeof connectGoogleCalendar === 'function') connectGoogleCalendar(); };
+      }
+    }
 
     function switchMainTab(tab) {
       activeMainTab = tab;
+      try { localStorage.setItem('dashboard_active_tab', tab); } catch(e) {}
 
       tasksTabBtn.classList.toggle('active', tab === 'tasks');
+      focusTabBtn.classList.toggle('active', tab === 'focus');
+      compassTabBtn.classList.toggle('active', tab === 'compass');
       memoryTabBtn.classList.toggle('active', tab === 'memory');
+      reviewTabBtn.classList.toggle('active', tab === 'review');
+      settingsTabBtn.classList.toggle('active', tab === 'settings');
 
       tasksPanel.classList.toggle('active', tab === 'tasks');
+      focusPanel.classList.toggle('active', tab === 'focus');
+      compassPanel.classList.toggle('active', tab === 'compass');
       memoryPanel.classList.toggle('active', tab === 'memory');
-
-      // Show/hide view toggle for tasks
-      taskViewToggle.style.display = tab === 'tasks' ? 'flex' : 'none';
+      reviewPanel.classList.toggle('active', tab === 'review');
+      settingsPanel.classList.toggle('active', tab === 'settings');
 
       // Show/hide appropriate buttons
       openTaskBtn.style.display = tab === 'tasks' ? 'inline-flex' : 'none';
       openMemoryBtn.style.display = tab === 'memory' ? 'inline-flex' : 'none';
       saveBtn.style.display = tab === 'tasks' ? 'inline-flex' : 'none';
+      document.getElementById('quickAddOpenBtn').style.display = (tab === 'tasks' || tab === 'focus') ? 'inline-flex' : 'none';
 
       // Update file path display
       if (tab === 'tasks') {
         filePathEl.textContent = taskFileHandle ? taskFileName : '';
-      } else {
+      } else if (tab === 'memory') {
         filePathEl.textContent = memoryDirHandle ? memoryDirHandle.name : '';
+      } else {
+        filePathEl.textContent = '';
       }
+
+      // Update gcal button
+      updateGcalHeaderBtn();
+
+      // Render focus/compass/review/settings on switch
+      if (tab === 'focus') renderFocusView();
+      if (tab === 'compass') renderCompassView();
+      if (tab === 'review') renderReviewView();
+      if (tab === 'settings') renderSettingsView();
     }
 
     tasksTabBtn.addEventListener('click', () => switchMainTab('tasks'));
+    focusTabBtn.addEventListener('click', () => switchMainTab('focus'));
+    compassTabBtn.addEventListener('click', () => switchMainTab('compass'));
     memoryTabBtn.addEventListener('click', () => switchMainTab('memory'));
+    reviewTabBtn.addEventListener('click', () => switchMainTab('review'));
+    settingsTabBtn.addEventListener('click', () => switchMainTab('settings'));
+
+    // Restore last active tab
+    try {
+      const savedTab = localStorage.getItem('dashboard_active_tab');
+      if (savedTab && ['tasks', 'focus', 'compass', 'memory', 'review', 'settings'].includes(savedTab)) {
+        switchMainTab(savedTab);
+      }
+    } catch(e) {}
 
     // ============================================================
     // ===== TASKS FUNCTIONALITY =====
@@ -2708,16 +3915,8 @@
     }
 
     const weekView = document.getElementById('weekView');
-    const timelineView = document.getElementById('timelineView');
-    const weekViewBtn = document.getElementById('weekViewBtn');
-    const timelineViewBtn = document.getElementById('timelineViewBtn');
     const tagView = document.getElementById('tagView');
-    const tagViewBtn = document.getElementById('tagViewBtn');
-
-    const board = document.getElementById('board');
-    const listView = document.getElementById('listView');
-    const listViewBtn = document.getElementById('listViewBtn');
-    const boardViewBtn = document.getElementById('boardViewBtn');
+    const tagViewBtn = document.getElementById('tagViewBtn'); // may be null
 
     function taskSectionId(name) {
       return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
@@ -2865,9 +4064,10 @@
       card.dataset.id = task.id;
 
       let html = `
-        <div style="display: flex; align-items: flex-start; gap: 12px;">
+        <div style="display: flex; align-items: flex-start; gap: 8px;">
           <button class="delete-btn" data-action="delete" title="Delete task">&times;</button>
           <span class="checkbox ${task.checked ? 'checked' : ''}" data-action="toggle"></span>
+          <button class="star-toggle star-toggle-sm${task.starred ? ' starred' : ''}" data-action="star" title="중요">${task.starred ? '★' : '☆'}</button>
           <div class="card-title" data-action="edit-title">${task.title}</div>
         </div>
       `;
@@ -2963,6 +4163,11 @@
           deleteTask(task);
         } else if (action === 'edit-tags') {
           openTagPicker(card, task);
+        } else if (action === 'star') {
+          task.starred = !task.starred;
+          e.target.classList.toggle('starred', task.starred);
+          e.target.textContent = task.starred ? '★' : '☆';
+          markChanged();
         }
       });
 
@@ -3439,42 +4644,13 @@
     }
 
     function renderTasks() {
-      if (currentView === 'board') { renderBoard(); }
-      else if (currentView === 'list') { renderList(); }
-      else if (currentView === 'week') { renderWeekCalendar(); }
-      else if (currentView === 'timeline') { renderTimeline(); }
-      else if (currentView === 'tags') { renderTagView(); }
+      if (currentView === 'week') { renderWeekCalendar(); }
+      else { renderTagView(); }
     }
 
-    function renderBoard() {
-      board.innerHTML = '';
-
-      // Google Calendar connect bar
-      const boardGcalBar = document.createElement('div');
-      boardGcalBar.className = 'board-gcal-bar';
-      if (isGcalConnected()) {
-        boardGcalBar.innerHTML = `<button class="gcal-connect-btn disconnect gcal-board-btn" id="gcalDisconnectBoard">Disconnect Calendar</button>`;
-      } else {
-        boardGcalBar.innerHTML = `<button class="gcal-connect-btn gcal-board-btn" id="gcalConnectBoard">Connect Google Calendar</button>`;
-      }
-      board.appendChild(boardGcalBar);
-      document.getElementById('gcalConnectBoard')?.addEventListener('click', connectGoogleCalendar);
-      document.getElementById('gcalDisconnectBoard')?.addEventListener('click', disconnectGoogleCalendar);
-
-      sections.forEach(section => {
-        const sectionTasks = tasks[section.id] || [];
-        board.appendChild(createColumn(section.id, section.name, sectionTasks));
-      });
-
-      const addSectionBtn = document.createElement('div');
-      addSectionBtn.className = 'column';
-      addSectionBtn.style.cssText = 'background: transparent; border: 2px dashed var(--border); display: flex; align-items: center; justify-content: center; cursor: pointer; min-height: 120px;';
-      addSectionBtn.innerHTML = '<span style="color: var(--text-muted); font-size: 14px; font-weight: 500;">+ Add Section</span>';
-      addSectionBtn.addEventListener('click', () => startAddingSection(addSectionBtn));
-      board.appendChild(addSectionBtn);
-    }
-
-    function renderList() {
+    function renderList() { }
+    function _renderList_unused() {
+      var listView = document.createElement('div');
       listView.innerHTML = '';
 
       if (!quickAddSection && sections.length > 0) {
@@ -3791,7 +4967,21 @@
         deleteTask(task);
       });
 
+      // Star toggle
+      const star = document.createElement('button');
+      star.className = 'star-toggle' + (task.starred ? ' starred' : '');
+      star.innerHTML = task.starred ? '★' : '☆';
+      star.title = '중요';
+      star.addEventListener('click', (e) => {
+        e.stopPropagation();
+        task.starred = !task.starred;
+        star.classList.toggle('starred', task.starred);
+        star.innerHTML = task.starred ? '★' : '☆';
+        markChanged();
+      });
+
       item.appendChild(checkbox);
+      item.appendChild(star);
       item.appendChild(content);
       item.appendChild(actions);
 
@@ -3942,26 +5132,23 @@
     }
 
     function switchTaskView(view) {
+      if (view === 'board' || view === 'list' || view === 'timeline') view = 'tags';
       currentView = view;
-      const views = { board, list: listView, week: weekView, timeline: timelineView, tags: tagView };
-      const btns = { board: boardViewBtn, list: listViewBtn, week: weekViewBtn, timeline: timelineViewBtn, tags: tagViewBtn };
+      const views = { week: weekView, tags: tagView };
+      const btns = { tags: tagViewBtn };
       Object.entries(views).forEach(([k, el]) => {
         if (view === k) {
-          el.style.display = (k === 'board' || k === 'week' || k === 'tags') ? 'flex' : 'block';
+          el.style.display = (k === 'week' || k === 'tags') ? 'flex' : 'block';
         } else {
           el.style.display = 'none';
         }
       });
-      Object.values(btns).forEach(b => b.classList.remove('active'));
+      Object.values(btns).forEach(b => { if (b) b.classList.remove('active'); });
       if (btns[view]) btns[view].classList.add('active');
       renderTasks();
     }
 
-    listViewBtn.addEventListener('click', () => switchTaskView('list'));
-    boardViewBtn.addEventListener('click', () => switchTaskView('board'));
-    if (weekViewBtn) weekViewBtn.addEventListener('click', () => switchTaskView('week'));
-    timelineViewBtn.addEventListener('click', () => switchTaskView('timeline'));
-    tagViewBtn.addEventListener('click', () => switchTaskView('tags'));
+    if (tagViewBtn) tagViewBtn.addEventListener('click', () => switchTaskView('tags'));
 
     // ============================================================
     // SHARED SOURCE ICON HELPER
@@ -4066,6 +5253,7 @@
 
         card.innerHTML = `
           <input type="checkbox" class="plan-checkbox" ${t.checked ? 'checked' : ''} title="완료 표시">
+          <button class="star-toggle star-toggle-sm${t.starred ? ' starred' : ''}" title="중요">${t.starred ? '★' : '☆'}</button>
           <div class="tg-body">
             <div class="tg-title">${t.title}</div>
             ${t.note ? `<div class="tg-note">${t.note}</div>` : ''}
@@ -4076,6 +5264,19 @@
             </div>
           </div>
         `;
+
+        // Star toggle
+        const starBtn = card.querySelector('.star-toggle');
+        starBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const ref = findTaskRef(t.id);
+          if (ref) {
+            ref.starred = !ref.starred;
+            starBtn.classList.toggle('starred', ref.starred);
+            starBtn.textContent = ref.starred ? '★' : '☆';
+            markChanged();
+          }
+        });
 
         // Main checkbox toggle
         const cb = card.querySelector('.plan-checkbox');
@@ -4460,223 +5661,6 @@
         return chip;
       }
 
-      // ===== TASK DETAIL PANEL =====
-      function openTaskDetail(taskId) {
-        const ref = findTaskRef(taskId);
-        if (!ref) return;
-        // Resolve sectionName
-        if (!ref.sectionName) {
-          for (const s of sections) {
-            if ((tasks[s.id] || []).includes(ref)) { ref.sectionName = s.name; break; }
-          }
-        }
-
-        // Remove existing detail panel if any
-        document.querySelector('.plan-detail-overlay')?.remove();
-        document.querySelector('.plan-detail-panel')?.remove();
-
-        const overlay = document.createElement('div');
-        overlay.className = 'plan-detail-overlay';
-        const panel = document.createElement('div');
-        panel.className = 'plan-detail-panel';
-
-        // Topbar
-        const topbar = document.createElement('div');
-        topbar.className = 'plan-detail-topbar';
-        topbar.innerHTML = `<h3>태스크 상세</h3><button class="plan-detail-close">&times;</button>`;
-        panel.appendChild(topbar);
-
-        // Body
-        const body = document.createElement('div');
-        body.className = 'plan-detail-body';
-
-        // -- Title + checkbox row
-        const titleRow = document.createElement('div');
-        titleRow.style.cssText = 'display:flex;align-items:flex-start;gap:10px;';
-        const mainCb = document.createElement('input');
-        mainCb.type = 'checkbox'; mainCb.checked = !!ref.checked;
-        mainCb.style.cssText = 'width:18px;height:18px;min-width:18px;margin-top:3px;accent-color:var(--accent);cursor:pointer;';
-        const titleEl = document.createElement('div');
-        titleEl.className = 'plan-detail-title' + (ref.checked ? ' is-checked' : '');
-        titleEl.textContent = ref.title;
-        mainCb.addEventListener('change', () => {
-          ref.checked = mainCb.checked;
-          titleEl.classList.toggle('is-checked', ref.checked);
-          markChanged();
-        });
-        titleRow.appendChild(mainCb);
-        titleRow.appendChild(titleEl);
-        body.appendChild(titleRow);
-
-        // -- Source note (original description)
-        if (ref.note) {
-          const noteBlock = document.createElement('div');
-          noteBlock.innerHTML = `<div class="plan-detail-section-label">설명</div><div class="plan-detail-note">${ref.note}</div>`;
-          body.appendChild(noteBlock);
-        }
-
-        // -- Meta: section, tags, date, bucket
-        const metaBlock = document.createElement('div');
-        metaBlock.innerHTML = `<div class="plan-detail-section-label">정보</div>`;
-        const metaRow = document.createElement('div');
-        metaRow.className = 'plan-detail-meta-row';
-
-        // Section
-        if (ref.sectionName) {
-          metaRow.innerHTML += `<span class="plan-detail-meta-chip">📂 ${ref.sectionName}</span>`;
-        }
-        // Date
-        if (ref.scheduledDate) {
-          metaRow.innerHTML += `<span class="plan-detail-meta-chip" style="color:var(--accent);font-weight:600;">📅 ${ref.scheduledDate}</span>`;
-        }
-        // Bucket
-        if (ref.planBucket) {
-          const bucketLabels = { asap: '⚡ ASAP', schedule: '📋 Schedule', someday: '💭 Someday', maybe: '🤔 Maybe' };
-          metaRow.innerHTML += `<span class="plan-detail-meta-chip">${bucketLabels[ref.planBucket] || ref.planBucket}</span>`;
-        }
-        metaBlock.appendChild(metaRow);
-
-        // Tags
-        if (ref.tags && ref.tags.length > 0) {
-          const tagsDiv = document.createElement('div');
-          tagsDiv.className = 'plan-detail-tags';
-          tagsDiv.style.marginTop = '8px';
-          ref.tags.forEach(tag => {
-            const tc = tagColors[tag] || { bg: '#F3F4F6', color: '#6B7280', label: tag };
-            tagsDiv.innerHTML += `<span class="tag-badge tag-${tag}" style="font-size:12px;padding:3px 10px;">${tc.label}</span>`;
-          });
-          metaBlock.appendChild(tagsDiv);
-        }
-        body.appendChild(metaBlock);
-
-        // -- Source link
-        if (ref.url) {
-          const srcBlock = document.createElement('div');
-          srcBlock.innerHTML = `<div class="plan-detail-section-label">출처</div>`;
-          let srcLabel = 'Link', srcSvg = '🔗';
-          if (ref.url.includes('slack.com')) { srcLabel = 'Slack에서 보기'; srcSvg = _slackSvg; }
-          else if (ref.url.includes('notion.so')) { srcLabel = 'Notion에서 보기'; srcSvg = _notionSvg; }
-          else if (ref.url.includes('steam')) { srcLabel = 'Steam에서 보기'; srcSvg = _steamSvg; }
-          srcBlock.innerHTML += `<a href="${ref.url}" target="_blank" rel="noopener" class="plan-detail-src-link">${srcSvg} ${srcLabel}</a>`;
-          body.appendChild(srcBlock);
-        }
-
-        // -- Subtasks
-        if (ref.subtasks && ref.subtasks.length > 0) {
-          const stBlock = document.createElement('div');
-          stBlock.innerHTML = `<div class="plan-detail-section-label">하위 작업 (${ref.subtasks.filter(s=>s.checked).length}/${ref.subtasks.length})</div>`;
-          const stList = document.createElement('div');
-          stList.className = 'plan-detail-subtasks';
-          ref.subtasks.forEach((st, idx) => {
-            const stItem = document.createElement('div');
-            stItem.className = 'plan-detail-subtask' + (st.checked ? ' is-done' : '');
-            stItem.innerHTML = `<input type="checkbox" ${st.checked ? 'checked' : ''}><span>${st.text}</span>`;
-            stItem.querySelector('input').addEventListener('change', (e) => {
-              ref.subtasks[idx].checked = e.target.checked;
-              stItem.classList.toggle('is-done', e.target.checked);
-              // Update header count
-              stBlock.querySelector('.plan-detail-section-label').textContent = `하위 작업 (${ref.subtasks.filter(s=>s.checked).length}/${ref.subtasks.length})`;
-              markChanged();
-            });
-            stList.appendChild(stItem);
-          });
-          stBlock.appendChild(stList);
-          body.appendChild(stBlock);
-        }
-
-        // -- User Note (editable)
-        const noteArea = document.createElement('div');
-        noteArea.className = 'plan-detail-user-note-area';
-        noteArea.innerHTML = `<div class="plan-detail-section-label">내 메모</div>`;
-        const textarea = document.createElement('textarea');
-        textarea.className = 'plan-detail-user-note';
-        textarea.placeholder = '이 태스크에 대한 메모를 남겨보세요...';
-        textarea.value = ref.userNote || '';
-        let _noteTimer = null;
-        textarea.addEventListener('input', () => {
-          clearTimeout(_noteTimer);
-          _noteTimer = setTimeout(() => {
-            ref.userNote = textarea.value;
-            markChanged();
-          }, 400);
-        });
-        noteArea.appendChild(textarea);
-        body.appendChild(noteArea);
-
-        // -- Schedule actions
-        const actionsBlock = document.createElement('div');
-        actionsBlock.innerHTML = `<div class="plan-detail-section-label">빠른 액션</div>`;
-        const actions = document.createElement('div');
-        actions.className = 'plan-detail-actions';
-
-        // Today button
-        const btnToday = document.createElement('button');
-        btnToday.className = 'plan-detail-btn';
-        btnToday.textContent = '📅 오늘 배정';
-        btnToday.addEventListener('click', () => {
-          ref.scheduledDate = formatDateStr(new Date());
-          ref.planBucket = '';
-          markChanged(); renderTasks(); closeDetail();
-        });
-        actions.appendChild(btnToday);
-
-        // Tomorrow button
-        const btnTomorrow = document.createElement('button');
-        btnTomorrow.className = 'plan-detail-btn';
-        btnTomorrow.textContent = '📅 내일 배정';
-        btnTomorrow.addEventListener('click', () => {
-          const tmr = new Date(); tmr.setDate(tmr.getDate() + 1);
-          ref.scheduledDate = formatDateStr(tmr);
-          ref.planBucket = '';
-          markChanged(); renderTasks(); closeDetail();
-        });
-        actions.appendChild(btnTomorrow);
-
-        // Unschedule button
-        if (ref.scheduledDate || ref.planBucket) {
-          const btnUnsched = document.createElement('button');
-          btnUnsched.className = 'plan-detail-btn';
-          btnUnsched.textContent = '↩ 배정 해제';
-          btnUnsched.addEventListener('click', () => {
-            ref.scheduledDate = '';
-            ref.planBucket = '';
-            markChanged(); renderTasks(); closeDetail();
-          });
-          actions.appendChild(btnUnsched);
-        }
-
-        actionsBlock.appendChild(actions);
-        body.appendChild(actionsBlock);
-
-        panel.appendChild(body);
-        document.body.appendChild(overlay);
-        document.body.appendChild(panel);
-
-        // Animate in
-        requestAnimationFrame(() => {
-          overlay.classList.add('show');
-          panel.classList.add('show');
-        });
-
-        function closeDetail() {
-          // Save any pending note
-          ref.userNote = textarea.value;
-          markChanged();
-          panel.classList.remove('show');
-          overlay.classList.remove('show');
-          setTimeout(() => { overlay.remove(); panel.remove(); }, 250);
-        }
-
-        overlay.addEventListener('click', closeDetail);
-        topbar.querySelector('.plan-detail-close').addEventListener('click', closeDetail);
-
-        // ESC key
-        const escHandler = (e) => {
-          if (e.key === 'Escape') { closeDetail(); document.removeEventListener('keydown', escHandler); }
-        };
-        document.addEventListener('keydown', escHandler);
-      }
-
       function makeBucketPanel(bucket, icon, title, taskList, hint) {
         const panel = document.createElement('div');
         panel.className = `plan-bucket-panel bucket-${bucket}`;
@@ -4812,8 +5796,256 @@
       }
     }
 
-    
-        // ============================================================
+    // ===== TASK DETAIL PANEL =====
+    function openTaskDetail(taskId) {
+      const ref = findTaskRef(taskId);
+      if (!ref) return;
+      let refSectionId = null;
+      if (!ref.sectionName) {
+        for (const s of sections) {
+          if ((tasks[s.id] || []).includes(ref)) { ref.sectionName = s.name; refSectionId = s.id; break; }
+        }
+      } else {
+        for (const s of sections) {
+          if ((tasks[s.id] || []).includes(ref)) { refSectionId = s.id; break; }
+        }
+      }
+
+      document.querySelector('.plan-detail-overlay')?.remove();
+      document.querySelector('.plan-detail-panel')?.remove();
+
+      const overlay = document.createElement('div');
+      overlay.className = 'plan-detail-overlay';
+      const panel = document.createElement('div');
+      panel.className = 'plan-detail-panel';
+
+      const topbar = document.createElement('div');
+      topbar.className = 'plan-detail-topbar';
+      topbar.innerHTML = `<h3>태스크 편집</h3><button class="plan-detail-close">&times;</button>`;
+      panel.appendChild(topbar);
+
+      const body = document.createElement('div');
+      body.className = 'plan-detail-body';
+
+      const titleRow = document.createElement('div');
+      titleRow.style.cssText = 'display:flex;align-items:flex-start;gap:10px;';
+      const mainCb = document.createElement('input');
+      mainCb.type = 'checkbox'; mainCb.checked = !!ref.checked;
+      mainCb.style.cssText = 'width:18px;height:18px;min-width:18px;margin-top:5px;accent-color:var(--accent);cursor:pointer;';
+      const starBtn = document.createElement('button');
+      starBtn.className = 'star-toggle' + (ref.starred ? ' starred' : '');
+      starBtn.innerHTML = ref.starred ? '★' : '☆';
+      starBtn.style.cssText = 'margin-top:2px;font-size:18px;';
+      const titleInput = document.createElement('input');
+      titleInput.type = 'text';
+      titleInput.className = 'plan-detail-title-input';
+      titleInput.value = ref.title;
+
+      mainCb.addEventListener('change', () => { ref.checked = mainCb.checked; markChanged(); });
+      starBtn.addEventListener('click', () => {
+        ref.starred = !ref.starred;
+        starBtn.classList.toggle('starred', ref.starred);
+        starBtn.innerHTML = ref.starred ? '★' : '☆';
+        markChanged();
+      });
+      titleInput.addEventListener('input', () => { ref.title = titleInput.value; markChanged(); });
+
+      titleRow.appendChild(mainCb);
+      titleRow.appendChild(starBtn);
+      titleRow.appendChild(titleInput);
+      body.appendChild(titleRow);
+
+      const noteBlock = document.createElement('div');
+      noteBlock.innerHTML = `<div class="plan-detail-section-label">설명</div>`;
+      const noteInput = document.createElement('textarea');
+      noteInput.className = 'plan-detail-note-input';
+      noteInput.placeholder = '설명을 입력하세요...';
+      noteInput.value = ref.note || '';
+      noteInput.addEventListener('input', () => { ref.note = noteInput.value; markChanged(); });
+      noteBlock.appendChild(noteInput);
+      body.appendChild(noteBlock);
+
+      const tagsBlock = document.createElement('div');
+      tagsBlock.innerHTML = `<div class="plan-detail-section-label">태그</div>`;
+      const tagsRow = document.createElement('div');
+      tagsRow.className = 'plan-detail-edit-row';
+      if (!ref.tags) ref.tags = [];
+      function renderDetailTags() {
+        tagsRow.innerHTML = Object.entries(tagColors).map(([tag, tc]) => {
+          const sel = ref.tags.includes(tag) ? ' selected' : '';
+          return `<button class="plan-detail-edit-btn${sel}" data-tag="${tag}" style="${sel ? `background:${tc.bg};color:${tc.color};border-color:${tc.color};` : ''}">${tc.label}</button>`;
+        }).join('');
+        tagsRow.querySelectorAll('[data-tag]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const tag = btn.dataset.tag;
+            const idx = ref.tags.indexOf(tag);
+            if (idx >= 0) ref.tags.splice(idx, 1); else ref.tags.push(tag);
+            markChanged(); renderDetailTags();
+          });
+        });
+      }
+      renderDetailTags();
+      tagsBlock.appendChild(tagsRow);
+      body.appendChild(tagsBlock);
+
+      const bucketBlock = document.createElement('div');
+      bucketBlock.innerHTML = `<div class="plan-detail-section-label">우선순위</div>`;
+      const bucketRow = document.createElement('div');
+      bucketRow.className = 'plan-detail-edit-row';
+      const bucketOptions = { asap: '⚡ ASAP', schedule: '📋 Schedule', someday: '💭 Someday', maybe: '🤔 Maybe' };
+      function renderDetailBucket() {
+        bucketRow.innerHTML = Object.entries(bucketOptions).map(([bkt, label]) => {
+          const sel = ref.planBucket === bkt ? ' selected' : '';
+          return `<button class="plan-detail-edit-btn${sel}" data-bucket="${bkt}">${label}</button>`;
+        }).join('');
+        bucketRow.querySelectorAll('[data-bucket]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            ref.planBucket = ref.planBucket === btn.dataset.bucket ? '' : btn.dataset.bucket;
+            markChanged(); renderDetailBucket();
+          });
+        });
+      }
+      renderDetailBucket();
+      bucketBlock.appendChild(bucketRow);
+      body.appendChild(bucketBlock);
+
+      const dateBlock = document.createElement('div');
+      dateBlock.innerHTML = `<div class="plan-detail-section-label">날짜</div>`;
+      const dateRow = document.createElement('div');
+      dateRow.style.cssText = 'display:flex;gap:8px;align-items:center;';
+      const dateInput = document.createElement('input');
+      dateInput.type = 'date';
+      dateInput.className = 'plan-detail-date-input';
+      dateInput.value = ref.scheduledDate || '';
+      dateInput.addEventListener('change', () => { ref.scheduledDate = dateInput.value; markChanged(); });
+      const dateClearBtn = document.createElement('button');
+      dateClearBtn.className = 'plan-detail-edit-btn';
+      dateClearBtn.textContent = '날짜 해제';
+      dateClearBtn.addEventListener('click', () => { ref.scheduledDate = ''; dateInput.value = ''; markChanged(); });
+      dateRow.appendChild(dateInput);
+      dateRow.appendChild(dateClearBtn);
+      dateBlock.appendChild(dateRow);
+      body.appendChild(dateBlock);
+
+      const secBlock = document.createElement('div');
+      secBlock.innerHTML = `<div class="plan-detail-section-label">섹션</div>`;
+      const secSelect = document.createElement('select');
+      secSelect.style.cssText = 'font-size:13px;padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:var(--bg-card);color:var(--text-primary);font-family:inherit;outline:none;';
+      sections.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.id; opt.textContent = s.name;
+        if (s.id === refSectionId) opt.selected = true;
+        secSelect.appendChild(opt);
+      });
+      secSelect.addEventListener('change', () => {
+        const newSecId = secSelect.value;
+        if (newSecId !== refSectionId) {
+          const oldArr = tasks[refSectionId] || [];
+          const idx = oldArr.indexOf(ref);
+          if (idx >= 0) oldArr.splice(idx, 1);
+          if (!tasks[newSecId]) tasks[newSecId] = [];
+          tasks[newSecId].unshift(ref);
+          refSectionId = newSecId;
+          ref.sectionName = sections.find(s => s.id === newSecId)?.name || '';
+          markChanged();
+        }
+      });
+      secBlock.appendChild(secSelect);
+      body.appendChild(secBlock);
+
+      if (ref.url) {
+        const srcBlock = document.createElement('div');
+        srcBlock.innerHTML = `<div class="plan-detail-section-label">출처</div>`;
+        let srcLabel = 'Link', srcSvg = '🔗';
+        if (ref.url.includes('slack.com')) { srcLabel = 'Slack에서 보기'; srcSvg = _slackSvg; }
+        else if (ref.url.includes('notion.so')) { srcLabel = 'Notion에서 보기'; srcSvg = _notionSvg; }
+        else if (ref.url.includes('steam')) { srcLabel = 'Steam에서 보기'; srcSvg = _steamSvg; }
+        srcBlock.innerHTML += `<a href="${ref.url}" target="_blank" rel="noopener" class="plan-detail-src-link">${srcSvg} ${srcLabel}</a>`;
+        body.appendChild(srcBlock);
+      }
+
+      if (ref.subtasks && ref.subtasks.length > 0) {
+        const stBlock = document.createElement('div');
+        stBlock.innerHTML = `<div class="plan-detail-section-label">하위 작업 (${ref.subtasks.filter(s=>s.checked).length}/${ref.subtasks.length})</div>`;
+        const stList = document.createElement('div');
+        stList.className = 'plan-detail-subtasks';
+        ref.subtasks.forEach((st, idx) => {
+          const stItem = document.createElement('div');
+          stItem.className = 'plan-detail-subtask' + (st.checked ? ' is-done' : '');
+          stItem.innerHTML = `<input type="checkbox" ${st.checked ? 'checked' : ''}><span>${st.text}</span>`;
+          stItem.querySelector('input').addEventListener('change', (e) => {
+            ref.subtasks[idx].checked = e.target.checked;
+            stItem.classList.toggle('is-done', e.target.checked);
+            stBlock.querySelector('.plan-detail-section-label').textContent = `하위 작업 (${ref.subtasks.filter(s=>s.checked).length}/${ref.subtasks.length})`;
+            markChanged();
+          });
+          stList.appendChild(stItem);
+        });
+        stBlock.appendChild(stList);
+        body.appendChild(stBlock);
+      }
+
+      const noteArea = document.createElement('div');
+      noteArea.className = 'plan-detail-user-note-area';
+      noteArea.innerHTML = `<div class="plan-detail-section-label">내 메모</div>`;
+      const textarea = document.createElement('textarea');
+      textarea.className = 'plan-detail-user-note';
+      textarea.placeholder = '이 태스크에 대한 메모를 남겨보세요...';
+      textarea.value = ref.userNote || '';
+      let _noteTimer = null;
+      textarea.addEventListener('input', () => {
+        clearTimeout(_noteTimer);
+        _noteTimer = setTimeout(() => { ref.userNote = textarea.value; markChanged(); }, 400);
+      });
+      noteArea.appendChild(textarea);
+      body.appendChild(noteArea);
+
+      const deleteBlock = document.createElement('div');
+      deleteBlock.style.cssText = 'margin-top: 8px; padding-top: 16px; border-top: 1px solid var(--border-light);';
+      const deleteBtn = document.createElement('button');
+      deleteBtn.style.cssText = 'width:100%;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;background:#FEE2E2;color:#DC2626;border:1px solid #FCA5A5;transition:all 0.15s;';
+      deleteBtn.textContent = '태스크 삭제';
+      deleteBtn.addEventListener('mouseenter', () => { deleteBtn.style.background = '#FECACA'; });
+      deleteBtn.addEventListener('mouseleave', () => { deleteBtn.style.background = '#FEE2E2'; });
+      deleteBtn.addEventListener('click', () => {
+        if (!confirm(`"${ref.title}" 을(를) 삭제하시겠습니까?`)) return;
+        for (const section of sections) {
+          const arr = tasks[section.id] || [];
+          const idx = arr.findIndex(t => t.id === ref.id);
+          if (idx !== -1) { arr.splice(idx, 1); break; }
+        }
+        markChanged(); renderTasks();
+        panel.classList.remove('show'); overlay.classList.remove('show');
+        setTimeout(() => { overlay.remove(); panel.remove(); }, 250);
+      });
+      deleteBlock.appendChild(deleteBtn);
+      body.appendChild(deleteBlock);
+
+      panel.appendChild(body);
+      document.body.appendChild(overlay);
+      document.body.appendChild(panel);
+
+      requestAnimationFrame(() => { overlay.classList.add('show'); panel.classList.add('show'); });
+
+      function closeDetail() {
+        ref.userNote = textarea.value;
+        ref.title = titleInput.value;
+        ref.note = noteInput.value;
+        markChanged(); renderTasks();
+        if (activeMainTab === 'focus') renderFocusView();
+        panel.classList.remove('show'); overlay.classList.remove('show');
+        setTimeout(() => { overlay.remove(); panel.remove(); }, 250);
+      }
+
+      overlay.addEventListener('click', closeDetail);
+      topbar.querySelector('.plan-detail-close').addEventListener('click', closeDetail);
+      const escHandler = (e) => {
+        if (e.key === 'Escape') { closeDetail(); document.removeEventListener('keydown', escHandler); }
+      };
+      document.addEventListener('keydown', escHandler);
+    }
+
+    // ============================================================
     // WEEKLY CALENDAR VIEW
     // ============================================================
 
@@ -4849,7 +6081,7 @@
     function findTaskRef(taskId) {
       for (const s of sections) {
         const arr = tasks[s.id] || [];
-        const t = arr.find(x => x.id === taskId);
+        const t = arr.find(x => String(x.id) === String(taskId));
         if (t) return t;
       }
       return null;
@@ -4888,7 +6120,9 @@
           gcalTokenExpiry = Date.now() + (response.expires_in * 1000);
           localStorage.setItem('gcal_access_token', gcalAccessToken);
           localStorage.setItem('gcal_token_expiry', String(gcalTokenExpiry));
+          localStorage.setItem('gcal_connected', 'true');
           console.log('Google Calendar connected, fetching events...');
+          updateGcalHeaderBtn();
           fetchGoogleCalendarEvents(getPlanWeeks(planWeekOffset)).then(() => {
             console.log('Events fetched:', gcalEvents);
             renderTasks();
@@ -4922,7 +6156,9 @@
       gcalEvents = {};
       localStorage.removeItem('gcal_access_token');
       localStorage.removeItem('gcal_token_expiry');
+      localStorage.removeItem('gcal_connected');
       gcalTokenClient = null;
+      updateGcalHeaderBtn();
       renderWeekCalendar();
     }
 
@@ -4942,9 +6178,15 @@
           headers: { 'Authorization': `Bearer ${gcalAccessToken}` }
         });
         if (res.status === 401) {
-          // Token expired
+          // Token expired → try silent re-auth
           gcalAccessToken = '';
+          gcalTokenExpiry = 0;
           localStorage.removeItem('gcal_access_token');
+          localStorage.removeItem('gcal_token_expiry');
+          if (localStorage.getItem('gcal_connected') && gcalTokenClient) {
+            gcalTokenClient.requestAccessToken({prompt: ''});
+          }
+          updateGcalHeaderBtn();
           return;
         }
         const data = await res.json();
@@ -5082,8 +6324,15 @@
     window.addEventListener('load', () => {
       setTimeout(() => {
         initGoogleAuth();
+        updateGcalHeaderBtn();
         if (isGcalConnected()) {
+          // Token still valid → fetch events
           fetchGoogleCalendarEvents(getPlanWeeks(planWeekOffset)).then(() => renderTasks());
+        } else if (localStorage.getItem('gcal_connected')) {
+          // User previously connected but token expired → silent re-auth
+          if (gcalTokenClient) {
+            gcalTokenClient.requestAccessToken({prompt: ''});
+          }
         }
       }, 500);
     });
@@ -5349,7 +6598,9 @@
     // TIMELINE VIEW
     // ============================================================
 
-    function renderTimeline() {
+    function renderTimeline() { }
+    function _renderTimeline_unused() {
+      var timelineView = document.createElement('div');
       timelineView.innerHTML = '';
       const tagLabels = { VD: 'VOID DIVER', CQ: 'CQ', AI: 'AI', BIZ: 'BIZ', TEAM: 'TEAM', PERSONAL: 'PERSONAL' };
 
@@ -6212,6 +7463,7 @@
 - [ ] **커스텀 케이크 / 런칭격려금** - 정책 디테일 논의 #TEAM
 - [ ] **부동산 공부** - #PERSONAL
 - [ ] **데스크 구매** - 메이우드, 칙칙한 느낌 탈피 #PERSONAL
+- [ ] **디자인 레퍼런스 수집** - awwwards.com 등에서 UI/UX 디자인 참고 가져오기 #PERSONAL
 
 ## Waiting On
 - [ ] **성은 - 신작 프로젝트 현황/월별 보고** - 쓰레드 참고 (since 01-16) #TEAM {{https://loadcomplete.slack.com/archives/C07UE1WCZHD/p1768530619236049}}
@@ -6372,6 +7624,1806 @@
       memoryMainContent.style.display = 'flex';
       renderMemory();
     })();
+
+    // ============================================================
+    // ===== QUICK ADD TASK (Global) =====
+    // ============================================================
+
+    const QUICK_ADD_GLOSSARY = {
+      tags: {
+        'AI': ['ai', 'AI', '인공지능'],
+        'VD': ['vd', 'VD', 'void', 'voiddiver', '보이드'],
+        'CQ': ['cq', 'CQ'],
+        'BIZ': ['biz', 'BIZ', '비즈', '사업', '비즈니스'],
+        'TEAM': ['team', 'TEAM', '팀'],
+        'PERSONAL': ['personal', 'PERSONAL', '개인'],
+      },
+      buckets: {
+        'asap': ['급해', '급함', '긴급', '중요', 'urgent', 'asap', 'ASAP', '지금'],
+        'schedule': ['예정', '계획', 'schedule', '스케줄', '일정'],
+        'someday': ['언젠가', 'someday', '나중에'],
+        'maybe': ['아마', 'maybe', '고민', '검토'],
+      },
+      dates: {
+        'today': ['오늘', 'today'],
+        'tomorrow': ['내일', 'tomorrow'],
+      }
+    };
+
+    const qaPanel = document.getElementById('quickAddPanel');
+    const qaOverlay = document.getElementById('quickAddOverlay');
+    const qaTextarea = document.getElementById('quickAddText');
+    const qaPreview = document.getElementById('quickAddPreview');
+    const qaSubmitBtn = document.getElementById('quickAddSubmitBtn');
+    const qaCancelBtn = document.getElementById('quickAddCancelBtn');
+    const qaCloseBtn = document.getElementById('quickAddClose');
+    const qaSuccessMsg = document.getElementById('quickAddSuccessMsg');
+    const qaTagBtns = document.getElementById('quickAddTagBtns');
+    const qaBucketBtns = document.getElementById('quickAddBucketBtns');
+    const qaDateBtns = document.getElementById('quickAddDateBtns');
+
+    let qaParsed = { title: '', tags: [], bucket: null, date: null };
+    let qaManualTags = new Set();
+    let qaManualBucket = null;
+    let qaManualDate = null;
+    let qaStarred = false;
+    const qaStarBtn = document.getElementById('quickAddStar');
+
+    qaStarBtn.addEventListener('click', () => {
+      qaStarred = !qaStarred;
+      qaStarBtn.classList.toggle('starred', qaStarred);
+      qaStarBtn.innerHTML = qaStarred ? '★' : '☆';
+    });
+
+    // --- Parse engine ---
+    function parseQuickAddText(text) {
+      let tags = [];
+      let bucket = null;
+      let date = null;
+      let remaining = text;
+
+      // Step 1: Extract explicit syntax (#tag, !bucket, @date)
+      // Tags: #AI, #VD etc.
+      remaining = remaining.replace(/#(\S+)/g, (match, token) => {
+        const upper = token.toUpperCase();
+        for (const [tag, aliases] of Object.entries(QUICK_ADD_GLOSSARY.tags)) {
+          if (tag === upper || aliases.some(a => a.toLowerCase() === token.toLowerCase())) {
+            if (!tags.includes(tag)) tags.push(tag);
+            return '';
+          }
+        }
+        return match; // keep if not recognized
+      });
+
+      // Buckets: !asap, !schedule etc.
+      remaining = remaining.replace(/!(\S+)/g, (match, token) => {
+        for (const [bkt, aliases] of Object.entries(QUICK_ADD_GLOSSARY.buckets)) {
+          if (bkt === token.toLowerCase() || aliases.some(a => a.toLowerCase() === token.toLowerCase())) {
+            bucket = bkt;
+            return '';
+          }
+        }
+        return match;
+      });
+
+      // Dates: @today, @tomorrow
+      remaining = remaining.replace(/@(\S+)/g, (match, token) => {
+        for (const [dt, aliases] of Object.entries(QUICK_ADD_GLOSSARY.dates)) {
+          if (dt === token.toLowerCase() || aliases.some(a => a.toLowerCase() === token.toLowerCase())) {
+            date = dt;
+            return '';
+          }
+        }
+        return match;
+      });
+
+      // Step 2: Glossary matching on remaining text (scan from end)
+      const words = remaining.trim().split(/\s+/).filter(Boolean);
+      const consumed = new Set();
+
+      // Scan from end for better accuracy (modifiers tend to be at the end)
+      for (let i = words.length - 1; i >= 0; i--) {
+        const w = words[i];
+        const wLower = w.toLowerCase();
+
+        // Match tags
+        if (!tags.length || tags.length < 3) {
+          for (const [tag, aliases] of Object.entries(QUICK_ADD_GLOSSARY.tags)) {
+            if (aliases.some(a => a.toLowerCase() === wLower) && !tags.includes(tag)) {
+              tags.push(tag);
+              consumed.add(i);
+              break;
+            }
+          }
+        }
+
+        // Match buckets
+        if (!bucket && !consumed.has(i)) {
+          for (const [bkt, aliases] of Object.entries(QUICK_ADD_GLOSSARY.buckets)) {
+            if (aliases.some(a => a.toLowerCase() === wLower)) {
+              bucket = bkt;
+              consumed.add(i);
+              break;
+            }
+          }
+        }
+
+        // Match dates
+        if (!date && !consumed.has(i)) {
+          for (const [dt, aliases] of Object.entries(QUICK_ADD_GLOSSARY.dates)) {
+            if (aliases.some(a => a.toLowerCase() === wLower)) {
+              date = dt;
+              consumed.add(i);
+              break;
+            }
+          }
+        }
+      }
+
+      // Step 3: remaining words = title
+      const titleWords = words.filter((_, i) => !consumed.has(i));
+      const title = titleWords.join(' ').replace(/\s+/g, ' ').trim();
+
+      return { title, tags, bucket, date };
+    }
+
+    function resolveDate(dateKey) {
+      const today = new Date();
+      if (dateKey === 'today') return formatDateStr(today);
+      if (dateKey === 'tomorrow') {
+        const tmr = new Date(today);
+        tmr.setDate(tmr.getDate() + 1);
+        return formatDateStr(tmr);
+      }
+      return null;
+    }
+
+    // --- Merge parsed + manual selections ---
+    function getMergedResult() {
+      const merged = {
+        title: qaParsed.title,
+        tags: [...new Set([...qaParsed.tags, ...qaManualTags])],
+        bucket: qaManualBucket || qaParsed.bucket,
+        date: qaManualDate || qaParsed.date,
+      };
+      return merged;
+    }
+
+    // --- Render preview ---
+    function renderQAPreview() {
+      const m = getMergedResult();
+      qaSubmitBtn.disabled = !m.title;
+
+      if (!m.title && !m.tags.length && !m.bucket && !m.date) {
+        qaPreview.innerHTML = '<div class="quick-add-preview-empty">텍스트를 입력하면 자동으로 파싱됩니다</div>';
+        return;
+      }
+
+      let html = '';
+
+      // Title
+      if (m.title) {
+        html += `<div class="quick-add-preview-row"><span class="label">제목</span><span class="value">${escapeHtml(m.title)}</span></div>`;
+      }
+
+      // Tags
+      if (m.tags.length > 0) {
+        const chips = m.tags.map(tag => {
+          const tc = tagColors[tag] || { bg: '#F3F4F6', color: '#6B7280', label: tag };
+          return `<span class="quick-add-chip" style="background:${tc.bg};color:${tc.color};" data-remove-tag="${tag}">${tc.label}<span class="chip-remove">&times;</span></span>`;
+        }).join('');
+        html += `<div class="quick-add-preview-row"><span class="label">태그</span><div class="quick-add-preview-chips">${chips}</div></div>`;
+      }
+
+      // Bucket
+      if (m.bucket) {
+        const bucketLabels = { asap: '⚡ ASAP', schedule: '📋 Schedule', someday: '💭 Someday', maybe: '🤔 Maybe' };
+        html += `<div class="quick-add-preview-row"><span class="label">버킷</span><span class="quick-add-chip" style="background:var(--bg-card);border:1px solid var(--border);" data-remove-bucket="1">${bucketLabels[m.bucket] || m.bucket}<span class="chip-remove">&times;</span></span></div>`;
+      }
+
+      // Date
+      if (m.date) {
+        const dateLabels = { today: '📅 오늘', tomorrow: '📅 내일' };
+        html += `<div class="quick-add-preview-row"><span class="label">날짜</span><span class="quick-add-chip" style="background:var(--bg-card);border:1px solid var(--border);" data-remove-date="1">${dateLabels[m.date] || m.date}<span class="chip-remove">&times;</span></span></div>`;
+      }
+
+      qaPreview.innerHTML = html;
+
+      // Chip remove handlers
+      qaPreview.querySelectorAll('[data-remove-tag]').forEach(el => {
+        el.addEventListener('click', () => {
+          const tag = el.dataset.removeTag;
+          qaManualTags.delete(tag);
+          // Remove from parsed too
+          qaParsed.tags = qaParsed.tags.filter(t => t !== tag);
+          renderQAPreview();
+          renderManualBtns();
+        });
+      });
+      qaPreview.querySelectorAll('[data-remove-bucket]').forEach(el => {
+        el.addEventListener('click', () => {
+          qaManualBucket = null;
+          qaParsed.bucket = null;
+          renderQAPreview();
+          renderManualBtns();
+        });
+      });
+      qaPreview.querySelectorAll('[data-remove-date]').forEach(el => {
+        el.addEventListener('click', () => {
+          qaManualDate = null;
+          qaParsed.date = null;
+          renderQAPreview();
+          renderManualBtns();
+        });
+      });
+    }
+
+    function escapeHtml(text) {
+      const d = document.createElement('div');
+      d.textContent = text;
+      return d.innerHTML;
+    }
+
+    // --- Manual selection buttons ---
+    function renderManualBtns() {
+      const m = getMergedResult();
+
+      // Tags
+      qaTagBtns.innerHTML = Object.entries(tagColors).map(([tag, tc]) => {
+        const selected = m.tags.includes(tag) ? ' selected' : '';
+        return `<button class="quick-add-manual-btn${selected}" data-qa-tag="${tag}" style="${selected ? `background:${tc.bg};color:${tc.color};border-color:${tc.color};` : ''}">${tc.label}</button>`;
+      }).join('');
+
+      // Buckets
+      const bucketList = { asap: '⚡ ASAP', schedule: '📋 Schedule', someday: '💭 Someday', maybe: '🤔 Maybe' };
+      qaBucketBtns.innerHTML = Object.entries(bucketList).map(([bkt, label]) => {
+        const selected = m.bucket === bkt ? ' selected' : '';
+        return `<button class="quick-add-manual-btn${selected}" data-qa-bucket="${bkt}">${label}</button>`;
+      }).join('');
+
+      // Dates
+      const dateList = { today: '오늘', tomorrow: '내일' };
+      qaDateBtns.innerHTML = Object.entries(dateList).map(([dt, label]) => {
+        const selected = m.date === dt ? ' selected' : '';
+        return `<button class="quick-add-manual-btn${selected}" data-qa-date="${dt}">${label}</button>`;
+      }).join('');
+
+      // Event listeners
+      qaTagBtns.querySelectorAll('[data-qa-tag]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const tag = btn.dataset.qaTag;
+          if (qaManualTags.has(tag)) {
+            qaManualTags.delete(tag);
+            // Also remove from parsed
+            qaParsed.tags = qaParsed.tags.filter(t => t !== tag);
+          } else {
+            qaManualTags.add(tag);
+          }
+          renderQAPreview();
+          renderManualBtns();
+        });
+      });
+
+      qaBucketBtns.querySelectorAll('[data-qa-bucket]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const bkt = btn.dataset.qaBucket;
+          qaManualBucket = qaManualBucket === bkt ? null : bkt;
+          renderQAPreview();
+          renderManualBtns();
+        });
+      });
+
+      qaDateBtns.querySelectorAll('[data-qa-date]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const dt = btn.dataset.qaDate;
+          qaManualDate = qaManualDate === dt ? null : dt;
+          renderQAPreview();
+          renderManualBtns();
+        });
+      });
+    }
+
+    // --- Panel open/close ---
+    function openQuickAdd() {
+      qaOverlay.classList.add('show');
+      qaPanel.classList.add('show');
+      resetQuickAddForm();
+      renderManualBtns();
+      setTimeout(() => qaTextarea.focus(), 50);
+    }
+
+    function closeQuickAdd() {
+      qaPanel.classList.remove('show');
+      qaOverlay.classList.remove('show');
+    }
+
+    function resetQuickAddForm() {
+      qaTextarea.value = '';
+      qaParsed = { title: '', tags: [], bucket: null, date: null };
+      qaManualTags = new Set();
+      qaManualBucket = null;
+      qaManualDate = null;
+      qaStarred = false;
+      qaStarBtn.classList.remove('starred');
+      qaStarBtn.innerHTML = '☆';
+      qaSuccessMsg.innerHTML = '';
+      qaSubmitBtn.disabled = true;
+      renderQAPreview();
+    }
+
+    // --- Task creation ---
+    function submitQuickAdd() {
+      const m = getMergedResult();
+      if (!m.title) return;
+
+      // Determine target section
+      const targetSectionId = quickAddSection || (sections.length > 0 ? sections[0].id : null);
+      if (!targetSectionId) return;
+
+      if (!tasks[targetSectionId]) tasks[targetSectionId] = [];
+
+      const newTask = {
+        id: Date.now() + Math.random(),
+        title: m.title,
+        note: '',
+        checked: false,
+        subtasks: [],
+        section: targetSectionId,
+      };
+
+      if (m.tags.length > 0) newTask.tags = m.tags;
+      if (m.bucket) newTask.planBucket = m.bucket;
+      if (m.date) newTask.scheduledDate = resolveDate(m.date);
+      if (qaStarred) newTask.starred = true;
+
+      tasks[targetSectionId].unshift(newTask);
+      markChanged();
+      renderTasks();
+
+      // Show success message
+      qaSuccessMsg.innerHTML = `<div class="quick-add-success">✓ "${escapeHtml(m.title)}" 추가됨</div>`;
+      setTimeout(() => { qaSuccessMsg.innerHTML = ''; }, 2000);
+
+      // Reset form for continuous add
+      qaTextarea.value = '';
+      qaParsed = { title: '', tags: [], bucket: null, date: null };
+      qaManualTags = new Set();
+      qaManualBucket = null;
+      qaManualDate = null;
+      qaStarred = false;
+      qaStarBtn.classList.remove('starred');
+      qaStarBtn.innerHTML = '☆';
+      qaSubmitBtn.disabled = true;
+      renderQAPreview();
+      renderManualBtns();
+      qaTextarea.focus();
+    }
+
+    // --- Event listeners ---
+    qaOverlay.addEventListener('click', closeQuickAdd);
+    qaCloseBtn.addEventListener('click', closeQuickAdd);
+    qaCancelBtn.addEventListener('click', closeQuickAdd);
+    qaSubmitBtn.addEventListener('click', submitQuickAdd);
+
+    qaTextarea.addEventListener('input', () => {
+      qaParsed = parseQuickAddText(qaTextarea.value);
+      renderQAPreview();
+      renderManualBtns();
+    });
+
+    qaTextarea.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        if (!qaSubmitBtn.disabled) submitQuickAdd();
+      }
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        closeQuickAdd();
+      }
+    });
+
+    // Global shortcut: Q (when not typing) or Cmd+Enter / Ctrl+Enter
+    document.addEventListener('keydown', (e) => {
+      const active = document.activeElement;
+      const isTyping = active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable);
+
+      // Q key shortcut (when not typing in an input)
+      if (e.key === 'q' && !e.metaKey && !e.ctrlKey && !e.altKey && !isTyping) {
+        e.preventDefault();
+        if (qaPanel.classList.contains('show')) {
+          closeQuickAdd();
+        } else {
+          openQuickAdd();
+        }
+        return;
+      }
+
+      // Cmd+Enter / Ctrl+Enter
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+        const isOurTextarea = active === qaTextarea;
+        if (!isOurTextarea && isTyping) return;
+        e.preventDefault();
+        if (qaPanel.classList.contains('show')) {
+          closeQuickAdd();
+        } else {
+          openQuickAdd();
+        }
+      }
+    });
+
+    // Header + button
+    document.getElementById('quickAddOpenBtn').addEventListener('click', openQuickAdd);
+
+    console.log('[Quick Add] initialized successfully');
+
+    // ============================================================
+    // ===== FOCUS MODE =====
+    // ============================================================
+
+    function loadWeeklyNotes() {
+      try {
+        const saved = localStorage.getItem(LS_KEY_WEEKLY_NOTES);
+        if (saved) weeklyNotes = JSON.parse(saved);
+      } catch(e) { console.log('Weekly notes load error:', e); }
+    }
+
+    function saveWeeklyNotes() {
+      try {
+        localStorage.setItem(LS_KEY_WEEKLY_NOTES, JSON.stringify(weeklyNotes));
+      } catch(e) { console.log('Weekly notes save error:', e); }
+    }
+
+    // Migrate old object-format weekly notes to string format
+    function migrateWeeklyNotes() {
+      const dayOrder = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+      const dayLabels = { sun: 'Sun', mon: 'Mon', tue: 'Tue', wed: 'Wed', thu: 'Thu', fri: 'Fri', sat: 'Sat' };
+      let changed = false;
+      Object.keys(weeklyNotes).forEach(key => {
+        const val = weeklyNotes[key];
+        if (val && typeof val === 'object' && !Array.isArray(val)) {
+          const lines = [];
+          dayOrder.forEach(d => {
+            lines.push(`## ${dayLabels[d]}`);
+            if (val[d]) lines.push(val[d]);
+            lines.push('');
+          });
+          weeklyNotes[key] = lines.join('\n');
+          changed = true;
+        }
+      });
+      if (changed) saveWeeklyNotes();
+    }
+
+    function generateWeeklyTemplate(days) {
+      const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      const lines = [];
+      days.forEach((d, i) => {
+        lines.push(`## ${dayNames[i]} (${d.getMonth()+1}/${d.getDate()})`);
+        lines.push('');
+        if (i < days.length - 1) lines.push('');
+      });
+      return lines.join('\n');
+    }
+
+    function getWeekKey(offset) {
+      const days = getWeekDays(offset);
+      const d = days[1]; // Monday
+      const year = d.getFullYear();
+      const jan1 = new Date(year, 0, 1);
+      const dayOfYear = Math.floor((d - jan1) / 86400000) + 1;
+      const weekNum = Math.ceil((dayOfYear + jan1.getDay()) / 7);
+      return `${year}-W${String(weekNum).padStart(2,'0')}`;
+    }
+
+    // Simple markdown → HTML renderer
+    function renderMarkdown(md) {
+      let html = '';
+      const lines = md.split('\n');
+      let inCodeBlock = false;
+      let codeContent = '';
+      let inList = false;
+      let listType = 'ul';
+
+      function closeList() {
+        if (inList) { html += `</${listType}>`; inList = false; }
+      }
+
+      function inline(text) {
+        return text
+          .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+          .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" style="max-width:100%;border-radius:4px;">')
+          .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>')
+          .replace(/`([^`]+)`/g, '<code>$1</code>')
+          .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+          .replace(/__(.+?)__/g, '<strong>$1</strong>')
+          .replace(/\*(.+?)\*/g, '<em>$1</em>')
+          .replace(/_(.+?)_/g, '<em>$1</em>')
+          .replace(/~~(.+?)~~/g, '<del>$1</del>');
+      }
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+
+        // Code block
+        if (line.trimStart().startsWith('```')) {
+          if (inCodeBlock) {
+            html += `<pre><code>${codeContent.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</code></pre>`;
+            codeContent = '';
+            inCodeBlock = false;
+          } else {
+            closeList();
+            inCodeBlock = true;
+          }
+          continue;
+        }
+        if (inCodeBlock) { codeContent += (codeContent ? '\n' : '') + line; continue; }
+
+        // Blank line
+        if (line.trim() === '') { closeList(); continue; }
+
+        // Headings
+        const hMatch = line.match(/^(#{1,3})\s+(.+)/);
+        if (hMatch) {
+          closeList();
+          const level = hMatch[1].length;
+          html += `<h${level}>${inline(hMatch[2])}</h${level}>`;
+          continue;
+        }
+
+        // Horizontal rule
+        if (/^(-{3,}|_{3,}|\*{3,})$/.test(line.trim())) { closeList(); html += '<hr>'; continue; }
+
+        // Blockquote
+        if (line.trimStart().startsWith('> ')) {
+          closeList();
+          html += `<blockquote>${inline(line.replace(/^>\s*/, ''))}</blockquote>`;
+          continue;
+        }
+
+        // Task list item: - [ ] , - [x] , - [] , [] , [ ]
+        const taskMatch = line.match(/^[\s]*(?:[-*]\s+)?\[([ xX]?)\]\s+(.*)/);
+        if (taskMatch) {
+          if (!inList) { html += '<ul>'; inList = true; listType = 'ul'; }
+          const checked = /[xX]/.test(taskMatch[1]) ? ' checked disabled' : ' disabled';
+          html += `<li class="md-task"><input type="checkbox"${checked}>${inline(taskMatch[2])}</li>`;
+          continue;
+        }
+
+        // Unordered list
+        const ulMatch = line.match(/^[\s]*[-*+]\s+(.*)/);
+        if (ulMatch) {
+          if (!inList || listType !== 'ul') { closeList(); html += '<ul>'; inList = true; listType = 'ul'; }
+          html += `<li>${inline(ulMatch[1])}</li>`;
+          continue;
+        }
+
+        // Ordered list
+        const olMatch = line.match(/^[\s]*\d+[.)]\s+(.*)/);
+        if (olMatch) {
+          if (!inList || listType !== 'ol') { closeList(); html += '<ol>'; inList = true; listType = 'ol'; }
+          html += `<li>${inline(olMatch[1])}</li>`;
+          continue;
+        }
+
+        // Paragraph
+        closeList();
+        html += `<p>${inline(line)}</p>`;
+      }
+      closeList();
+      if (inCodeBlock) {
+        html += `<pre><code>${codeContent.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</code></pre>`;
+      }
+      return html;
+    }
+
+
+    async function renderFocusView() {
+      loadWeeklyNotes();
+      const focusView = document.getElementById('focusView');
+      const days = getWeekDays(focusWeekOffset);
+      const todayStr = dateStr(new Date());
+      const selectedStr = focusSelectedDate || todayStr;
+
+      // Fetch gcal events for this week if connected
+      if (isGcalConnected()) {
+        await fetchGoogleCalendarEvents(days);
+      }
+
+      // Build all tasks for counting
+      const allTasks = getAllTasks();
+      const tasksByDate = {};
+      allTasks.forEach(t => {
+        if (t.scheduledDate) {
+          if (!tasksByDate[t.scheduledDate]) tasksByDate[t.scheduledDate] = [];
+          tasksByDate[t.scheduledDate].push(t);
+        }
+      });
+
+      // Week label
+      const weekStart = days[1]; // Monday
+      const weekEnd = days[5]; // Friday
+      const weekLabel = `${weekStart.getMonth()+1}/${weekStart.getDate()} ~ ${weekEnd.getMonth()+1}/${weekEnd.getDate()}`;
+
+      // Selected day's tasks & events
+      const dayTasks = (tasksByDate[selectedStr] || []).sort((a, b) => {
+        if (a.starred && !b.starred) return -1;
+        if (!a.starred && b.starred) return 1;
+        if (a.checked && !b.checked) return 1;
+        if (!a.checked && b.checked) return -1;
+        return 0;
+      });
+
+      const dayEvents = gcalEvents[selectedStr] || [];
+      const allDayEvents = dayEvents.filter(e => e.isAllDay);
+      const timedEvents = dayEvents.filter(e => !e.isAllDay).sort((a, b) => {
+        const aTime = a.start?.dateTime || '';
+        const bTime = b.start?.dateTime || '';
+        return aTime.localeCompare(bTime);
+      });
+
+      // Selected date display
+      const selDate = new Date(selectedStr + 'T00:00:00');
+      const dayNamesFull_kr = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'];
+      const selectedLabel = `${selDate.getMonth()+1}월 ${selDate.getDate()}일 (${dayNamesFull_kr[selDate.getDay()]})`;
+
+      // Week note key
+      const weekKey = getWeekKey(focusWeekOffset);
+      migrateWeeklyNotes();
+      if (!weeklyNotes[weekKey] || typeof weeklyNotes[weekKey] !== 'string' || weeklyNotes[weekKey].trim() === '') {
+        weeklyNotes[weekKey] = generateWeeklyTemplate(days);
+        saveWeeklyNotes();
+      }
+      const currentNoteText = weeklyNotes[weekKey];
+
+      focusView.innerHTML = `
+        <div class="focus-left">
+          <div class="focus-week-bar">
+            <div class="week-nav">
+              <button id="focusPrevWeek">◀</button>
+              <span class="focus-week-label">${weekLabel}</span>
+              <button id="focusNextWeek">▶</button>
+            </div>
+            <div class="focus-days">
+              ${days.map((d, i) => {
+                const ds = dateStr(d);
+                const count = (tasksByDate[ds] || []).length;
+                const isToday = ds === todayStr;
+                const isSelected = ds === selectedStr;
+                return `<div class="focus-day${isToday ? ' is-today' : ''}${isSelected ? ' is-selected' : ''}" data-date="${ds}">
+                  <div class="focus-day-name">${dayNames[i]}</div>
+                  <div class="focus-day-date">${d.getDate()}</div>
+                  <div class="focus-day-dots">${count > 0 ? (count > 3 ? count : '●'.repeat(count)) : ''}</div>
+                </div>`;
+              }).join('')}
+            </div>
+          </div>
+
+          <div class="focus-section-title">${selectedLabel} - 이벤트 <span class="count">${dayEvents.length}</span></div>
+          ${allDayEvents.length > 0 ? `<div style="margin-bottom: 8px;">${allDayEvents.map(e => `<span class="focus-event-allday">${e.summary}</span> `).join('')}</div>` : ''}
+          ${timedEvents.length > 0 ? `<ul class="focus-event-list">
+            ${timedEvents.map(e => {
+              const st = e.start?.dateTime ? new Date(e.start.dateTime).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',hour12:false}) : '';
+              const en = e.end?.dateTime ? new Date(e.end.dateTime).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',hour12:false}) : '';
+              return `<li class="focus-event-item"${e.htmlLink ? ` style="cursor:pointer" data-href="${e.htmlLink}"` : ''}>
+              <span class="focus-event-time">${st} - ${en}</span>
+              <span class="focus-event-title">${e.summary}</span>
+            </li>`;
+            }).join('')}
+          </ul>` : ''}
+          ${dayEvents.length === 0 ? `<div class="focus-no-data">${isGcalConnected() ? '이벤트가 없습니다' : '캘린더를 연결하세요'}</div>` : ''}
+
+          <div class="focus-section-title">${selectedLabel} - 태스크 <span class="count">${dayTasks.length}</span></div>
+          ${dayTasks.length > 0 ? `<ul class="focus-task-list">
+            ${dayTasks.map(t => `<li class="focus-task-item${t.checked ? ' is-checked' : ''}" data-task-id="${t.id}">
+              <span class="focus-task-star${t.starred ? ' starred' : ''}" data-task-id="${t.id}">${t.starred ? '★' : '☆'}</span>
+              <span class="checkbox${t.checked ? ' checked' : ''}" data-task-id="${t.id}"></span>
+              <span class="focus-task-title">${t.title}</span>
+              <span class="focus-task-tags">${(t.tags || []).map(tag => `<span class="tag-badge tag-${tag}" style="font-size:10px; padding:1px 6px;">${tag}</span>`).join('')}</span>
+            </li>`).join('')}
+          </ul>` : `<div class="focus-no-data">예정된 태스크가 없습니다</div>`}
+        </div>
+
+        <div class="focus-divider" id="focusDivider"></div>
+        <div class="focus-right">
+          <div class="weekly-notes-title">주간 노트</div>
+          <textarea class="weekly-note-textarea" id="weeklyNoteTextarea" data-week="${weekKey}" style="display:none;">${currentNoteText.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>
+          <div class="weekly-note-preview" id="weeklyNotePreview" data-week="${weekKey}">${renderMarkdown(currentNoteText)}</div>
+        </div>
+      `;
+
+      // Event listeners
+      document.getElementById('focusPrevWeek')?.addEventListener('click', () => { focusWeekOffset--; renderFocusView(); });
+      document.getElementById('focusNextWeek')?.addEventListener('click', () => { focusWeekOffset++; renderFocusView(); });
+      // Event click → open in Google Calendar
+      focusView.querySelectorAll('.focus-event-item[data-href]').forEach(el => {
+        el.addEventListener('click', () => window.open(el.dataset.href, '_blank'));
+      });
+
+      // Day click
+      focusView.querySelectorAll('.focus-day').forEach(el => {
+        el.addEventListener('click', () => {
+          focusSelectedDate = el.dataset.date;
+          renderFocusView();
+        });
+      });
+
+      // Task checkbox toggle
+      focusView.querySelectorAll('.focus-task-item .checkbox').forEach(cb => {
+        cb.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const taskId = cb.dataset.taskId;
+          const ref = findTaskRef(taskId);
+          if (ref) { ref.checked = !ref.checked; markChanged(); renderFocusView(); }
+        });
+      });
+
+      // Star toggle
+      focusView.querySelectorAll('.focus-task-star').forEach(star => {
+        star.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const taskId = star.dataset.taskId;
+          const ref = findTaskRef(taskId);
+          if (ref) { ref.starred = !ref.starred; markChanged(); renderFocusView(); }
+        });
+      });
+
+      // Task click -> detail
+      focusView.querySelectorAll('.focus-task-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+          if (e.target.closest('.checkbox') || e.target.closest('.focus-task-star')) return;
+          const taskId = item.dataset.taskId;
+          openTaskDetail(taskId);
+        });
+      });
+
+      // Weekly note: textarea + preview (click-to-edit, blur-to-preview)
+      const noteTextarea = document.getElementById('weeklyNoteTextarea');
+      const notePreview = document.getElementById('weeklyNotePreview');
+      if (noteTextarea && notePreview) {
+        const wk = noteTextarea.dataset.week;
+
+        // Save on input
+        noteTextarea.addEventListener('input', () => {
+          weeklyNotes[wk] = noteTextarea.value;
+          saveWeeklyNotes();
+        });
+
+        // Esc → blur (back to preview)
+        noteTextarea.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape') { noteTextarea.blur(); }
+        });
+
+        // Blur → switch back to preview
+        noteTextarea.addEventListener('blur', () => {
+          weeklyNotes[wk] = noteTextarea.value;
+          saveWeeklyNotes();
+          notePreview.innerHTML = renderMarkdown(noteTextarea.value);
+          noteTextarea.style.display = 'none';
+          notePreview.style.display = '';
+        });
+
+        // Click preview → switch to edit (textarea)
+        notePreview.addEventListener('click', (e) => {
+          // Handle checkbox click in preview
+          if (e.target.matches('input[type="checkbox"]')) {
+            setTimeout(() => {
+              // Toggle checkbox in raw markdown
+              const lines = noteTextarea.value.split('\n');
+              let checkboxIdx = 0;
+              const allCheckboxes = notePreview.querySelectorAll('input[type="checkbox"]');
+              for (let i = 0; i < allCheckboxes.length; i++) {
+                if (allCheckboxes[i] === e.target) { checkboxIdx = i; break; }
+              }
+              let found = 0;
+              for (let i = 0; i < lines.length; i++) {
+                const m = lines[i].match(/^(\s*-\s*)\[([xX ]?)\](\s.*)/);
+                if (m) {
+                  if (found === checkboxIdx) {
+                    const wasChecked = /[xX]/.test(m[2]);
+                    lines[i] = `${m[1]}[${wasChecked ? ' ' : 'x'}]${m[3]}`;
+                    break;
+                  }
+                  found++;
+                }
+              }
+              noteTextarea.value = lines.join('\n');
+              weeklyNotes[wk] = noteTextarea.value;
+              saveWeeklyNotes();
+              notePreview.innerHTML = renderMarkdown(noteTextarea.value);
+            }, 0);
+            return;
+          }
+
+          // Find which section was clicked (by closest h2)
+          const clickedH2 = e.target.closest('h2') || (() => {
+            let el = e.target;
+            while (el && el !== notePreview) {
+              let prev = el.previousElementSibling;
+              while (prev) {
+                if (prev.tagName === 'H2') return prev;
+                prev = prev.previousElementSibling;
+              }
+              el = el.parentElement;
+            }
+            return null;
+          })();
+
+          notePreview.style.display = 'none';
+          noteTextarea.style.display = '';
+          noteTextarea.focus();
+
+          // Try to position cursor at the clicked section
+          if (clickedH2) {
+            const headerText = clickedH2.textContent.trim();
+            const lines = noteTextarea.value.split('\n');
+            let pos = 0;
+            for (let i = 0; i < lines.length; i++) {
+              if (lines[i].replace(/^##\s*/, '').trim().startsWith(headerText.split(' ')[0])) {
+                // Move to end of this section (before next ## or end)
+                let endPos = pos + lines[i].length + 1;
+                for (let j = i + 1; j < lines.length; j++) {
+                  if (lines[j].startsWith('## ')) break;
+                  endPos += lines[j].length + 1;
+                }
+                noteTextarea.setSelectionRange(endPos - 1, endPos - 1);
+                // Scroll to cursor position
+                const lineHeight = 21; // ~13px * 1.6 line-height
+                const lineNum = noteTextarea.value.substring(0, endPos).split('\n').length;
+                noteTextarea.scrollTop = Math.max(0, (lineNum - 5) * lineHeight);
+                return;
+              }
+              pos += lines[i].length + 1;
+            }
+          }
+        });
+
+        // Auto-enter edit mode and scroll to today's section
+        const todayIdx = new Date().getDay();
+        const dayNamesH = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const todayName = dayNamesH[todayIdx];
+        const lines = noteTextarea.value.split('\n');
+        let cursorPos = 0;
+        let foundToday = false;
+        for (let i = 0; i < lines.length; i++) {
+          if (lines[i].startsWith('## ' + todayName)) {
+            // Find end of today's section
+            let endPos = cursorPos + lines[i].length + 1;
+            for (let j = i + 1; j < lines.length; j++) {
+              if (lines[j].startsWith('## ')) break;
+              endPos += lines[j].length + 1;
+            }
+            // Show textarea, focus, set cursor
+            notePreview.style.display = 'none';
+            noteTextarea.style.display = '';
+            noteTextarea.focus();
+            noteTextarea.setSelectionRange(endPos - 1, endPos - 1);
+            const lineHeight = 21;
+            const lineNum = noteTextarea.value.substring(0, endPos).split('\n').length;
+            noteTextarea.scrollTop = Math.max(0, (lineNum - 5) * lineHeight);
+            foundToday = true;
+            break;
+          }
+          cursorPos += lines[i].length + 1;
+        }
+        if (!foundToday) {
+          // Default: show preview
+          noteTextarea.style.display = 'none';
+          notePreview.style.display = '';
+        }
+      }
+
+      // Focus divider drag logic
+      const focusDivider = document.getElementById('focusDivider');
+      const focusRight = focusView.querySelector('.focus-right');
+      if (focusDivider && focusRight) {
+        let isFocusDragging = false;
+        focusDivider.addEventListener('mousedown', (e) => {
+          isFocusDragging = true;
+          focusDivider.classList.add('dragging');
+          document.body.style.cursor = 'col-resize';
+          document.body.style.userSelect = 'none';
+          e.preventDefault();
+        });
+        document.addEventListener('mousemove', (e) => {
+          if (!isFocusDragging) return;
+          const rect = focusView.getBoundingClientRect();
+          const rightWidth = rect.right - e.clientX;
+          const clamped = Math.max(280, Math.min(rect.width * 0.7, rightWidth));
+          focusRight.style.width = clamped + 'px';
+        });
+        document.addEventListener('mouseup', () => {
+          if (isFocusDragging) {
+            isFocusDragging = false;
+            focusDivider.classList.remove('dragging');
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+          }
+        });
+      }
+    }
+
+    // ============================================================
+    // ===== COMPASS MODE =====
+    // ============================================================
+
+    const LS_KEY_COMPASS_MILESTONES = 'dashboard_compass_milestones';
+    const LS_KEY_COMPASS_GOALS = 'dashboard_compass_goals';
+    let compassHalfOffset = 0; // 0 = current half-year
+
+    let compassMilestones = [
+      { id: 'm1', project: 'VD', title: 'GDC 참가', date: '2025-03-16', color: '#7C3AED' },
+      { id: 'm2', project: 'VD', title: '넥페 출품', date: '2025-05-10', color: '#7C3AED' },
+      { id: 'm3', project: 'VD', title: '출시', date: '2025-06-30', color: '#7C3AED' },
+      { id: 'm4', project: 'CQ', title: '출시', date: '2025-03-01', color: '#D97706' },
+      { id: 'm5', project: 'BIZ', title: '투자 미팅', date: '2025-02-15', color: '#DC2626' },
+      { id: 'm6', project: 'BIZ', title: 'IR', date: '2025-05-20', color: '#DC2626' },
+      { id: 'm7', project: 'TEAM', title: '온보딩', date: '2025-02-28', color: '#059669' },
+    ];
+
+    let compassGoals = {
+      categories: [
+        { id: 'mastery', icon: '\uD83E\uDDE0', name: 'Mastery (장인)', goals: [
+          { id: 'g1', text: 'VD 크리에이티브 디렉션 완성', checked: false },
+          { id: 'g2', text: 'AI/ML 실무 역량 강화', checked: false },
+          { id: 'g3', text: '레퍼런스 게임 월 2개 플레이', checked: false },
+          { id: 'g4', text: '분기 3권 독서', checked: false },
+        ]},
+        { id: 'venture', icon: '\uD83D\uDE80', name: 'Venture (사업)', goals: [
+          { id: 'g5', text: 'VD 출시 + 초기 KPI 달성', checked: false },
+          { id: 'g6', text: '투자 라운드 클로징', checked: false },
+          { id: 'g7', text: '핵심 인재 채용', checked: false },
+        ]},
+        { id: 'family', icon: '\uD83D\uDC68\u200D\uD83D\uDC69\u200D\uD83D\uDC66', name: 'Family (가족)', goals: [
+          { id: 'g8', text: '주 3회 저녁 같이 먹기', checked: false },
+          { id: 'g9', text: '아들과 주말 1:1 시간', checked: false },
+          { id: 'g10', text: '와이프와 월 1회 데이트', checked: false },
+          { id: 'g11', text: '가족 여행 계획', checked: false },
+        ]},
+        { id: 'body', icon: '\uD83D\uDCAA', name: 'Body (몸)', goals: [
+          { id: 'g12', text: '주 3회 운동 루틴', checked: false },
+          { id: 'g13', text: '수면 7시간 확보', checked: false },
+          { id: 'g14', text: '건강검진', checked: false },
+        ]},
+        { id: 'soul', icon: '\uD83D\uDE4F', name: 'Soul (내면)', goals: [
+          { id: 'g15', text: '아침 10분 명상/저널링', checked: false },
+          { id: 'g16', text: '분기 1회 혼자만의 시간', checked: false },
+          { id: 'g17', text: '미션 스테이트먼트 점검', checked: false },
+        ]},
+        { id: 'circle', icon: '\uD83E\uDD1D', name: 'Circle (관계)', goals: [
+          { id: 'g18', text: '멘토/동료 founder 월 1회 만남', checked: false },
+          { id: 'g19', text: '팀원 1on1 정기화', checked: false },
+          { id: 'g20', text: '오래된 친구 연락', checked: false },
+        ]},
+      ],
+      okrs: [
+        { quarter: 'Q1', collapsed: false, objectives: [
+          { title: 'VD 출시 준비', keyResults: [
+            { id: 'kr1', text: '넥페 참가', checked: false },
+            { id: 'kr2', text: '위시리스트 50K', checked: false },
+          ]}
+        ]},
+        { quarter: 'Q2', collapsed: true, objectives: [
+          { title: '성장 가속', keyResults: [
+            { id: 'kr3', text: '매출 목표 달성', checked: false },
+          ]}
+        ]},
+      ]
+    };
+
+    function loadCompassData() {
+      try {
+        const ms = localStorage.getItem(LS_KEY_COMPASS_MILESTONES);
+        if (ms) compassMilestones = JSON.parse(ms);
+        const gs = localStorage.getItem(LS_KEY_COMPASS_GOALS);
+        if (gs) compassGoals = JSON.parse(gs);
+      } catch(e) { console.log('Compass data load error:', e); }
+    }
+
+    function saveCompassData() {
+      try {
+        localStorage.setItem(LS_KEY_COMPASS_MILESTONES, JSON.stringify(compassMilestones));
+        localStorage.setItem(LS_KEY_COMPASS_GOALS, JSON.stringify(compassGoals));
+      } catch(e) { console.log('Compass data save error:', e); }
+    }
+
+    function renderCompassView() {
+      loadCompassData();
+      const compassView = document.getElementById('compassView');
+      const now = new Date();
+      const currentYear = now.getFullYear();
+
+      // Determine which half-year to show
+      const currentHalf = now.getMonth() < 6 ? 0 : 1;
+      const displayHalf = currentHalf + compassHalfOffset;
+      const displayYear = currentYear + Math.floor(displayHalf / 2);
+      const halfIndex = ((displayHalf % 2) + 2) % 2; // 0 = H1, 1 = H2
+      const startMonth = halfIndex * 6; // 0 or 6
+      const monthLabels = [];
+      for (let i = 0; i < 6; i++) {
+        monthLabels.push(monthNames[startMonth + i]);
+      }
+      const halfLabel = `${displayYear} ${halfIndex === 0 ? 'H1' : 'H2'}`;
+
+      // Build project lanes
+      const projects = [];
+      const projectSet = new Set();
+      compassMilestones.forEach(m => {
+        if (!projectSet.has(m.project)) {
+          projectSet.add(m.project);
+          projects.push(m.project);
+        }
+      });
+      // Ensure at least some default projects
+      ['VD', 'CQ', 'BIZ', 'TEAM'].forEach(p => {
+        if (!projectSet.has(p)) { projectSet.add(p); projects.push(p); }
+      });
+
+      // Date range for this half
+      const rangeStart = new Date(displayYear, startMonth, 1);
+      const rangeEnd = new Date(displayYear, startMonth + 6, 0); // last day of last month
+      const rangeDuration = rangeEnd - rangeStart;
+
+      // Today line position
+      const todayPos = rangeDuration > 0 ? Math.max(0, Math.min(100, ((now - rangeStart) / rangeDuration) * 100)) : -1;
+      const showTodayLine = now >= rangeStart && now <= rangeEnd;
+
+      // Current month index within this half
+      const currentMonthInHalf = (now.getMonth() - startMonth);
+
+      // Milestone positions
+      function milestonePos(dateStr) {
+        const d = new Date(dateStr + 'T00:00:00');
+        return Math.max(0, Math.min(100, ((d - rangeStart) / rangeDuration) * 100));
+      }
+
+      // Goals HTML
+      const collapsedCats = {};
+      const goalsHTML = compassGoals.categories.map(cat => {
+        const isCollapsed = collapsedCats[cat.id];
+        return `<div class="compass-category" data-cat-id="${cat.id}">
+          <div class="compass-category-header" data-cat-id="${cat.id}">
+            <span class="toggle-icon${isCollapsed ? ' collapsed' : ''}">▼</span>
+            ${cat.icon} ${cat.name}
+          </div>
+          <div class="compass-category-goals" style="${isCollapsed ? 'display:none' : ''}">
+            ${cat.goals.map(g => `<div class="compass-goal-item" data-goal-id="${g.id}" data-cat-id="${cat.id}">
+              <span class="checkbox${g.checked ? ' checked' : ''}" data-goal-id="${g.id}" data-cat-id="${cat.id}"></span>
+              <input class="compass-goal-text" value="${g.text.replace(/"/g, '&quot;')}" data-goal-id="${g.id}" data-cat-id="${cat.id}">
+            </div>`).join('')}
+            <div class="compass-add-goal">
+              <button data-cat-id="${cat.id}">+ 목표 추가</button>
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+
+      // OKR HTML
+      const okrsHTML = compassGoals.okrs.map((okr, oi) => {
+        return `<div class="compass-okr-section">
+          <div class="compass-okr-header" data-okr-idx="${oi}">
+            <span class="toggle-icon${okr.collapsed ? ' collapsed' : ''}">▼</span>
+            ${okr.quarter} OKR
+          </div>
+          <div class="compass-okr-body" style="${okr.collapsed ? 'display:none' : ''}">
+            ${okr.objectives.map((obj, objI) => `<div class="compass-okr-objective">
+              <div class="compass-okr-objective-title">O: ${obj.title}</div>
+              ${obj.keyResults.map(kr => `<div class="compass-okr-kr">
+                <span class="checkbox${kr.checked ? ' checked' : ''}" data-kr-id="${kr.id}" data-okr-idx="${oi}" data-obj-idx="${objI}"></span>
+                <input value="${kr.text.replace(/"/g, '&quot;')}" data-kr-id="${kr.id}" data-okr-idx="${oi}" data-obj-idx="${objI}">
+              </div>`).join('')}
+            </div>`).join('')}
+          </div>
+        </div>`;
+      }).join('');
+
+      compassView.innerHTML = `
+        <div class="compass-left">
+          <div class="compass-header">
+            <button id="compassPrevHalf">◀</button>
+            <h2>${halfLabel} 로드맵</h2>
+            <button id="compassNextHalf">▶</button>
+          </div>
+          <div class="compass-timeline">
+            <div class="compass-months">
+              ${monthLabels.map((m, i) => `<div class="compass-month${i === currentMonthInHalf && showTodayLine ? ' is-current' : ''}">${m}</div>`).join('')}
+            </div>
+            ${projects.map(proj => {
+              const projMilestones = compassMilestones.filter(m => m.project === proj);
+              const projColor = projMilestones[0]?.color || '#888';
+              return `<div class="compass-lane">
+                <div class="compass-lane-label">${proj}</div>
+                <div class="compass-lane-track">
+                  ${showTodayLine ? `<div class="compass-today-line" style="left: ${todayPos}%"></div>` : ''}
+                  ${projMilestones.map(m => {
+                    const mDate = new Date(m.date + 'T00:00:00');
+                    const inRange = mDate >= rangeStart && mDate <= rangeEnd;
+                    if (!inRange) return '';
+                    const pos = milestonePos(m.date);
+                    return `<div class="compass-milestone" style="left: ${pos}%; background: ${m.color || projColor};" data-milestone-id="${m.id}" title="${m.title} (${m.date})">
+                      <span class="compass-milestone-label">${m.title}</span>
+                    </div>`;
+                  }).join('')}
+                </div>
+              </div>`;
+            }).join('')}
+          </div>
+          <div class="compass-add-milestone">
+            <button id="compassAddMilestone">+ 마일스톤 추가</button>
+          </div>
+        </div>
+
+        <div class="compass-right">
+          <div class="compass-goals-title">${displayYear}년 목표</div>
+          ${goalsHTML}
+          ${okrsHTML}
+        </div>
+      `;
+
+      // Event listeners
+      document.getElementById('compassPrevHalf')?.addEventListener('click', () => { compassHalfOffset--; renderCompassView(); });
+      document.getElementById('compassNextHalf')?.addEventListener('click', () => { compassHalfOffset++; renderCompassView(); });
+
+      // Add milestone
+      document.getElementById('compassAddMilestone')?.addEventListener('click', () => {
+        showMilestoneEditModal(null);
+      });
+
+      // Milestone click -> edit
+      compassView.querySelectorAll('.compass-milestone').forEach(el => {
+        el.addEventListener('click', () => {
+          showMilestoneEditModal(el.dataset.milestoneId);
+        });
+      });
+
+      // Category toggle
+      compassView.querySelectorAll('.compass-category-header').forEach(hdr => {
+        hdr.addEventListener('click', () => {
+          const goalsDiv = hdr.nextElementSibling;
+          const icon = hdr.querySelector('.toggle-icon');
+          if (goalsDiv.style.display === 'none') {
+            goalsDiv.style.display = '';
+            icon.classList.remove('collapsed');
+          } else {
+            goalsDiv.style.display = 'none';
+            icon.classList.add('collapsed');
+          }
+        });
+      });
+
+      // OKR toggle
+      compassView.querySelectorAll('.compass-okr-header').forEach(hdr => {
+        hdr.addEventListener('click', () => {
+          const idx = parseInt(hdr.dataset.okrIdx);
+          compassGoals.okrs[idx].collapsed = !compassGoals.okrs[idx].collapsed;
+          saveCompassData();
+          renderCompassView();
+        });
+      });
+
+      // Goal checkbox
+      compassView.querySelectorAll('.compass-goal-item .checkbox').forEach(cb => {
+        cb.addEventListener('click', () => {
+          const catId = cb.dataset.catId;
+          const goalId = cb.dataset.goalId;
+          const cat = compassGoals.categories.find(c => c.id === catId);
+          if (cat) {
+            const goal = cat.goals.find(g => g.id === goalId);
+            if (goal) { goal.checked = !goal.checked; saveCompassData(); renderCompassView(); }
+          }
+        });
+      });
+
+      // Goal text edit
+      compassView.querySelectorAll('.compass-goal-text').forEach(input => {
+        input.addEventListener('change', () => {
+          const catId = input.dataset.catId;
+          const goalId = input.dataset.goalId;
+          const cat = compassGoals.categories.find(c => c.id === catId);
+          if (cat) {
+            const goal = cat.goals.find(g => g.id === goalId);
+            if (goal) { goal.text = input.value; saveCompassData(); }
+          }
+        });
+      });
+
+      // Add goal
+      compassView.querySelectorAll('.compass-add-goal button').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const catId = btn.dataset.catId;
+          const cat = compassGoals.categories.find(c => c.id === catId);
+          if (cat) {
+            cat.goals.push({ id: 'g' + Date.now(), text: '새 목표', checked: false });
+            saveCompassData();
+            renderCompassView();
+          }
+        });
+      });
+
+      // KR checkbox
+      compassView.querySelectorAll('.compass-okr-kr .checkbox').forEach(cb => {
+        cb.addEventListener('click', () => {
+          const okrIdx = parseInt(cb.dataset.okrIdx);
+          const objIdx = parseInt(cb.dataset.objIdx);
+          const krId = cb.dataset.krId;
+          const obj = compassGoals.okrs[okrIdx]?.objectives[objIdx];
+          if (obj) {
+            const kr = obj.keyResults.find(k => k.id === krId);
+            if (kr) { kr.checked = !kr.checked; saveCompassData(); renderCompassView(); }
+          }
+        });
+      });
+
+      // KR text edit
+      compassView.querySelectorAll('.compass-okr-kr input').forEach(input => {
+        input.addEventListener('change', () => {
+          const okrIdx = parseInt(input.dataset.okrIdx);
+          const objIdx = parseInt(input.dataset.objIdx);
+          const krId = input.dataset.krId;
+          const obj = compassGoals.okrs[okrIdx]?.objectives[objIdx];
+          if (obj) {
+            const kr = obj.keyResults.find(k => k.id === krId);
+            if (kr) { kr.text = input.value; saveCompassData(); }
+          }
+        });
+      });
+    }
+
+    function showMilestoneEditModal(milestoneId) {
+      const existing = milestoneId ? compassMilestones.find(m => m.id === milestoneId) : null;
+
+      const overlay = document.createElement('div');
+      overlay.className = 'compass-edit-overlay';
+
+      const projectOptions = ['VD', 'CQ', 'AI', 'BIZ', 'TEAM', 'PERSONAL'];
+      const colorOptions = [
+        { label: 'Purple', value: '#7C3AED' },
+        { label: 'Orange', value: '#D97706' },
+        { label: 'Blue', value: '#2563EB' },
+        { label: 'Red', value: '#DC2626' },
+        { label: 'Green', value: '#059669' },
+        { label: 'Gray', value: '#6B7280' },
+      ];
+
+      const modal = document.createElement('div');
+      modal.className = 'compass-edit-modal';
+      modal.innerHTML = `
+        <h3>${existing ? '마일스톤 편집' : '새 마일스톤'}</h3>
+        <label>프로젝트</label>
+        <select id="msEditProject">
+          ${projectOptions.map(p => `<option value="${p}"${existing?.project === p ? ' selected' : ''}>${p}</option>`).join('')}
+        </select>
+        <label>제목</label>
+        <input id="msEditTitle" value="${existing ? existing.title.replace(/"/g, '&quot;') : ''}" placeholder="마일스톤 제목">
+        <label>날짜</label>
+        <input type="date" id="msEditDate" value="${existing?.date || dateStr(new Date())}">
+        <label>색상</label>
+        <select id="msEditColor">
+          ${colorOptions.map(c => `<option value="${c.value}"${existing?.color === c.value ? ' selected' : ''} style="color:${c.value}">${c.label}</option>`).join('')}
+        </select>
+        <div class="modal-actions">
+          ${existing ? '<button id="msEditDelete" style="margin-right:auto; color:#DC2626; border-color:#DC2626;">삭제</button>' : ''}
+          <button id="msEditCancel">취소</button>
+          <button id="msEditSave" class="primary">저장</button>
+        </div>
+      `;
+
+      document.body.appendChild(overlay);
+      document.body.appendChild(modal);
+
+      overlay.addEventListener('click', () => { overlay.remove(); modal.remove(); });
+      document.getElementById('msEditCancel').addEventListener('click', () => { overlay.remove(); modal.remove(); });
+
+      document.getElementById('msEditSave').addEventListener('click', () => {
+        const project = document.getElementById('msEditProject').value;
+        const title = document.getElementById('msEditTitle').value.trim();
+        const date = document.getElementById('msEditDate').value;
+        const color = document.getElementById('msEditColor').value;
+        if (!title) return;
+
+        if (existing) {
+          existing.project = project;
+          existing.title = title;
+          existing.date = date;
+          existing.color = color;
+        } else {
+          compassMilestones.push({ id: 'm' + Date.now(), project, title, date, color });
+        }
+        saveCompassData();
+        overlay.remove();
+        modal.remove();
+        renderCompassView();
+      });
+
+      if (existing) {
+        document.getElementById('msEditDelete').addEventListener('click', () => {
+          compassMilestones = compassMilestones.filter(m => m.id !== milestoneId);
+          saveCompassData();
+          overlay.remove();
+          modal.remove();
+          renderCompassView();
+        });
+      }
+    }
+
+    // Load compass data on startup
+    loadCompassData();
+    loadWeeklyNotes();
+
+    // ============================================================
+    // ===== ROUTINE & HABIT NOTIFICATIONS =====
+    // ============================================================
+
+    const LS_KEY_ROUTINES = 'dashboard_routines';
+    const LS_KEY_ROUTINE_FIRED = 'dashboard_routine_fired';
+    const LS_KEY_REVIEW = 'dashboard_review';
+
+    const DEFAULT_ROUTINES = [
+      { id: 'morning', emoji: '🌅', name: '아침 계획', type: 'daily', time: '09:00', tab: 'focus', enabled: true, message: '오늘의 계획을 세워볼까요?' },
+      { id: 'evening', emoji: '🌆', name: '저녁 마감', type: 'daily', time: '18:00', tab: 'focus', enabled: false, message: '오늘 하루를 마무리합시다.' },
+      { id: 'weekly-review', emoji: '🌙', name: '주간 회고', type: 'weekly', dayOfWeek: 0, time: '22:00', tab: 'review', enabled: false, message: '이번 주를 돌아봅시다.' },
+      { id: 'goal-check', emoji: '🧭', name: '목표 점검', type: 'monthly', dayOfMonth: 1, time: '10:00', tab: 'compass', enabled: false, message: '월간 목표를 점검합시다.' },
+      { id: 'inbox-cleanup', emoji: '📥', name: '수집함 정리', type: 'weekly', dayOfWeek: 5, time: '17:00', tab: 'tasks', enabled: false, message: '수집함을 정리합시다.' },
+    ];
+
+    function loadRoutines() {
+      try {
+        const stored = localStorage.getItem(LS_KEY_ROUTINES);
+        if (stored) return JSON.parse(stored);
+      } catch(e) {}
+      const defaults = JSON.parse(JSON.stringify(DEFAULT_ROUTINES));
+      saveRoutines(defaults);
+      return defaults;
+    }
+
+    function saveRoutines(routines) {
+      try { localStorage.setItem(LS_KEY_ROUTINES, JSON.stringify(routines)); } catch(e) {}
+    }
+
+    let routines = loadRoutines();
+
+    // --- Schedule Check ---
+    function getRoutineSlotKey(routine, now) {
+      const dateStr = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
+      return routine.id + '-' + dateStr + '-' + routine.time;
+    }
+
+    function loadFiredKeys() {
+      try {
+        const stored = localStorage.getItem(LS_KEY_ROUTINE_FIRED);
+        return stored ? JSON.parse(stored) : {};
+      } catch(e) { return {}; }
+    }
+
+    function saveFiredKey(key) {
+      const fired = loadFiredKeys();
+      fired[key] = Date.now();
+      // Clean old entries (> 7 days)
+      const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
+      for (const k in fired) { if (fired[k] < cutoff) delete fired[k]; }
+      try { localStorage.setItem(LS_KEY_ROUTINE_FIRED, JSON.stringify(fired)); } catch(e) {}
+    }
+
+    function isRoutineDue(routine, now) {
+      if (!routine.enabled) return false;
+      const hh = String(now.getHours()).padStart(2, '0');
+      const mm = String(now.getMinutes()).padStart(2, '0');
+      const currentTime = hh + ':' + mm;
+      if (currentTime !== routine.time) return false;
+
+      if (routine.type === 'weekly' && now.getDay() !== routine.dayOfWeek) return false;
+      if (routine.type === 'monthly' && now.getDate() !== routine.dayOfMonth) return false;
+
+      const slotKey = getRoutineSlotKey(routine, now);
+      const fired = loadFiredKeys();
+      return !fired[slotKey];
+    }
+
+    function checkRoutines() {
+      const now = new Date();
+      routines.forEach(r => {
+        if (isRoutineDue(r, now)) {
+          fireRoutineNotification(r);
+          saveFiredKey(getRoutineSlotKey(r, now));
+        }
+      });
+    }
+
+    let routineInterval = null;
+    function startRoutineCheck() {
+      if (routineInterval) clearInterval(routineInterval);
+      checkRoutines();
+      routineInterval = setInterval(checkRoutines, 60000);
+    }
+
+    // --- Service Worker + Notifications ---
+    async function registerServiceWorker() {
+      if ('serviceWorker' in navigator) {
+        try {
+          await navigator.serviceWorker.register('./sw.js');
+        } catch(e) { console.log('SW registration failed:', e); }
+      }
+    }
+
+    function getNotifPermission() {
+      if (!('Notification' in window)) return 'unsupported';
+      return Notification.permission;
+    }
+
+    async function requestNotifPermission() {
+      if (!('Notification' in window)) return 'unsupported';
+      const result = await Notification.requestPermission();
+      if (result === 'granted') startRoutineCheck();
+      return result;
+    }
+
+    async function fireRoutineNotification(routine) {
+      const options = {
+        body: routine.message || routine.name,
+        tag: 'routine-' + routine.id,
+        data: { tab: routine.tab },
+        icon: 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect x="4" y="2" width="24" height="28" rx="4" fill="#faf9f5" stroke="#D97757" stroke-width="2"/></svg>'),
+      };
+      try {
+        const reg = await navigator.serviceWorker?.ready;
+        if (reg) {
+          await reg.showNotification(routine.emoji + ' ' + routine.name, options);
+          return;
+        }
+      } catch(e) {}
+      // Fallback
+      try { new Notification(routine.emoji + ' ' + routine.name, options); } catch(e) {}
+    }
+
+    // --- SW message listener ---
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('message', (event) => {
+        if (event.data?.type === 'ROUTINE_TAB_SWITCH' && event.data.tab) {
+          switchMainTab(event.data.tab);
+        }
+      });
+    }
+
+    // --- URL hash navigation ---
+    function handleHashNavigation() {
+      const hash = window.location.hash;
+      const match = hash.match(/tab=(\w+)/);
+      if (match) {
+        const tab = match[1];
+        if (['tasks', 'focus', 'compass', 'memory', 'review', 'settings'].includes(tab)) {
+          switchMainTab(tab);
+        }
+        history.replaceState(null, '', window.location.pathname);
+      }
+    }
+    handleHashNavigation();
+
+    // ============================================================
+    // ===== REVIEW TAB =====
+    // ============================================================
+
+    let reviewWeekOffset = 0;
+
+    function loadReviewData(weekKey) {
+      try {
+        const all = JSON.parse(localStorage.getItem(LS_KEY_REVIEW) || '{}');
+        return all[weekKey] || {};
+      } catch(e) { return {}; }
+    }
+
+    function saveReviewData(weekKey, data) {
+      try {
+        const all = JSON.parse(localStorage.getItem(LS_KEY_REVIEW) || '{}');
+        all[weekKey] = data;
+        localStorage.setItem(LS_KEY_REVIEW, JSON.stringify(all));
+      } catch(e) {}
+    }
+
+    function getReviewWeekStats(weekOffset) {
+      // Count completed tasks for the week
+      const days = getWeekDays(weekOffset);
+      let completed = 0;
+      let total = 0;
+      for (const section of sections) {
+        const sectionTasks = tasks[section.id] || [];
+        for (const t of sectionTasks) {
+          total++;
+          if (t.done) completed++;
+        }
+      }
+      return { completed, total };
+    }
+
+    let reviewSaveTimers = {};
+
+    function renderReviewView() {
+      const container = document.getElementById('reviewView');
+      const weekKey = getWeekKey(reviewWeekOffset);
+      const days = getWeekDays(reviewWeekOffset);
+      const startDate = days[0];
+      const endDate = days[6];
+      const fmt = (d) => (d.getMonth()+1) + '/' + d.getDate();
+
+      const data = loadReviewData(weekKey);
+      const stats = getReviewWeekStats(reviewWeekOffset);
+
+      const prompts = [
+        { key: 'good', title: '잘한 것', placeholder: '이번 주 잘한 일을 적어보세요...' },
+        { key: 'hard', title: '어려웠던 점', placeholder: '어려움이나 장애물을 적어보세요...' },
+        { key: 'learn', title: '배운 것', placeholder: '이번 주 배운 것을 적어보세요...' },
+        { key: 'next', title: '다음 주 집중 포인트', placeholder: '다음 주 집중할 영역을 적어보세요...' },
+      ];
+
+      const energyEmojis = ['😴', '😐', '🙂', '😊', '🔥'];
+
+      container.innerHTML = `
+        <div class="review-week-nav">
+          <button id="reviewPrevWeek">◀</button>
+          <span class="review-week-label">${weekKey} (${fmt(startDate)} ~ ${fmt(endDate)})</span>
+          <button id="reviewNextWeek">▶</button>
+        </div>
+
+        <div class="review-summary-stats">
+          <div class="review-stat">
+            <div class="stat-value">${stats.completed}</div>
+            <div class="stat-label">완료한 태스크</div>
+          </div>
+          <div class="review-stat">
+            <div class="stat-value">${stats.total}</div>
+            <div class="stat-label">전체 태스크</div>
+          </div>
+          <div class="review-stat">
+            <div class="stat-value">${stats.total > 0 ? Math.round(stats.completed / stats.total * 100) : 0}%</div>
+            <div class="stat-label">완료율</div>
+          </div>
+        </div>
+
+        <div class="review-section">
+          <div class="review-section-title">에너지 레벨</div>
+          <div class="review-score-row">
+            ${energyEmojis.map((e, i) => `<button class="review-score-btn${(data.energy === i+1) ? ' active' : ''}" data-score="${i+1}">${e}</button>`).join('')}
+          </div>
+        </div>
+
+        ${prompts.map(p => `
+          <div class="review-section">
+            <div class="review-section-title">${p.title}</div>
+            <textarea class="review-textarea" data-key="${p.key}" placeholder="${p.placeholder}">${data[p.key] || ''}</textarea>
+          </div>
+        `).join('')}
+      `;
+
+      // Week navigation
+      document.getElementById('reviewPrevWeek').addEventListener('click', () => { reviewWeekOffset--; renderReviewView(); });
+      document.getElementById('reviewNextWeek').addEventListener('click', () => { reviewWeekOffset++; renderReviewView(); });
+
+      // Energy score
+      container.querySelectorAll('.review-score-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const score = parseInt(btn.dataset.score);
+          const d = loadReviewData(weekKey);
+          d.energy = score;
+          saveReviewData(weekKey, d);
+          container.querySelectorAll('.review-score-btn').forEach(b => b.classList.toggle('active', parseInt(b.dataset.score) === score));
+        });
+      });
+
+      // Textarea auto-save with debounce
+      container.querySelectorAll('.review-textarea').forEach(ta => {
+        ta.addEventListener('input', () => {
+          const key = ta.dataset.key;
+          if (reviewSaveTimers[key]) clearTimeout(reviewSaveTimers[key]);
+          reviewSaveTimers[key] = setTimeout(() => {
+            const d = loadReviewData(weekKey);
+            d[key] = ta.value;
+            saveReviewData(weekKey, d);
+          }, 500);
+        });
+      });
+    }
+
+    // ============================================================
+    // ===== SETTINGS TAB =====
+    // ============================================================
+
+    function getScheduleDescription(r) {
+      const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+      if (r.type === 'daily') return '매일 ' + r.time;
+      if (r.type === 'weekly') return '매주 ' + dayNames[r.dayOfWeek] + '요일 ' + r.time;
+      if (r.type === 'monthly') return '매월 ' + r.dayOfMonth + '일 ' + r.time;
+      return r.time;
+    }
+
+    const TAB_LABELS = { tasks: 'Clarify & Plan', focus: 'Weekly Focus', compass: 'Compass', memory: 'Memory', review: '회고', settings: '설정' };
+
+    function renderSettingsView() {
+      const container = document.getElementById('settingsView');
+      const perm = getNotifPermission();
+
+      let bannerHtml = '';
+      if (perm === 'granted') {
+        bannerHtml = '<div class="notif-permission-banner granted">✅ 알림이 허용되었습니다.</div>';
+      } else if (perm === 'denied') {
+        bannerHtml = '<div class="notif-permission-banner denied">🚫 알림이 차단되었습니다. 브라우저 설정에서 변경해주세요.</div>';
+      } else if (perm === 'unsupported') {
+        bannerHtml = '<div class="notif-permission-banner denied">이 브라우저는 알림을 지원하지 않습니다.</div>';
+      } else {
+        bannerHtml = '<div class="notif-permission-banner default">🔔 알림을 허용하면 루틴 시간에 알림을 받을 수 있습니다. <button id="reqNotifBtn">알림 허용</button></div>';
+      }
+
+      container.innerHTML = `
+        <div class="settings-section-header">알림 권한</div>
+        ${bannerHtml}
+
+        <div class="settings-section-header">루틴 관리</div>
+        <div class="routine-list" id="routineList">
+          ${routines.map(r => `
+            <div class="routine-row" data-id="${r.id}">
+              <span class="routine-emoji">${r.emoji}</span>
+              <div class="routine-info">
+                <div class="routine-name">${r.name}</div>
+                <div class="routine-schedule">${getScheduleDescription(r)}</div>
+              </div>
+              <span class="routine-tab-badge">${TAB_LABELS[r.tab] || r.tab}</span>
+              <label class="routine-toggle">
+                <input type="checkbox" ${r.enabled ? 'checked' : ''} data-routine-id="${r.id}">
+                <span class="routine-toggle-track"></span>
+                <span class="routine-toggle-thumb"></span>
+              </label>
+              <button class="routine-edit-btn" data-routine-id="${r.id}">편집</button>
+            </div>
+          `).join('')}
+        </div>
+        <button id="addRoutineBtn" style="margin-top: 12px; width: 100%; padding: 10px; font-size: 13px; border: 1px dashed var(--border); border-radius: 10px; background: transparent; color: var(--text-muted); cursor: pointer;">+ 새 루틴 추가</button>
+      `;
+
+      // Notification permission button
+      const reqBtn = document.getElementById('reqNotifBtn');
+      if (reqBtn) {
+        reqBtn.addEventListener('click', async () => {
+          await requestNotifPermission();
+          renderSettingsView();
+        });
+      }
+
+      // Toggle switches
+      container.querySelectorAll('.routine-toggle input').forEach(input => {
+        input.addEventListener('change', () => {
+          const id = input.dataset.routineId;
+          const r = routines.find(x => x.id === id);
+          if (r) { r.enabled = input.checked; saveRoutines(routines); }
+        });
+      });
+
+      // Edit buttons
+      container.querySelectorAll('.routine-edit-btn').forEach(btn => {
+        btn.addEventListener('click', () => openRoutineEditModal(btn.dataset.routineId));
+      });
+
+      // Add new routine
+      document.getElementById('addRoutineBtn').addEventListener('click', () => openRoutineEditModal(null));
+    }
+
+    // ============================================================
+    // ===== ROUTINE EDIT MODAL =====
+    // ============================================================
+
+    function openRoutineEditModal(routineId) {
+      const existing = routineId ? routines.find(r => r.id === routineId) : null;
+
+      const overlay = document.createElement('div');
+      overlay.className = 'compass-edit-overlay';
+
+      const modal = document.createElement('div');
+      modal.className = 'compass-edit-modal';
+      modal.style.minWidth = '360px';
+
+      const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+      const tabOptions = ['tasks', 'focus', 'compass', 'memory', 'review', 'settings'];
+
+      modal.innerHTML = `
+        <h3>${existing ? '루틴 편집' : '새 루틴'}</h3>
+        <label>이모지 + 이름</label>
+        <div style="display: flex; gap: 8px;">
+          <input id="reEditEmoji" value="${existing ? existing.emoji : '⏰'}" style="width: 50px; text-align: center; font-size: 18px;">
+          <input id="reEditName" value="${existing ? existing.name.replace(/"/g, '&quot;') : ''}" placeholder="루틴 이름" style="flex: 1;">
+        </div>
+        <label>반복 타입</label>
+        <select id="reEditType">
+          <option value="daily"${existing?.type === 'daily' ? ' selected' : ''}>매일</option>
+          <option value="weekly"${existing?.type === 'weekly' ? ' selected' : ''}>매주</option>
+          <option value="monthly"${existing?.type === 'monthly' ? ' selected' : ''}>매월</option>
+        </select>
+        <div id="reEditDayOfWeekRow" style="display: none;">
+          <label>요일</label>
+          <select id="reEditDayOfWeek">
+            ${dayNames.map((d, i) => `<option value="${i}"${existing?.dayOfWeek === i ? ' selected' : ''}>${d}요일</option>`).join('')}
+          </select>
+        </div>
+        <div id="reEditDayOfMonthRow" style="display: none;">
+          <label>날짜</label>
+          <input type="number" id="reEditDayOfMonth" min="1" max="31" value="${existing?.dayOfMonth || 1}">
+        </div>
+        <label>시간</label>
+        <input type="time" id="reEditTime" value="${existing?.time || '09:00'}">
+        <label>이동 탭</label>
+        <select id="reEditTab">
+          ${tabOptions.map(t => `<option value="${t}"${existing?.tab === t ? ' selected' : ''}>${TAB_LABELS[t] || t}</option>`).join('')}
+        </select>
+        <label>알림 문구</label>
+        <input id="reEditMessage" value="${existing?.message?.replace(/"/g, '&quot;') || ''}" placeholder="알림에 표시될 문구">
+        <div class="modal-actions">
+          ${existing ? '<button id="reEditDelete" style="margin-right:auto; color:#DC2626; border-color:#DC2626;">삭제</button>' : ''}
+          <button id="reEditCancel">취소</button>
+          <button id="reEditSave" class="primary">저장</button>
+        </div>
+      `;
+
+      document.body.appendChild(overlay);
+      document.body.appendChild(modal);
+
+      // Show/hide conditional fields
+      function updateTypeFields() {
+        const type = document.getElementById('reEditType').value;
+        document.getElementById('reEditDayOfWeekRow').style.display = type === 'weekly' ? 'block' : 'none';
+        document.getElementById('reEditDayOfMonthRow').style.display = type === 'monthly' ? 'block' : 'none';
+      }
+      updateTypeFields();
+      document.getElementById('reEditType').addEventListener('change', updateTypeFields);
+
+      const closeModal = () => { overlay.remove(); modal.remove(); };
+      overlay.addEventListener('click', closeModal);
+      document.getElementById('reEditCancel').addEventListener('click', closeModal);
+
+      document.getElementById('reEditSave').addEventListener('click', () => {
+        const emoji = document.getElementById('reEditEmoji').value.trim() || '⏰';
+        const name = document.getElementById('reEditName').value.trim();
+        if (!name) return;
+        const type = document.getElementById('reEditType').value;
+        const time = document.getElementById('reEditTime').value || '09:00';
+        const tab = document.getElementById('reEditTab').value;
+        const message = document.getElementById('reEditMessage').value.trim();
+        const dayOfWeek = parseInt(document.getElementById('reEditDayOfWeek').value);
+        const dayOfMonth = parseInt(document.getElementById('reEditDayOfMonth').value) || 1;
+
+        if (existing) {
+          existing.emoji = emoji;
+          existing.name = name;
+          existing.type = type;
+          existing.time = time;
+          existing.tab = tab;
+          existing.message = message;
+          if (type === 'weekly') existing.dayOfWeek = dayOfWeek;
+          if (type === 'monthly') existing.dayOfMonth = dayOfMonth;
+        } else {
+          const newRoutine = {
+            id: 'r' + Date.now(),
+            emoji, name, type, time, tab, message, enabled: true,
+          };
+          if (type === 'weekly') newRoutine.dayOfWeek = dayOfWeek;
+          if (type === 'monthly') newRoutine.dayOfMonth = dayOfMonth;
+          routines.push(newRoutine);
+        }
+        saveRoutines(routines);
+        closeModal();
+        renderSettingsView();
+      });
+
+      if (existing) {
+        document.getElementById('reEditDelete').addEventListener('click', () => {
+          routines = routines.filter(r => r.id !== routineId);
+          saveRoutines(routines);
+          closeModal();
+          renderSettingsView();
+        });
+      }
+    }
+
+    // ============================================================
+    // ===== INITIALIZATION (Routines & SW) =====
+    // ============================================================
+    registerServiceWorker();
+    if (getNotifPermission() === 'granted') startRoutineCheck();
+
   </script>
 </body>
 </html>
