@@ -4271,6 +4271,7 @@
         const { data: dbTasks, error: taskErr } = await sb
           .from('tasks').select('*').order('position');
         if (taskErr) return false;
+        if (!dbTasks || dbTasks.length === 0) return false;
 
         const { data: dbSubtasks } = await sb
           .from('subtasks').select('*').order('position');
