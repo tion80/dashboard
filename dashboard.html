@@ -4166,32 +4166,57 @@
     catch(e) { console.log('Supabase init failed:', e); }
     let supabaseSaveTimeout = null;
 
-    async function backupToSupabase() {
+    // slot: 'auto' (자동, 매 sync 전) / 'manual' (수동, 사용자가 직접)
+    async function backupToSupabase(slot = 'auto') {
       if (!sb) return;
       try {
-        const { count } = await sb.from('tasks').select('*', { count: 'exact', head: true });
-        if (!count || count === 0) return; // 백업할 데이터 없음
-        const ts = new Date().toISOString();
         const { data: allTasks } = await sb.from('tasks').select('*');
         const { data: allQuests } = await sb.from('quests').select('*');
+        const taskCount = (allTasks || []).length;
+        if (taskCount === 0) return; // 백업할 데이터 없음
+
+        // 자동 백업: 기존 자동 백업보다 태스크 수가 절반 이하면 스킵 (데이터 손실 방지)
+        if (slot === 'auto') {
+          const { data: existing } = await sb.from('backups').select('tasks_data').eq('id', 'auto').single();
+          if (existing && existing.tasks_data && existing.tasks_data.length > taskCount * 2) {
+            console.warn('Auto backup skipped: existing backup has', existing.tasks_data.length, 'tasks, current cloud only has', taskCount);
+            return;
+          }
+        }
+
+        const ts = new Date().toISOString();
         await sb.from('backups').upsert({
-          id: 'latest',
+          id: slot,
           created_at: ts,
           tasks_data: allTasks || [],
           quests_data: allQuests || []
         }, { onConflict: 'id' });
-        console.log('Backup saved:', ts, `(${(allTasks||[]).length} tasks, ${(allQuests||[]).length} quests)`);
+        console.log(`Backup [${slot}] saved:`, ts, `(${taskCount} tasks, ${(allQuests||[]).length} quests)`);
       } catch(e) { console.log('Backup skip (table may not exist):', e.message); }
     }
 
     async function restoreFromBackup() {
       if (!sb) { alert('Supabase 연결 없음'); return; }
       try {
-        const { data } = await sb.from('backups').select('*').eq('id', 'latest').single();
-        if (!data) { alert('백업 없음'); return; }
+        // 수동 백업 우선, 없으면 자동 백업
+        const { data: backups } = await sb.from('backups').select('*').order('created_at', { ascending: false });
+        if (!backups || backups.length === 0) { alert('백업 없음'); return; }
+
+        const lines = backups.map(b => {
+          const label = b.id === 'manual' ? '수동' : '자동';
+          const tc = (b.tasks_data || []).length;
+          const qc = (b.quests_data || []).length;
+          return `[${label}] ${b.created_at}\n  태스크 ${tc}개, 퀘스트 ${qc}개`;
+        });
+        const choice = prompt(`복원할 백업 번호 선택:\n\n${lines.map((l, i) => `${i + 1}. ${l}`).join('\n\n')}\n\n번호 입력:`);
+        if (!choice) return;
+        const idx = parseInt(choice) - 1;
+        if (isNaN(idx) || idx < 0 || idx >= backups.length) { alert('잘못된 번호'); return; }
+
+        const data = backups[idx];
         const taskCount = (data.tasks_data || []).length;
         const questCount = (data.quests_data || []).length;
-        if (!confirm(`백업 복원: ${data.created_at}\n태스크 ${taskCount}개, 퀘스트 ${questCount}개\n\n현재 데이터를 덮어씁니다. 진행?`)) return;
+        if (!confirm(`복원: ${data.id === 'manual' ? '수동' : '자동'} 백업 (${data.created_at})\n태스크 ${taskCount}개, 퀘스트 ${questCount}개\n\n현재 데이터를 덮어씁니다. 진행?`)) return;
         // tasks 복원
         if (data.tasks_data && data.tasks_data.length > 0) {
           await sb.from('tasks').delete().gte('id', 0);
@@ -10254,8 +10279,8 @@
 
       // Backup / Restore
       document.getElementById('backupNowBtn')?.addEventListener('click', async () => {
-        await backupToSupabase();
-        alert('백업 완료!');
+        await backupToSupabase('manual');
+        alert('수동 백업 완료!');
       });
       document.getElementById('restoreBackupBtn')?.addEventListener('click', () => restoreFromBackup());
     }
