@@ -2124,6 +2124,31 @@
       flex-shrink: 0;
     }
     .plan-detail-topbar h3 { margin: 0; font-size: 14px; color: var(--text-muted); font-weight: 600; }
+    .plan-detail-topbar-right {
+      display: flex; align-items: center; gap: 8px;
+    }
+    .topbar-quest-area {
+      position: relative;
+    }
+    .topbar-quest-area .quest-current-display {
+      gap: 6px;
+    }
+    .topbar-quest-area .quest-current-chip {
+      font-size: 12px;
+      padding: 3px 8px;
+    }
+    .topbar-quest-area .quest-switch-btn {
+      font-size: 11px;
+      padding: 3px 8px;
+    }
+    .topbar-quest-area .quest-picker-popup {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      margin-top: 6px;
+      z-index: 100;
+      min-width: 280px;
+    }
     .plan-detail-close {
       background: none; border: none; font-size: 22px; cursor: pointer;
       color: var(--text-muted); line-height: 1; padding: 2px 6px; border-radius: 6px;
@@ -2984,7 +3009,7 @@
     .compass-lane {
       display: flex;
       align-items: center;
-      margin-bottom: 4px;
+      margin-bottom: 18px;
       min-height: 44px;
     }
     .compass-lane-label {
@@ -3000,6 +3025,7 @@
       position: relative;
       background: var(--bg-secondary);
       border-radius: 6px;
+      overflow: visible;
     }
     .compass-milestone {
       position: absolute;
@@ -3052,6 +3078,131 @@
       color: var(--accent);
       font-weight: 600;
       white-space: nowrap;
+    }
+
+    /* Quest list below timeline */
+    .compass-quest-list {
+      margin-top: 20px;
+      border-top: 1px solid var(--border-light);
+      padding-top: 12px;
+    }
+    .compass-quest-list-title {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+    .compass-epic-group {
+      margin-bottom: 16px;
+    }
+    .compass-epic-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 0 8px;
+    }
+    .compass-epic-badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+    .compass-epic-count {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .compass-epic-items {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .compass-quest-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border-light);
+      border-radius: 8px;
+      padding: 8px 12px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-size: 13px;
+      min-width: 200px;
+      flex: 1 1 200px;
+      max-width: 100%;
+      position: relative;
+      border-left: 3px solid var(--border-light);
+    }
+    .compass-quest-item:hover {
+      box-shadow: 0 2px 8px var(--shadow-hover);
+      border-color: var(--border);
+    }
+    .compass-quest-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 3px;
+    }
+    .compass-quest-info {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .compass-quest-top {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .compass-quest-title {
+      font-weight: 500;
+      color: var(--text-primary);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .compass-quest-date {
+      font-size: 11px;
+      color: var(--text-secondary);
+      flex-shrink: 0;
+      margin-left: auto;
+    }
+    .compass-quest-date.is-overdue {
+      color: #DC2626;
+      font-weight: 600;
+    }
+    .compass-quest-bar-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .compass-quest-bar {
+      flex: 1;
+      height: 5px;
+      background: var(--border-light);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .compass-quest-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.3s ease;
+    }
+    .compass-quest-pct {
+      font-size: 11px;
+      font-weight: 600;
+      min-width: 32px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+    .compass-quest-empty {
+      font-size: 12px;
+      color: var(--text-muted);
+      padding: 12px 10px;
     }
 
     .compass-add-milestone {
@@ -3209,7 +3360,7 @@
       white-space: nowrap;
     }
 
-    /* Milestone edit modal */
+    /* Quest edit modal */
     .compass-edit-modal {
       position: fixed;
       top: 50%;
@@ -3499,6 +3650,256 @@
     }
     .routine-edit-btn:hover { color: var(--text-primary); border-color: var(--text-muted); }
 
+    /* Overdue tomato */
+    .overdue-tomato {
+      font-size: 12px;
+      margin-left: 4px;
+      letter-spacing: -1px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    /* ===== Quest (Epic → Quest → Task) hierarchy styles ===== */
+    .milestone-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 10px;
+      font-weight: 500;
+      padding: 2px 7px 2px 6px;
+      border-radius: 4px;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: filter 0.15s;
+      vertical-align: middle;
+    }
+    .milestone-badge:hover {
+      filter: brightness(0.85);
+    }
+    .milestone-badge .quest-arrow {
+      font-size: 9px;
+      opacity: 0.6;
+      margin-left: 1px;
+    }
+
+    .milestone-selector {
+      margin-top: 4px;
+    }
+    .milestone-selector select {
+      font-size: 13px;
+      padding: 5px 8px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--bg-card);
+      color: var(--text-primary);
+      font-family: inherit;
+      outline: none;
+      min-width: 160px;
+      cursor: pointer;
+    }
+    .milestone-selector select:focus {
+      border-color: var(--accent);
+    }
+    .quest-current-display {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .quest-current-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      border: 1px solid;
+      cursor: default;
+    }
+    .quest-current-chip .quest-chip-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .quest-current-none {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-style: italic;
+    }
+    .quest-switch-btn {
+      font-size: 12px;
+      padding: 4px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--bg-card);
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .quest-switch-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--bg-secondary);
+    }
+    .quest-picker-popup {
+      margin-top: 8px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg-card);
+      box-shadow: 0 4px 16px var(--shadow);
+      overflow: hidden;
+    }
+    .quest-picker-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border-light);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+    .quest-picker-list {
+      max-height: 240px;
+      overflow-y: auto;
+    }
+    .quest-picker-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      cursor: pointer;
+      transition: background 0.1s;
+      font-size: 13px;
+    }
+    .quest-picker-item:hover {
+      background: var(--bg-secondary);
+    }
+    .quest-picker-item.is-selected {
+      background: var(--accent-bg, #EFF6FF);
+    }
+    .quest-picker-item .qp-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .quest-picker-item .qp-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .quest-picker-item .qp-title {
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+    .quest-picker-item .qp-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .quest-picker-item .qp-check {
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 14px;
+    }
+    .quest-picker-none {
+      padding: 8px 12px;
+      cursor: pointer;
+      font-size: 12px;
+      color: var(--text-muted);
+      transition: background 0.1s;
+    }
+    .quest-picker-none:hover {
+      background: var(--bg-secondary);
+    }
+    .quest-picker-footer {
+      border-top: 1px solid var(--border-light);
+      padding: 6px 12px;
+      display: flex;
+      gap: 6px;
+    }
+    .quest-picker-footer button {
+      font-size: 12px;
+      padding: 4px 10px;
+    }
+
+    .milestone-create-inline {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      margin-top: 6px;
+    }
+    .milestone-create-inline input {
+      font-size: 12px;
+      padding: 4px 8px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--bg-card);
+      color: var(--text-primary);
+      font-family: inherit;
+      outline: none;
+    }
+    .milestone-create-inline input:focus {
+      border-color: var(--accent);
+    }
+    .milestone-create-inline button {
+      font-size: 12px;
+      padding: 4px 10px;
+      white-space: nowrap;
+    }
+
+    .compass-milestone-progress {
+      position: absolute;
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 40px;
+      height: 4px;
+      background: rgba(0,0,0,0.1);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .compass-milestone-progress-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.3s ease;
+    }
+    .compass-milestone-progress-label {
+      position: absolute;
+      bottom: -22px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 9px;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    /* tag-group-milestone-zone removed — Quest management is in Compass */
+
+    .show-on-compass-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+    .show-on-compass-toggle input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .qa-milestone-row {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+
     </style>
 </head>
 <body>
@@ -3604,7 +4005,7 @@
         </div>
         <textarea class="quick-add-textarea" id="quickAddText" placeholder="태스크를 입력하세요... (예: API 문서 작성 #AI !asap @today)" rows="3"></textarea>
         <div class="quick-add-hint" style="margin-top: 6px;">
-          <kbd>#태그</kbd> <kbd>!버킷</kbd> <kbd>@날짜</kbd> 또는 자연어로 입력 &middot; <kbd>Enter</kbd> 추가 &middot; <kbd>Esc</kbd> 닫기
+          <kbd>#태그</kbd> <kbd>!버킷</kbd> <kbd>@날짜</kbd> <kbd>%퀘스트</kbd> 또는 자연어로 입력 &middot; <kbd>Enter</kbd> 추가 &middot; <kbd>Esc</kbd> 닫기
         </div>
       </div>
       <div>
@@ -3620,6 +4021,8 @@
         <div class="quick-add-manual-row" id="quickAddBucketBtns"></div>
         <div class="quick-add-manual-label" style="margin-top: 4px;">날짜</div>
         <div class="quick-add-manual-row" id="quickAddDateBtns"></div>
+        <div class="quick-add-manual-label" style="margin-top: 4px;">퀘스트</div>
+        <div class="quick-add-manual-row qa-milestone-row" id="quickAddMsBtns"></div>
       </div>
       <div id="quickAddSuccessMsg"></div>
       <div class="quick-add-actions">
@@ -3750,6 +4153,10 @@
     let quickAddSection = null;
     let weekOffset = 0;  // 0 = this week, -1 = last week, etc.
 
+    // Forward declarations for compass (used by tag view quest helpers)
+    let compassMilestones = [];
+    let compassGoals = {};
+
     // ============================================================
     // SUPABASE SETUP
     // ============================================================
@@ -3795,6 +4202,7 @@
               url: t.url || '',
               scheduled_date: t.scheduledDate || null,
               plan_bucket: t.planBucket || null,
+              milestone_id: t.milestoneId || null,
               position: i
             });
             (t.subtasks || []).forEach((st, si) => {
@@ -3816,6 +4224,21 @@
         }
         if (allSubtasks.length > 0) {
           await sb.from('subtasks').insert(allSubtasks);
+        }
+
+        // 3) quests 저장
+        const questRows = compassMilestones.map((m, i) => ({
+          id: m.id,
+          epic: m.project,
+          title: m.title,
+          date: m.date || null,
+          color: m.color || '#7C3AED',
+          show_on_compass: m.showOnCompass !== false,
+          position: i
+        }));
+        await sb.from('quests').delete().neq('id', '');
+        if (questRows.length > 0) {
+          await sb.from('quests').insert(questRows);
         }
 
         console.log('Supabase synced');
@@ -3866,11 +4289,26 @@
             url: t.url || '',
             scheduledDate: t.scheduled_date || '',
             planBucket: t.plan_bucket || '',
+            milestoneId: t.milestone_id || null,
             subtasks: subtaskMap[t.id] || []
           };
           if (!tasks[t.section]) tasks[t.section] = [];
           tasks[t.section].push(task);
         });
+
+        // quests 로드
+        const { data: dbQuests } = await sb.from('quests').select('*').order('position');
+        if (dbQuests && dbQuests.length > 0) {
+          compassMilestones = dbQuests.map(q => ({
+            id: q.id,
+            project: q.epic,
+            title: q.title,
+            date: q.date || '',
+            color: q.color || '#7C3AED',
+            showOnCompass: q.show_on_compass !== false
+          }));
+          saveCompassData(); // localStorage에도 동기화
+        }
 
         filePathEl.textContent = 'Supabase (cloud)';
         return true;
@@ -5210,6 +5648,57 @@
       return `${y}-${m}-${dd}`;
     }
 
+    // ===== Overdue (miss) tracking =====
+    const LS_KEY_OVERDUE = 'dashboard_overdue_counts';
+
+    function loadOverdueCounts() {
+      try { return JSON.parse(localStorage.getItem(LS_KEY_OVERDUE) || '{}'); } catch(e) { return {}; }
+    }
+    function saveOverdueCounts(data) {
+      try { localStorage.setItem(LS_KEY_OVERDUE, JSON.stringify(data)); } catch(e) {}
+    }
+
+    function checkOverdueTasks() {
+      const today = new Date();
+      today.setHours(0,0,0,0);
+      const todayStr = formatDateStr(today);
+      const counts = loadOverdueCounts();
+      const allT = getAllTasks();
+
+      allT.forEach(t => {
+        if (!t.scheduledDate || t.checked) return;
+        const scheduled = new Date(t.scheduledDate + 'T00:00:00');
+        if (scheduled >= today) return; // 아직 안 지남
+
+        const entry = counts[t.id] || { count: 0, lastCountedDate: null };
+        if (entry.lastCountedDate !== t.scheduledDate) {
+          entry.count++;
+          entry.lastCountedDate = t.scheduledDate;
+          counts[t.id] = entry;
+        }
+      });
+
+      // 완료된 태스크는 카운트 제거
+      allT.forEach(t => {
+        if (t.checked && counts[t.id]) delete counts[t.id];
+      });
+
+      saveOverdueCounts(counts);
+    }
+
+    function getOverdueCount(task) {
+      if (task.checked) return 0;
+      const counts = loadOverdueCounts();
+      return counts[task.id]?.count || 0;
+    }
+
+    function overdueHtml(task) {
+      const count = getOverdueCount(task);
+      if (count === 0) return '';
+      const zombies = count <= 5 ? '🧟'.repeat(count) : '🧟×' + count;
+      return `<span class="overdue-tomato" title="${count}회 밀림">${zombies}</span>`;
+    }
+
     function renderTagView() {
       tagView.innerHTML = '';
       // Exclude Ideas & References sections
@@ -5251,16 +5740,23 @@
         let dateHtml = '';
         if (t.scheduledDate) dateHtml = `<span class="plan-card-date">${t.scheduledDate}</span>`;
 
+        // Quest chip — context only, click navigates to Compass
+        let msBadgeHtml = '';
+        if (t.milestoneId) {
+          const ms = getMilestoneById(t.milestoneId);
+          if (ms) msBadgeHtml = `<span class="milestone-badge" data-quest-id="${ms.id}" style="color:${ms.color};background:${ms.color}14;" title="Compass에서 보기">${ms.title}<span class="quest-arrow">▸</span></span>`;
+        }
+
         card.innerHTML = `
           <input type="checkbox" class="plan-checkbox" ${t.checked ? 'checked' : ''} title="완료 표시">
           <button class="star-toggle star-toggle-sm${t.starred ? ' starred' : ''}" title="중요">${t.starred ? '★' : '☆'}</button>
           <div class="tg-body">
-            <div class="tg-title">${t.title}</div>
+            <div class="tg-title">${t.title}${overdueHtml(t)}</div>
             ${t.note ? `<div class="tg-note">${t.note}</div>` : ''}
             ${subtasksHtml}
             <div class="tg-meta">
               <span class="tg-section">${t.sectionName}</span>
-              ${srcHtml}${tagsHtml}${dateHtml}
+              ${srcHtml}${tagsHtml}${msBadgeHtml}${dateHtml}
             </div>
           </div>
         `;
@@ -5305,6 +5801,31 @@
           });
         });
 
+        // Quest chip click → navigate to Compass
+        const questChip = card.querySelector('.milestone-badge[data-quest-id]');
+        if (questChip) {
+          questChip.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const qId = questChip.dataset.questId;
+            switchMainTab('compass');
+            // Highlight the quest marker after render
+            setTimeout(() => {
+              const marker = document.querySelector(`.compass-milestone[data-milestone-id="${qId}"]`);
+              if (marker) {
+                marker.style.transform = 'translate(-50%, -50%) scale(1.8)';
+                marker.style.boxShadow = '0 0 0 4px ' + (marker.style.background || 'var(--accent)') + '44';
+                const label = marker.querySelector('.compass-milestone-label');
+                if (label) label.style.opacity = '1';
+                setTimeout(() => {
+                  marker.style.transform = '';
+                  marker.style.boxShadow = '';
+                  if (label) label.style.opacity = '';
+                }, 1500);
+              }
+            }, 100);
+          });
+        }
+
         // Drag
         let _dragStarted = false;
         card.addEventListener('dragstart', (e) => {
@@ -5312,12 +5833,14 @@
           e.dataTransfer.setData('text/plain', JSON.stringify({ taskId: t.id, sectionId: t.sectionId }));
           card.classList.add('dragging');
         });
-        card.addEventListener('dragend', () => { card.classList.remove('dragging'); });
+        card.addEventListener('dragend', () => {
+          card.classList.remove('dragging');
+        });
 
         // Click to open detail (only if not dragging)
         card.addEventListener('click', (e) => {
           if (_dragStarted) { _dragStarted = false; return; }
-          if (e.target.closest('input[type="checkbox"]') || e.target.closest('a')) return;
+          if (e.target.closest('input[type="checkbox"]') || e.target.closest('a') || e.target.closest('.milestone-badge')) return;
           openTaskDetail(t.id);
         });
 
@@ -5556,7 +6079,7 @@
 
             const span = document.createElement('span');
             span.className = 'cal-title';
-            span.textContent = t.title;
+            span.innerHTML = t.title + overdueHtml(t);
             chip.appendChild(span);
             chip.draggable = true;
             chip.dataset.taskId = t.id;
@@ -5821,7 +6344,7 @@
 
       const topbar = document.createElement('div');
       topbar.className = 'plan-detail-topbar';
-      topbar.innerHTML = `<h3>태스크 편집</h3><button class="plan-detail-close">&times;</button>`;
+      topbar.innerHTML = `<h3>태스크 편집</h3><div class="plan-detail-topbar-right"><div class="topbar-quest-area"></div><button class="plan-detail-close">&times;</button></div>`;
       panel.appendChild(topbar);
 
       const body = document.createElement('div');
@@ -5887,6 +6410,177 @@
       renderDetailTags();
       tagsBlock.appendChild(tagsRow);
       body.appendChild(tagsBlock);
+
+      // === Quest selector (topbar) ===
+      const msContainer = document.createElement('div');
+      msContainer.className = 'milestone-selector';
+      if (!ref.milestoneId) ref.milestoneId = null;
+      let _questPickerOpen = false;
+      function renderMilestoneSelector() {
+        const activeTags = ref.tags && ref.tags.length > 0 ? ref.tags : [];
+        const availableMs = activeTags.length > 0
+          ? compassMilestones.filter(m => activeTags.includes(m.project))
+          : compassMilestones;
+        const currentMs = ref.milestoneId ? getMilestoneById(ref.milestoneId) : null;
+
+        // Current quest display
+        let chipHtml = '';
+        if (currentMs) {
+          chipHtml = `<span class="quest-current-chip" style="color:${currentMs.color};border-color:${currentMs.color}33;background:${currentMs.color}14;">
+            <span class="quest-chip-dot" style="background:${currentMs.color}"></span>
+            ${currentMs.title}
+          </span>`;
+        } else {
+          chipHtml = `<span class="quest-current-none">퀘스트 없음</span>`;
+        }
+
+        let html = `<div class="quest-current-display">
+          ${chipHtml}
+          <button class="quest-switch-btn" id="questSwitchBtn">퀘스트 전환</button>
+          ${currentMs ? `<button class="quest-switch-btn" id="questRemoveBtn" style="color:#DC2626;border-color:#DC262633;">해제</button>` : ''}
+        </div>`;
+        msContainer.innerHTML = html;
+
+        // Remove quest
+        const removeBtn = msContainer.querySelector('#questRemoveBtn');
+        if (removeBtn) {
+          removeBtn.addEventListener('click', () => {
+            ref.milestoneId = null;
+            _questPickerOpen = false;
+            markChanged();
+            renderMilestoneSelector();
+          });
+        }
+
+        // Switch button opens picker
+        msContainer.querySelector('#questSwitchBtn').addEventListener('click', () => {
+          if (_questPickerOpen) {
+            _questPickerOpen = false;
+            const existing = msContainer.querySelector('.quest-picker-popup');
+            if (existing) existing.remove();
+            return;
+          }
+          _questPickerOpen = true;
+          showQuestPicker();
+        });
+
+        if (_questPickerOpen) showQuestPicker();
+
+        function showQuestPicker() {
+          const existing = msContainer.querySelector('.quest-picker-popup');
+          if (existing) existing.remove();
+
+          const popup = document.createElement('div');
+          popup.className = 'quest-picker-popup';
+
+          // Group by epic
+          const byEpic = {};
+          availableMs.forEach(m => {
+            if (!byEpic[m.project]) byEpic[m.project] = [];
+            byEpic[m.project].push(m);
+          });
+
+          let listHtml = '<div class="quest-picker-list">';
+          listHtml += `<div class="quest-picker-none" data-quest-id="">${ref.milestoneId ? '퀘스트 해제' : '— 선택 안함 —'}</div>`;
+
+          const epicKeys = Object.keys(byEpic);
+          epicKeys.forEach(ep => {
+            const tc = tagColors[ep] || { bg: '#F3F4F6', color: '#6B7280', label: ep };
+            listHtml += `<div style="padding:6px 12px 2px;font-size:11px;font-weight:600;color:var(--text-muted);">
+              <span style="background:${tc.bg};color:${tc.color};padding:1px 6px;border-radius:3px;font-size:10px;">${tc.label || ep}</span>
+            </div>`;
+            byEpic[ep].forEach(m => {
+              const prog = getMilestoneProgress(m.id);
+              const isSel = ref.milestoneId === m.id;
+              const dateLabel = m.date ? m.date.slice(5).replace('-', '/') : '';
+              listHtml += `<div class="quest-picker-item${isSel ? ' is-selected' : ''}" data-quest-id="${m.id}">
+                <span class="qp-dot" style="background:${m.color}"></span>
+                <div class="qp-info">
+                  <div class="qp-title">${m.title}</div>
+                  <div class="qp-meta">${dateLabel}${prog.total > 0 ? ` · ${prog.done}/${prog.total}` : ''}</div>
+                </div>
+                ${isSel ? '<span class="qp-check">✓</span>' : ''}
+              </div>`;
+            });
+          });
+
+          // Include current milestone if not in filtered list
+          if (currentMs && !availableMs.find(am => am.id === currentMs.id)) {
+            listHtml += `<div style="padding:6px 12px 2px;font-size:11px;font-weight:600;color:#DC2626;">다른 에픽</div>`;
+            listHtml += `<div class="quest-picker-item is-selected" data-quest-id="${currentMs.id}">
+              <span class="qp-dot" style="background:${currentMs.color}"></span>
+              <div class="qp-info">
+                <div class="qp-title">${currentMs.title} ⚠️</div>
+                <div class="qp-meta">${currentMs.project}</div>
+              </div>
+              <span class="qp-check">✓</span>
+            </div>`;
+          }
+
+          listHtml += '</div>';
+
+          const defaultProject = activeTags.length > 0 ? activeTags[0] : 'VD';
+          popup.innerHTML = `
+            <div class="quest-picker-header">
+              <span>퀘스트 선택</span>
+              <button id="questPickerCreateBtn" style="font-size:11px;padding:2px 8px;">+ 새 퀘스트</button>
+            </div>
+            ${listHtml}
+          `;
+          msContainer.appendChild(popup);
+
+          // Click to select
+          popup.querySelectorAll('[data-quest-id]').forEach(item => {
+            item.addEventListener('click', () => {
+              ref.milestoneId = item.dataset.questId || null;
+              _questPickerOpen = false;
+              markChanged();
+              renderMilestoneSelector();
+            });
+          });
+
+          // Create new quest
+          popup.querySelector('#questPickerCreateBtn').addEventListener('click', () => {
+            const form = document.createElement('div');
+            form.className = 'milestone-create-inline';
+            form.innerHTML = `
+              <input type="text" id="newMsTitle" placeholder="퀘스트 이름" style="flex:1;">
+              <input type="date" id="newMsDate" value="${dateStr(new Date())}">
+              <button id="newMsSave" class="primary" style="font-size:12px;padding:4px 10px;">생성</button>
+              <button id="newMsCancel" style="font-size:12px;padding:4px 10px;">취소</button>
+            `;
+            popup.appendChild(form);
+            form.querySelector('#newMsTitle').focus();
+
+            form.querySelector('#newMsSave').addEventListener('click', () => {
+              const title = form.querySelector('#newMsTitle').value.trim();
+              const date = form.querySelector('#newMsDate').value;
+              if (!title) return;
+              const color = (tagColors[defaultProject]?.color) || '#7C3AED';
+              const newMs = { id: 'm' + Date.now(), project: defaultProject, title, date, color, showOnCompass: false };
+              compassMilestones.push(newMs);
+              saveCompassData();
+              ref.milestoneId = newMs.id;
+              _questPickerOpen = false;
+              markChanged();
+              renderMilestoneSelector();
+            });
+
+            form.querySelector('#newMsCancel').addEventListener('click', () => {
+              form.remove();
+            });
+          });
+        }
+      }
+      renderMilestoneSelector();
+      topbar.querySelector('.topbar-quest-area').appendChild(msContainer);
+
+      // Re-render quest selector when tags change
+      const _origRenderDetailTags = renderDetailTags;
+      renderDetailTags = function() {
+        _origRenderDetailTags();
+        renderMilestoneSelector();
+      };
 
       const bucketBlock = document.createElement('div');
       bucketBlock.innerHTML = `<div class="plan-detail-section-label">우선순위</div>`;
@@ -6450,7 +7144,7 @@
           chip.draggable = true;
           chip.innerHTML = `
             <button class="day-task-remove" title="Unschedule">&times;</button>
-            <div>${t.title}</div>
+            <div>${t.title}${overdueHtml(t)}</div>
             <div class="day-task-section">${t.sectionName}</div>
           `;
           chip.addEventListener('dragstart', (e) => {
@@ -6742,6 +7436,7 @@
       try {
         const loaded = await loadFromSupabase();
         if (loaded) {
+          checkOverdueTasks();
           saveToLocalStorage();
           renderTasks();
           switchTaskView(currentView);
@@ -7551,6 +8246,7 @@
       taskFileName = 'TASKS.md (임베드)';
       filePathEl.textContent = '3개월 종합 — Slack · NotePlan · Notion (+ SecondBrain TODO)';
       saveToLocalStorage();
+      checkOverdueTasks();
       switchTaskView('tags');
 
       // === AUTO-LOAD MEMORY ===
@@ -7661,11 +8357,13 @@
     const qaTagBtns = document.getElementById('quickAddTagBtns');
     const qaBucketBtns = document.getElementById('quickAddBucketBtns');
     const qaDateBtns = document.getElementById('quickAddDateBtns');
+    const qaMsBtns = document.getElementById('quickAddMsBtns');
 
-    let qaParsed = { title: '', tags: [], bucket: null, date: null };
+    let qaParsed = { title: '', tags: [], bucket: null, date: null, milestone: null };
     let qaManualTags = new Set();
     let qaManualBucket = null;
     let qaManualDate = null;
+    let qaManualMilestone = null;
     let qaStarred = false;
     const qaStarBtn = document.getElementById('quickAddStar');
 
@@ -7680,7 +8378,15 @@
       let tags = [];
       let bucket = null;
       let date = null;
+      let milestone = null;
       let remaining = text;
+
+      // Step 0: Extract %quest syntax
+      remaining = remaining.replace(/%(\S+)/g, (match, token) => {
+        const found = compassMilestones.find(m => m.title.includes(token) || m.title.toLowerCase().includes(token.toLowerCase()));
+        if (found) { milestone = found.id; return ''; }
+        return match;
+      });
 
       // Step 1: Extract explicit syntax (#tag, !bucket, @date)
       // Tags: #AI, #VD etc.
@@ -7764,7 +8470,7 @@
       const titleWords = words.filter((_, i) => !consumed.has(i));
       const title = titleWords.join(' ').replace(/\s+/g, ' ').trim();
 
-      return { title, tags, bucket, date };
+      return { title, tags, bucket, date, milestone };
     }
 
     function resolveDate(dateKey) {
@@ -7785,6 +8491,7 @@
         tags: [...new Set([...qaParsed.tags, ...qaManualTags])],
         bucket: qaManualBucket || qaParsed.bucket,
         date: qaManualDate || qaParsed.date,
+        milestone: qaManualMilestone || qaParsed.milestone,
       };
       return merged;
     }
@@ -7827,6 +8534,14 @@
         html += `<div class="quick-add-preview-row"><span class="label">날짜</span><span class="quick-add-chip" style="background:var(--bg-card);border:1px solid var(--border);" data-remove-date="1">${dateLabels[m.date] || m.date}<span class="chip-remove">&times;</span></span></div>`;
       }
 
+      // Quest
+      if (m.milestone) {
+        const ms = getMilestoneById(m.milestone);
+        if (ms) {
+          html += `<div class="quick-add-preview-row"><span class="label">퀘스트</span><span class="quick-add-chip" style="background:${ms.color}14;color:${ms.color};border:1px solid ${ms.color}33;" data-remove-milestone="1">◆ ${ms.title}<span class="chip-remove">&times;</span></span></div>`;
+        }
+      }
+
       qaPreview.innerHTML = html;
 
       // Chip remove handlers
@@ -7852,6 +8567,14 @@
         el.addEventListener('click', () => {
           qaManualDate = null;
           qaParsed.date = null;
+          renderQAPreview();
+          renderManualBtns();
+        });
+      });
+      qaPreview.querySelectorAll('[data-remove-milestone]').forEach(el => {
+        el.addEventListener('click', () => {
+          qaManualMilestone = null;
+          qaParsed.milestone = null;
           renderQAPreview();
           renderManualBtns();
         });
@@ -7888,6 +8611,14 @@
         return `<button class="quick-add-manual-btn${selected}" data-qa-date="${dt}">${label}</button>`;
       }).join('');
 
+      // Quests (filtered by selected tags)
+      const msTags = m.tags.length > 0 ? m.tags : null;
+      const availMs = msTags ? compassMilestones.filter(ms => msTags.includes(ms.project)) : compassMilestones;
+      qaMsBtns.innerHTML = availMs.map(ms => {
+        const selected = m.milestone === ms.id ? ' selected' : '';
+        return `<button class="quick-add-manual-btn${selected}" data-qa-ms="${ms.id}" style="${selected ? `background:${ms.color}14;color:${ms.color};border-color:${ms.color};` : ''}">◆ ${ms.title}</button>`;
+      }).join('') || '<span style="font-size:11px;color:var(--text-muted);">태그를 선택하면 퀘스트가 표시됩니다</span>';
+
       // Event listeners
       qaTagBtns.querySelectorAll('[data-qa-tag]').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -7921,6 +8652,15 @@
           renderManualBtns();
         });
       });
+
+      qaMsBtns.querySelectorAll('[data-qa-ms]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const msId = btn.dataset.qaMs;
+          qaManualMilestone = qaManualMilestone === msId ? null : msId;
+          renderQAPreview();
+          renderManualBtns();
+        });
+      });
     }
 
     // --- Panel open/close ---
@@ -7939,10 +8679,11 @@
 
     function resetQuickAddForm() {
       qaTextarea.value = '';
-      qaParsed = { title: '', tags: [], bucket: null, date: null };
+      qaParsed = { title: '', tags: [], bucket: null, date: null, milestone: null };
       qaManualTags = new Set();
       qaManualBucket = null;
       qaManualDate = null;
+      qaManualMilestone = null;
       qaStarred = false;
       qaStarBtn.classList.remove('starred');
       qaStarBtn.innerHTML = '☆';
@@ -7974,6 +8715,7 @@
       if (m.tags.length > 0) newTask.tags = m.tags;
       if (m.bucket) newTask.planBucket = m.bucket;
       if (m.date) newTask.scheduledDate = resolveDate(m.date);
+      if (m.milestone) newTask.milestoneId = m.milestone;
       if (qaStarred) newTask.starred = true;
 
       tasks[targetSectionId].unshift(newTask);
@@ -7986,10 +8728,11 @@
 
       // Reset form for continuous add
       qaTextarea.value = '';
-      qaParsed = { title: '', tags: [], bucket: null, date: null };
+      qaParsed = { title: '', tags: [], bucket: null, date: null, milestone: null };
       qaManualTags = new Set();
       qaManualBucket = null;
       qaManualDate = null;
+      qaManualMilestone = null;
       qaStarred = false;
       qaStarBtn.classList.remove('starred');
       qaStarBtn.innerHTML = '☆';
@@ -8317,7 +9060,7 @@
             ${dayTasks.map(t => `<li class="focus-task-item${t.checked ? ' is-checked' : ''}" data-task-id="${t.id}">
               <span class="focus-task-star${t.starred ? ' starred' : ''}" data-task-id="${t.id}">${t.starred ? '★' : '☆'}</span>
               <span class="checkbox${t.checked ? ' checked' : ''}" data-task-id="${t.id}"></span>
-              <span class="focus-task-title">${t.title}</span>
+              <span class="focus-task-title">${t.title}${overdueHtml(t)}</span>
               <span class="focus-task-tags">${(t.tags || []).map(tag => `<span class="tag-badge tag-${tag}" style="font-size:10px; padding:1px 6px;">${tag}</span>`).join('')}</span>
             </li>`).join('')}
           </ul>` : `<div class="focus-no-data">예정된 태스크가 없습니다</div>`}
@@ -8550,17 +9293,19 @@
     const LS_KEY_COMPASS_GOALS = 'dashboard_compass_goals';
     let compassHalfOffset = 0; // 0 = current half-year
 
-    let compassMilestones = [
-      { id: 'm1', project: 'VD', title: 'GDC 참가', date: '2025-03-16', color: '#7C3AED' },
-      { id: 'm2', project: 'VD', title: '넥페 출품', date: '2025-05-10', color: '#7C3AED' },
-      { id: 'm3', project: 'VD', title: '출시', date: '2025-06-30', color: '#7C3AED' },
-      { id: 'm4', project: 'CQ', title: '출시', date: '2025-03-01', color: '#D97706' },
-      { id: 'm5', project: 'BIZ', title: '투자 미팅', date: '2025-02-15', color: '#DC2626' },
-      { id: 'm6', project: 'BIZ', title: 'IR', date: '2025-05-20', color: '#DC2626' },
-      { id: 'm7', project: 'TEAM', title: '온보딩', date: '2025-02-28', color: '#059669' },
+    const _defaultCompassMilestones = [
+      { id: 'm1', project: 'VD', title: 'GDC 참가', date: '2026-03-16', color: '#7C3AED', showOnCompass: true },
+      { id: 'm2', project: 'VD', title: '넥페 출품', date: '2026-05-10', color: '#7C3AED', showOnCompass: true },
+      { id: 'm3', project: 'VD', title: '출시', date: '2026-06-30', color: '#7C3AED', showOnCompass: true },
+      { id: 'm4', project: 'CQ', title: '출시', date: '2026-03-01', color: '#D97706', showOnCompass: true },
+      { id: 'm5', project: 'BIZ', title: '투자 미팅', date: '2026-02-28', color: '#DC2626', showOnCompass: true },
+      { id: 'm6', project: 'BIZ', title: 'IR', date: '2026-05-20', color: '#DC2626', showOnCompass: true },
+      { id: 'm7', project: 'TEAM', title: '온보딩', date: '2026-03-15', color: '#059669', showOnCompass: true },
+      { id: 'm8', project: 'PERSONAL', title: '운동 루틴 정착', date: '2026-04-01', color: '#6B7280', showOnCompass: true },
+      { id: 'm9', project: 'PERSONAL', title: '독서 12권 달성', date: '2026-06-30', color: '#6B7280', showOnCompass: true },
     ];
 
-    let compassGoals = {
+    const _defaultCompassGoals = {
       categories: [
         { id: 'mastery', icon: '\uD83E\uDDE0', name: 'Mastery (장인)', goals: [
           { id: 'g1', text: 'VD 크리에이티브 디렉션 완성', checked: false },
@@ -8613,9 +9358,15 @@
     function loadCompassData() {
       try {
         const ms = localStorage.getItem(LS_KEY_COMPASS_MILESTONES);
-        if (ms) compassMilestones = JSON.parse(ms);
+        compassMilestones = ms ? JSON.parse(ms) : JSON.parse(JSON.stringify(_defaultCompassMilestones));
         const gs = localStorage.getItem(LS_KEY_COMPASS_GOALS);
-        if (gs) compassGoals = JSON.parse(gs);
+        compassGoals = gs ? JSON.parse(gs) : JSON.parse(JSON.stringify(_defaultCompassGoals));
+        // Migrate: ensure all quests have showOnCompass field
+        let migrated = false;
+        compassMilestones.forEach(m => {
+          if (m.showOnCompass === undefined) { m.showOnCompass = true; migrated = true; }
+        });
+        if (migrated) saveCompassData();
       } catch(e) { console.log('Compass data load error:', e); }
     }
 
@@ -8623,11 +9374,30 @@
       try {
         localStorage.setItem(LS_KEY_COMPASS_MILESTONES, JSON.stringify(compassMilestones));
         localStorage.setItem(LS_KEY_COMPASS_GOALS, JSON.stringify(compassGoals));
+        scheduleSyncToSupabase();
       } catch(e) { console.log('Compass data save error:', e); }
     }
 
+    // ===== Epic / Quest / Task helpers =====
+    function getMilestonesForTag(tag) {
+      return compassMilestones.filter(m => m.project === tag);
+    }
+
+    function getMilestoneById(milestoneId) {
+      return compassMilestones.find(m => m.id === milestoneId) || null;
+    }
+
+    function getTasksForMilestone(milestoneId) {
+      return getAllTasks().filter(t => t.milestoneId === milestoneId);
+    }
+
+    function getMilestoneProgress(milestoneId) {
+      const mTasks = getTasksForMilestone(milestoneId);
+      return { total: mTasks.length, done: mTasks.filter(t => t.checked).length };
+    }
+
     function renderCompassView() {
-      loadCompassData();
+      // loadCompassData() is called once at startup (line below). No need to reload every render.
       const compassView = document.getElementById('compassView');
       const now = new Date();
       const currentYear = now.getFullYear();
@@ -8654,7 +9424,7 @@
         }
       });
       // Ensure at least some default projects
-      ['VD', 'CQ', 'BIZ', 'TEAM'].forEach(p => {
+      ['VD', 'CQ', 'BIZ', 'TEAM', 'PERSONAL'].forEach(p => {
         if (!projectSet.has(p)) { projectSet.add(p); projects.push(p); }
       });
 
@@ -8670,7 +9440,7 @@
       // Current month index within this half
       const currentMonthInHalf = (now.getMonth() - startMonth);
 
-      // Milestone positions
+      // Quest positions
       function milestonePos(dateStr) {
         const d = new Date(dateStr + 'T00:00:00');
         return Math.max(0, Math.min(100, ((d - rangeStart) / rangeDuration) * 100));
@@ -8734,21 +9504,80 @@
                 <div class="compass-lane-label">${proj}</div>
                 <div class="compass-lane-track">
                   ${showTodayLine ? `<div class="compass-today-line" style="left: ${todayPos}%"></div>` : ''}
-                  ${projMilestones.map(m => {
+                  ${projMilestones.filter(m => m.showOnCompass !== false).map(m => {
                     const mDate = new Date(m.date + 'T00:00:00');
                     const inRange = mDate >= rangeStart && mDate <= rangeEnd;
                     if (!inRange) return '';
                     const pos = milestonePos(m.date);
-                    return `<div class="compass-milestone" style="left: ${pos}%; background: ${m.color || projColor};" data-milestone-id="${m.id}" title="${m.title} (${m.date})">
+                    const prog = getMilestoneProgress(m.id);
+                    const progPct = prog.total > 0 ? Math.round((prog.done / prog.total) * 100) : 0;
+                    const progColor = m.color || projColor;
+                    const progBar = prog.total > 0 ? `
+                      <div class="compass-milestone-progress">
+                        <div class="compass-milestone-progress-fill" style="width:${progPct}%;background:${progColor};"></div>
+                      </div>
+                      <span class="compass-milestone-progress-label">${prog.done}/${prog.total}</span>` : '';
+                    return `<div class="compass-milestone" style="left: ${pos}%; background: ${m.color || projColor};" data-milestone-id="${m.id}" title="${m.title} (${m.date})${prog.total > 0 ? ` — ${prog.done}/${prog.total} 완료` : ''}">
                       <span class="compass-milestone-label">${m.title}</span>
+                      ${progBar}
                     </div>`;
                   }).join('')}
                 </div>
               </div>`;
             }).join('')}
           </div>
+          <div class="compass-quest-list">
+            <div class="compass-quest-list-title">퀘스트 목록</div>
+            ${(() => {
+              if (compassMilestones.length === 0) return '<div class="compass-quest-empty">퀘스트가 없습니다. 아래 버튼으로 추가하세요.</div>';
+              // Group by epic (project)
+              const epicOrder = projects.length > 0 ? projects : ['VD','CQ','BIZ','TEAM'];
+              const byEpic = {};
+              compassMilestones.forEach(m => {
+                if (!byEpic[m.project]) byEpic[m.project] = [];
+                byEpic[m.project].push(m);
+              });
+              // Sort each group by date
+              Object.values(byEpic).forEach(arr => arr.sort((a, b) => (a.date || '').localeCompare(b.date || '')));
+              const allEpics = [...new Set([...epicOrder, ...Object.keys(byEpic)])];
+              return allEpics.filter(ep => byEpic[ep] && byEpic[ep].length > 0).map(ep => {
+                const tc = tagColors[ep] || { bg: '#F3F4F6', color: '#6B7280', label: ep };
+                const quests = byEpic[ep];
+                return `<div class="compass-epic-group">
+                  <div class="compass-epic-header">
+                    <span class="compass-epic-badge" style="background:${tc.bg};color:${tc.color};">${tc.label || ep}</span>
+                    <span class="compass-epic-count">${quests.length}개 퀘스트</span>
+                  </div>
+                  <div class="compass-epic-items">
+                  ${quests.map(m => {
+                    const prog = getMilestoneProgress(m.id);
+                    const pct = prog.total > 0 ? Math.round((prog.done / prog.total) * 100) : 0;
+                    const mDate = m.date ? new Date(m.date + 'T00:00:00') : null;
+                    const isOverdue = mDate && mDate < now && prog.done < prog.total;
+                    const dateLabel = m.date ? m.date.slice(5).replace('-', '/') : '—';
+                    const pctColor = pct === 100 ? '#059669' : (m.color || '#888');
+                    const barLabel = prog.total > 0 ? pct + '%' : '—';
+                    const barColor = prog.total > 0 ? pctColor : 'var(--border)';
+                    return `<div class="compass-quest-item" data-quest-edit-id="${m.id}" style="border-left-color:${m.color}">
+                      <div class="compass-quest-info">
+                        <div class="compass-quest-top">
+                          <span class="compass-quest-title">${m.title}</span>
+                          <span class="compass-quest-date${isOverdue ? ' is-overdue' : ''}">${dateLabel}</span>
+                        </div>
+                        <div class="compass-quest-bar-row">
+                          <div class="compass-quest-bar"><div class="compass-quest-bar-fill" style="width:${pct}%;background:${barColor};"></div></div>
+                          <span class="compass-quest-pct" style="color:${barColor}">${barLabel}</span>
+                        </div>
+                      </div>
+                    </div>`;
+                  }).join('')}
+                  </div>
+                </div>`;
+              }).join('');
+            })()}
+          </div>
           <div class="compass-add-milestone">
-            <button id="compassAddMilestone">+ 마일스톤 추가</button>
+            <button id="compassAddMilestone">+ 퀘스트 추가</button>
           </div>
         </div>
 
@@ -8763,15 +9592,22 @@
       document.getElementById('compassPrevHalf')?.addEventListener('click', () => { compassHalfOffset--; renderCompassView(); });
       document.getElementById('compassNextHalf')?.addEventListener('click', () => { compassHalfOffset++; renderCompassView(); });
 
-      // Add milestone
+      // Add quest
       document.getElementById('compassAddMilestone')?.addEventListener('click', () => {
         showMilestoneEditModal(null);
       });
 
-      // Milestone click -> edit
+      // Quest timeline dot click -> edit
       compassView.querySelectorAll('.compass-milestone').forEach(el => {
         el.addEventListener('click', () => {
           showMilestoneEditModal(el.dataset.milestoneId);
+        });
+      });
+
+      // Quest list item click -> edit
+      compassView.querySelectorAll('.compass-quest-item').forEach(el => {
+        el.addEventListener('click', () => {
+          showMilestoneEditModal(el.dataset.questEditId);
         });
       });
 
@@ -8887,19 +9723,23 @@
       const modal = document.createElement('div');
       modal.className = 'compass-edit-modal';
       modal.innerHTML = `
-        <h3>${existing ? '마일스톤 편집' : '새 마일스톤'}</h3>
-        <label>프로젝트</label>
+        <h3>${existing ? '퀘스트 편집' : '새 퀘스트'}</h3>
+        <label>에픽</label>
         <select id="msEditProject">
           ${projectOptions.map(p => `<option value="${p}"${existing?.project === p ? ' selected' : ''}>${p}</option>`).join('')}
         </select>
         <label>제목</label>
-        <input id="msEditTitle" value="${existing ? existing.title.replace(/"/g, '&quot;') : ''}" placeholder="마일스톤 제목">
+        <input id="msEditTitle" value="${existing ? existing.title.replace(/"/g, '&quot;') : ''}" placeholder="퀘스트 제목">
         <label>날짜</label>
         <input type="date" id="msEditDate" value="${existing?.date || dateStr(new Date())}">
         <label>색상</label>
         <select id="msEditColor">
           ${colorOptions.map(c => `<option value="${c.value}"${existing?.color === c.value ? ' selected' : ''} style="color:${c.value}">${c.label}</option>`).join('')}
         </select>
+        <label class="show-on-compass-toggle">
+          <input type="checkbox" id="msEditShowOnCompass" ${existing ? (existing.showOnCompass !== false ? 'checked' : '') : 'checked'}>
+          Compass 타임라인에 표시
+        </label>
         <div class="modal-actions">
           ${existing ? '<button id="msEditDelete" style="margin-right:auto; color:#DC2626; border-color:#DC2626;">삭제</button>' : ''}
           <button id="msEditCancel">취소</button>
@@ -8918,6 +9758,7 @@
         const title = document.getElementById('msEditTitle').value.trim();
         const date = document.getElementById('msEditDate').value;
         const color = document.getElementById('msEditColor').value;
+        const showOnCompass = document.getElementById('msEditShowOnCompass').checked;
         if (!title) return;
 
         if (existing) {
@@ -8925,8 +9766,9 @@
           existing.title = title;
           existing.date = date;
           existing.color = color;
+          existing.showOnCompass = showOnCompass;
         } else {
-          compassMilestones.push({ id: 'm' + Date.now(), project, title, date, color });
+          compassMilestones.push({ id: 'm' + Date.now(), project, title, date, color, showOnCompass });
         }
         saveCompassData();
         overlay.remove();
@@ -8936,6 +9778,14 @@
 
       if (existing) {
         document.getElementById('msEditDelete').addEventListener('click', () => {
+          // Clear milestoneId from all tasks referencing this quest
+          getAllTasks().forEach(t => {
+            const ref = findTaskRef(t.id);
+            if (ref && ref.milestoneId === milestoneId) {
+              ref.milestoneId = null;
+            }
+          });
+          markChanged();
           compassMilestones = compassMilestones.filter(m => m.id !== milestoneId);
           saveCompassData();
           overlay.remove();
@@ -8960,9 +9810,9 @@
     const DEFAULT_ROUTINES = [
       { id: 'morning', emoji: '🌅', name: '아침 계획', type: 'daily', time: '09:00', tab: 'focus', enabled: true, message: '오늘의 계획을 세워볼까요?' },
       { id: 'evening', emoji: '🌆', name: '저녁 마감', type: 'daily', time: '18:00', tab: 'focus', enabled: false, message: '오늘 하루를 마무리합시다.' },
-      { id: 'weekly-review', emoji: '🌙', name: '주간 회고', type: 'weekly', dayOfWeek: 0, time: '22:00', tab: 'review', enabled: false, message: '이번 주를 돌아봅시다.' },
+      { id: 'weekly-review', emoji: '🌙', name: '주간 회고', type: 'weekly', daysOfWeek: [0], time: '22:00', tab: 'review', enabled: false, message: '이번 주를 돌아봅시다.' },
       { id: 'goal-check', emoji: '🧭', name: '목표 점검', type: 'monthly', dayOfMonth: 1, time: '10:00', tab: 'compass', enabled: false, message: '월간 목표를 점검합시다.' },
-      { id: 'inbox-cleanup', emoji: '📥', name: '수집함 정리', type: 'weekly', dayOfWeek: 5, time: '17:00', tab: 'tasks', enabled: false, message: '수집함을 정리합시다.' },
+      { id: 'inbox-cleanup', emoji: '📥', name: '수집함 정리', type: 'weekly', daysOfWeek: [5], time: '17:00', tab: 'tasks', enabled: false, message: '수집함을 정리합시다.' },
     ];
 
     function loadRoutines() {
@@ -9010,7 +9860,10 @@
       const currentTime = hh + ':' + mm;
       if (currentTime !== routine.time) return false;
 
-      if (routine.type === 'weekly' && now.getDay() !== routine.dayOfWeek) return false;
+      if (routine.type === 'weekly') {
+        const days = routine.daysOfWeek || (routine.dayOfWeek != null ? [routine.dayOfWeek] : []);
+        if (!days.includes(now.getDay())) return false;
+      }
       if (routine.type === 'monthly' && now.getDate() !== routine.dayOfMonth) return false;
 
       const slotKey = getRoutineSlotKey(routine, now);
@@ -9228,7 +10081,10 @@
     function getScheduleDescription(r) {
       const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
       if (r.type === 'daily') return '매일 ' + r.time;
-      if (r.type === 'weekly') return '매주 ' + dayNames[r.dayOfWeek] + '요일 ' + r.time;
+      if (r.type === 'weekly') {
+        const days = r.daysOfWeek || (r.dayOfWeek != null ? [r.dayOfWeek] : []);
+        return '매주 ' + days.map(d => dayNames[d]).join(',') + '요일 ' + r.time;
+      }
       if (r.type === 'monthly') return '매월 ' + r.dayOfMonth + '일 ' + r.time;
       return r.time;
     }
@@ -9334,10 +10190,13 @@
           <option value="monthly"${existing?.type === 'monthly' ? ' selected' : ''}>매월</option>
         </select>
         <div id="reEditDayOfWeekRow" style="display: none;">
-          <label>요일</label>
-          <select id="reEditDayOfWeek">
-            ${dayNames.map((d, i) => `<option value="${i}"${existing?.dayOfWeek === i ? ' selected' : ''}>${d}요일</option>`).join('')}
-          </select>
+          <label>요일 (복수 선택 가능)</label>
+          <div id="reEditDaysOfWeek" style="display: flex; gap: 4px; flex-wrap: wrap;">
+            ${dayNames.map((d, i) => {
+              const sel = existing?.daysOfWeek ? existing.daysOfWeek.includes(i) : (existing?.dayOfWeek === i);
+              return `<button type="button" class="re-day-btn${sel ? ' active' : ''}" data-day="${i}" style="padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border); background: ${sel ? 'var(--accent)' : 'var(--bg-card)'}; color: ${sel ? 'white' : 'var(--text-primary)'}; font-size: 13px; cursor: pointer; font-family: inherit;">${d}</button>`;
+            }).join('')}
+          </div>
         </div>
         <div id="reEditDayOfMonthRow" style="display: none;">
           <label>날짜</label>
@@ -9370,6 +10229,16 @@
       updateTypeFields();
       document.getElementById('reEditType').addEventListener('change', updateTypeFields);
 
+      // Day-of-week multi-select toggle
+      document.querySelectorAll('.re-day-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          btn.classList.toggle('active');
+          const on = btn.classList.contains('active');
+          btn.style.background = on ? 'var(--accent)' : 'var(--bg-card)';
+          btn.style.color = on ? 'white' : 'var(--text-primary)';
+        });
+      });
+
       const closeModal = () => { overlay.remove(); modal.remove(); };
       overlay.addEventListener('click', closeModal);
       document.getElementById('reEditCancel').addEventListener('click', closeModal);
@@ -9382,7 +10251,7 @@
         const time = document.getElementById('reEditTime').value || '09:00';
         const tab = document.getElementById('reEditTab').value;
         const message = document.getElementById('reEditMessage').value.trim();
-        const dayOfWeek = parseInt(document.getElementById('reEditDayOfWeek').value);
+        const daysOfWeek = Array.from(document.querySelectorAll('.re-day-btn.active')).map(b => parseInt(b.dataset.day));
         const dayOfMonth = parseInt(document.getElementById('reEditDayOfMonth').value) || 1;
 
         if (existing) {
@@ -9392,14 +10261,14 @@
           existing.time = time;
           existing.tab = tab;
           existing.message = message;
-          if (type === 'weekly') existing.dayOfWeek = dayOfWeek;
+          if (type === 'weekly') { existing.daysOfWeek = daysOfWeek; delete existing.dayOfWeek; }
           if (type === 'monthly') existing.dayOfMonth = dayOfMonth;
         } else {
           const newRoutine = {
             id: 'r' + Date.now(),
             emoji, name, type, time, tab, message, enabled: true,
           };
-          if (type === 'weekly') newRoutine.dayOfWeek = dayOfWeek;
+          if (type === 'weekly') newRoutine.daysOfWeek = daysOfWeek;
           if (type === 'monthly') newRoutine.dayOfMonth = dayOfMonth;
           routines.push(newRoutine);
         }
