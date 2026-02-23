@@ -4335,17 +4335,20 @@
 
         if (allTasks.length > 0) {
           const { error: taskInsertErr } = await sb.from('tasks').upsert(allTasks, { onConflict: 'id' });
-          if (taskInsertErr) { console.log('Tasks upsert error:', taskInsertErr); return; }
-          const currentTaskIds = allTasks.map(t => t.id);
-          await sb.from('subtasks').delete().not('task_id', 'in', `(${currentTaskIds.join(',')})`);
-          await sb.from('tasks').delete().not('id', 'in', `(${currentTaskIds.join(',')})`);
-        }
-        if (allSubtasks.length > 0) {
-          await sb.from('subtasks').delete().in('task_id', allTasks.map(t => t.id));
-          await sb.from('subtasks').insert(allSubtasks);
+          if (taskInsertErr) {
+            console.log('Tasks upsert error:', taskInsertErr);
+          } else {
+            const currentTaskIds = allTasks.map(t => t.id);
+            await sb.from('subtasks').delete().not('task_id', 'in', `(${currentTaskIds.join(',')})`);
+            await sb.from('tasks').delete().not('id', 'in', `(${currentTaskIds.join(',')})`);
+            if (allSubtasks.length > 0) {
+              await sb.from('subtasks').delete().in('task_id', allTasks.map(t => t.id));
+              await sb.from('subtasks').insert(allSubtasks);
+            }
+          }
         }
 
-        // 3) quests 저장
+        // 3) quests 저장 (tasks와 독립적으로 실행)
         const questRows = compassMilestones.map((m, i) => ({
           id: m.id,
           epic: m.project,
@@ -4357,9 +4360,11 @@
         }));
         if (questRows.length > 0) {
           const { error: questErr } = await sb.from('quests').upsert(questRows, { onConflict: 'id' });
-          if (!questErr) {
+          if (questErr) {
+            console.log('Quests upsert error:', questErr);
+          } else {
             const currentQuestIds = questRows.map(q => q.id);
-            await sb.from('quests').delete().not('id', 'in', `(${currentQuestIds.join("','")})`);
+            await sb.from('quests').delete().not('id', 'in', `('${currentQuestIds.join("','")}')`);
           }
         } else {
           await sb.from('quests').delete().neq('id', '');
@@ -6541,9 +6546,8 @@
       const topbarQuestArea = topbar.querySelector('.topbar-quest-area');
       topbarQuestArea.innerHTML = `<button class="quest-switch-btn" style="font-size:11px;padding:3px 8px;">퀘스트 전환</button>`;
       topbarQuestArea.querySelector('.quest-switch-btn').addEventListener('click', () => {
-        panel.classList.remove('show'); overlay.classList.remove('show');
-        setTimeout(() => { overlay.remove(); panel.remove(); }, 250);
-        switchMainTab('compass');
+        closeDetail();
+        setTimeout(() => switchMainTab('compass'), 300);
       });
 
       // === Quest dropdown (body) ===
