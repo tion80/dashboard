@@ -6771,13 +6771,18 @@
       noteArea.appendChild(textarea);
       body.appendChild(noteArea);
 
-      const deleteBlock = document.createElement('div');
-      deleteBlock.style.cssText = 'margin-top: 8px; padding-top: 16px; border-top: 1px solid var(--border-light);';
+      const actionBlock = document.createElement('div');
+      actionBlock.style.cssText = 'margin-top: 8px; padding-top: 16px; border-top: 1px solid var(--border-light); display:flex; align-items:center; gap:8px;';
+      const confirmBtn = document.createElement('button');
+      confirmBtn.style.cssText = 'flex:1;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;background:var(--accent);color:#fff;border:none;transition:all 0.15s;';
+      confirmBtn.textContent = '확인';
+      confirmBtn.addEventListener('click', () => closeDetail());
       const deleteBtn = document.createElement('button');
-      deleteBtn.style.cssText = 'width:100%;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;background:#FEE2E2;color:#DC2626;border:1px solid #FCA5A5;transition:all 0.15s;';
-      deleteBtn.textContent = '태스크 삭제';
-      deleteBtn.addEventListener('mouseenter', () => { deleteBtn.style.background = '#FECACA'; });
-      deleteBtn.addEventListener('mouseleave', () => { deleteBtn.style.background = '#FEE2E2'; });
+      deleteBtn.style.cssText = 'width:36px;height:36px;border-radius:8px;font-size:16px;cursor:pointer;background:transparent;color:#DC2626;border:1px solid #DC262633;transition:all 0.15s;display:flex;align-items:center;justify-content:center;flex-shrink:0;';
+      deleteBtn.innerHTML = '🗑';
+      deleteBtn.title = '태스크 삭제';
+      deleteBtn.addEventListener('mouseenter', () => { deleteBtn.style.background = '#FEE2E2'; });
+      deleteBtn.addEventListener('mouseleave', () => { deleteBtn.style.background = 'transparent'; });
       deleteBtn.addEventListener('click', () => {
         if (!confirm(`"${ref.title}" 을(를) 삭제하시겠습니까?`)) return;
         for (const section of sections) {
@@ -6789,8 +6794,9 @@
         panel.classList.remove('show'); overlay.classList.remove('show');
         setTimeout(() => { overlay.remove(); panel.remove(); }, 250);
       });
-      deleteBlock.appendChild(deleteBtn);
-      body.appendChild(deleteBlock);
+      actionBlock.appendChild(confirmBtn);
+      actionBlock.appendChild(deleteBtn);
+      body.appendChild(actionBlock);
 
       panel.appendChild(body);
       document.body.appendChild(overlay);
