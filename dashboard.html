@@ -3929,7 +3929,6 @@
     <div class="buttons">
       <button id="gcalHeaderBtn" style="padding: 6px 14px; font-size: 13px;"></button>
       <button id="quickAddOpenBtn" class="primary" style="padding: 6px 14px; font-size: 13px;">+ Add Task</button>
-      <button id="openTaskBtn">Select File</button>
       <button id="openMemoryBtn" style="display: none;">Open Folder</button>
       <button id="saveBtn" class="primary" disabled style="display: none;">Save</button>
     </div>
@@ -4101,7 +4100,7 @@
       settingsPanel.classList.toggle('active', tab === 'settings');
 
       // Show/hide appropriate buttons
-      openTaskBtn.style.display = tab === 'tasks' ? 'inline-flex' : 'none';
+      if (openTaskBtn) openTaskBtn.style.display = tab === 'tasks' ? 'inline-flex' : 'none';
       openMemoryBtn.style.display = tab === 'memory' ? 'inline-flex' : 'none';
       saveBtn.style.display = tab === 'tasks' ? 'inline-flex' : 'none';
       document.getElementById('quickAddOpenBtn').style.display = (tab === 'tasks' || tab === 'focus') ? 'inline-flex' : 'none';
@@ -7427,7 +7426,7 @@
       }
     }
 
-    openTaskBtn.addEventListener('click', openTaskFile);
+    if (openTaskBtn) openTaskBtn.addEventListener('click', openTaskFile);
     document.getElementById('openBtnLarge')?.addEventListener('click', openTaskFile);
 
     // 임베딩/localStorage 로드 후, Supabase에서 최신 데이터 비동기 로드
@@ -8614,10 +8613,11 @@
       // Quests (filtered by selected tags)
       const msTags = m.tags.length > 0 ? m.tags : null;
       const availMs = msTags ? compassMilestones.filter(ms => msTags.includes(ms.project)) : compassMilestones;
-      qaMsBtns.innerHTML = availMs.map(ms => {
+      const msListHtml = availMs.map(ms => {
         const selected = m.milestone === ms.id ? ' selected' : '';
         return `<button class="quick-add-manual-btn${selected}" data-qa-ms="${ms.id}" style="${selected ? `background:${ms.color}14;color:${ms.color};border-color:${ms.color};` : ''}">◆ ${ms.title}</button>`;
       }).join('') || '<span style="font-size:11px;color:var(--text-muted);">태그를 선택하면 퀘스트가 표시됩니다</span>';
+      qaMsBtns.innerHTML = msListHtml + `<button class="quick-add-manual-btn" id="qaNewQuestBtn" style="border-style:dashed;">+ 새 퀘스트</button>`;
 
       // Event listeners
       qaTagBtns.querySelectorAll('[data-qa-tag]').forEach(btn => {
@@ -8661,6 +8661,22 @@
           renderManualBtns();
         });
       });
+
+      const qaNewQuestBtn = document.getElementById('qaNewQuestBtn');
+      if (qaNewQuestBtn) {
+        qaNewQuestBtn.addEventListener('click', () => {
+          const defaultProject = m.tags.length > 0 ? m.tags[0] : 'VD';
+          const color = (tagColors[defaultProject]?.color) || '#7C3AED';
+          const title = prompt('새 퀘스트 이름:');
+          if (!title || !title.trim()) return;
+          const newMs = { id: 'm' + Date.now(), project: defaultProject, title: title.trim(), date: '', color, showOnCompass: false };
+          compassMilestones.push(newMs);
+          saveCompassData();
+          qaManualMilestone = newMs.id;
+          renderQAPreview();
+          renderManualBtns();
+        });
+      }
     }
 
     // --- Panel open/close ---
