@@ -2017,6 +2017,7 @@
     .plan-bucket-panel.bucket-schedule { border-left: 4px solid #F59E0B; }
     .plan-bucket-panel.bucket-someday { border-left: 4px solid #3B82F6; }
     .plan-bucket-panel.bucket-maybe { border-left: 4px solid #9CA3AF; }
+    .plan-bucket-panel.bucket-waitingon { border-left: 4px solid #F97316; }
     .plan-bucket-header {
       font-size: 12px; font-weight: 700;
       display: flex; align-items: center; gap: 6px;
@@ -2028,6 +2029,9 @@
     }
     .plan-bucket-header .bucket-hint {
       font-weight: 400; color: var(--text-muted); font-size: 10px; margin-left: auto; font-style: italic;
+    }
+    .plan-bucket-header .bucket-chevron {
+      font-size: 11px; color: var(--text-muted); margin-right: 2px;
     }
     .plan-bucket-items {
       display: flex; flex-wrap: wrap; gap: 4px;
@@ -2071,6 +2075,10 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+    }
+
+    .tag-group-card .tg-quest-line {
+      margin-bottom: 3px;
     }
 
     .tag-group-card .tg-meta {
@@ -2194,11 +2202,36 @@
     .plan-detail-subtask {
       display: flex; align-items: center; gap: 8px;
       font-size: 13px; color: var(--text-secondary);
+      position: relative;
     }
     .plan-detail-subtask input[type="checkbox"] {
       width: 14px; height: 14px; accent-color: var(--accent); cursor: pointer;
     }
-    .plan-detail-subtask.is-done span { text-decoration: line-through; opacity: 0.5; }
+    .plan-detail-subtask.is-done .plan-detail-subtask-text { text-decoration: line-through; opacity: 0.5; }
+    .plan-detail-subtask-text {
+      flex: 1; cursor: pointer; min-width: 0; word-break: break-word;
+    }
+    .plan-detail-subtask-text:hover { color: var(--text-primary); }
+    .plan-detail-subtask-del {
+      width: 18px; height: 18px; border: none; background: none;
+      color: var(--text-muted); cursor: pointer; font-size: 14px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 4px; opacity: 0; transition: opacity 0.15s;
+      flex-shrink: 0;
+    }
+    .plan-detail-subtask:hover .plan-detail-subtask-del { opacity: 1; }
+    .plan-detail-subtask-del:hover { background: var(--bg-secondary); color: var(--text-primary); }
+    .plan-detail-add-subtask {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 13px; color: var(--text-muted); font-style: italic;
+      cursor: pointer; padding: 4px 0; margin-top: 2px;
+    }
+    .plan-detail-add-subtask:hover { color: var(--text-secondary); }
+    .plan-detail-subtask-input {
+      flex: 1; background: var(--bg-card); border: 2px solid var(--accent);
+      border-radius: 6px; padding: 3px 8px; color: var(--text-primary);
+      font-size: 13px; font-family: inherit; outline: none;
+    }
 
     .plan-detail-src-link {
       display: inline-flex; align-items: center; gap: 6px;
@@ -3009,8 +3042,9 @@
     .compass-lane {
       display: flex;
       align-items: center;
-      margin-bottom: 18px;
+      margin-bottom: 28px;
       min-height: 44px;
+      padding: 14px 0;
     }
     .compass-lane-label {
       min-width: 64px;
@@ -3046,18 +3080,19 @@
     }
     .compass-milestone-label {
       position: absolute;
-      top: -20px;
       left: 50%;
       transform: translateX(-50%);
       font-size: 10px;
       color: var(--text-secondary);
       white-space: nowrap;
       pointer-events: none;
-      opacity: 0;
-      transition: opacity 0.15s;
     }
-    .compass-milestone:hover .compass-milestone-label {
-      opacity: 1;
+    .compass-milestone.label-top .compass-milestone-label {
+      top: -20px;
+    }
+    .compass-milestone.label-bottom .compass-milestone-label {
+      top: auto;
+      bottom: -20px;
     }
     .compass-today-line {
       position: absolute;
@@ -4194,7 +4229,7 @@
     let sb = null;
     try { sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null; }
     catch(e) { console.log('Supabase init failed:', e); }
-    let supabaseSaveTimeout = null;
+    let taskSyncTimeout = null;
 
     // slot: 'auto' (자동, 매 sync 전) / 'manual' (수동, 사용자가 직접)
     async function backupToSupabase(slot = 'auto') {
@@ -4262,7 +4297,7 @@
       } catch(e) { alert('복원 실패: ' + e.message); }
     }
 
-    async function saveToSupabase() {
+    async function saveTasksToSupabase() {
       if (!sb) return;
       try {
         // 로컬 태스크 수 계산
@@ -4356,45 +4391,62 @@
           }
         }
 
-        // 3) quests 저장 (tasks와 독립적으로 실행)
-        const questRows = compassMilestones.map((m, i) => ({
-          id: m.id,
-          epic: m.project,
-          title: m.title,
-          date: m.date || null,
-          color: m.color || '#7C3AED',
-          show_on_compass: m.showOnCompass !== false,
-          position: i
-        }));
-        if (questRows.length > 0) {
-          const { error: questErr } = await sb.from('quests').upsert(questRows, { onConflict: 'id' });
-          if (questErr) {
-            console.log('Quests upsert error:', questErr);
-          } else {
-            // DB에 있지만 로컬에 없는 퀘스트만 삭제
-            const currentQuestIds = questRows.map(q => q.id);
-            const { data: dbQuests } = await sb.from('quests').select('id');
-            if (dbQuests) {
-              const toDelete = dbQuests.filter(q => !currentQuestIds.includes(q.id)).map(q => q.id);
-              if (toDelete.length > 0) {
-                await sb.from('quests').delete().in('id', toDelete);
-              }
-            }
-          }
-        }
-
-        console.log('Supabase synced');
+        // quests는 saveQuestsToSupabase()에서 별도 저장
       } catch (e) { console.log('Supabase save error:', e); }
     }
 
-    function scheduleSyncToSupabase() {
-      if (supabaseSaveTimeout) clearTimeout(supabaseSaveTimeout);
-      supabaseSaveTimeout = setTimeout(saveToSupabase, 2000);
+    function scheduleTaskSync() {
+      if (taskSyncTimeout) clearTimeout(taskSyncTimeout);
+      taskSyncTimeout = setTimeout(saveTasksToSupabase, 2000);
     }
 
-    async function loadFromSupabase() {
+    // ===== Quest-only Supabase sync =====
+    let questSyncTimeout = null;
+    function scheduleQuestSync() {
+      if (questSyncTimeout) clearTimeout(questSyncTimeout);
+      questSyncTimeout = setTimeout(saveQuestsToSupabase, 2000);
+    }
+
+    async function saveQuestsToSupabase() {
+      if (!sb || compassMilestones.length === 0) return;
+      const questRows = compassMilestones.map((m, i) => ({
+        id: m.id, epic: m.project || 'GENERAL', title: m.title || 'Untitled',
+        date: m.date || null, color: m.color || '#7C3AED',
+        show_on_compass: m.showOnCompass !== false, position: i
+      }));
+      const { error } = await sb.from('quests').upsert(questRows, { onConflict: 'id' }).select();
+      if (error) { console.error('Quest save error:', error); return; }
+      // diff-delete: DB에만 있는 퀘스트 삭제
+      const localIds = questRows.map(q => q.id);
+      const { data: dbQuests } = await sb.from('quests').select('id');
+      if (dbQuests) {
+        const toDelete = dbQuests.filter(q => !localIds.includes(q.id)).map(q => q.id);
+        if (toDelete.length > 0) await sb.from('quests').delete().in('id', toDelete);
+      }
+    }
+
+    async function loadQuestsFromSupabase() {
+      if (!sb) return;
+      const { data, error } = await sb.from('quests').select('*').order('position');
+      if (error) { console.error('Quest load error:', error); return; }
+      if (data && data.length > 0) {
+        compassMilestones = data.map(q => ({
+          id: q.id, project: q.epic, title: q.title,
+          date: q.date || '', color: q.color || '#7C3AED',
+          showOnCompass: q.show_on_compass !== false
+        }));
+      }
+      // DB 비어있으면 compassMilestones = [] 유지 (빈 상태 허용)
+    }
+
+    async function loadTasksFromSupabase() {
       if (!sb) return false;
       try {
+        let tasksLoaded = false;
+
+        // 퀘스트는 loadQuestsFromSupabase()에서 별도 로드
+
+        // sections + tasks 로드
         const { data: dbSections, error: secErr } = await sb
           .from('sections').select('*').order('position');
         if (secErr || !dbSections || dbSections.length === 0) return false;
@@ -4439,20 +4491,6 @@
           tasks[t.section].push(task);
         });
 
-        // quests 로드
-        const { data: dbQuests } = await sb.from('quests').select('*').order('position');
-        if (dbQuests && dbQuests.length > 0) {
-          compassMilestones = dbQuests.map(q => ({
-            id: q.id,
-            project: q.epic,
-            title: q.title,
-            date: q.date || '',
-            color: q.color || '#7C3AED',
-            showOnCompass: q.show_on_compass !== false
-          }));
-          saveCompassData(); // localStorage에도 동기화
-        }
-
         filePathEl.textContent = 'Supabase (cloud)';
         return true;
       } catch (e) { console.log('Supabase load error:', e); return false; }
@@ -4461,38 +4499,19 @@
     // ============================================================
     // LOCAL STORAGE PERSISTENCE
     // ============================================================
-    const LS_KEY_SECTIONS = 'dashboard_sections';
-    const LS_KEY_TASKS = 'dashboard_tasks';
-    const LS_KEY_FILENAME = 'dashboard_filename';
     const LS_KEY_VIEW = 'dashboard_view';
 
-    function saveToLocalStorage() {
+    function saveViewPreference() {
       try {
-        localStorage.setItem(LS_KEY_SECTIONS, JSON.stringify(sections));
-        localStorage.setItem(LS_KEY_TASKS, JSON.stringify(tasks));
-        if (taskFileName) localStorage.setItem(LS_KEY_FILENAME, taskFileName);
         localStorage.setItem(LS_KEY_VIEW, currentView);
-      } catch (e) { console.log('localStorage save error:', e); }
+      } catch (e) {}
     }
 
-    function loadFromLocalStorage() {
+    function loadViewPreference() {
       try {
-        const savedSections = localStorage.getItem(LS_KEY_SECTIONS);
-        const savedTasks = localStorage.getItem(LS_KEY_TASKS);
-        if (savedSections && savedTasks) {
-          sections = JSON.parse(savedSections);
-          tasks = JSON.parse(savedTasks);
-          const savedName = localStorage.getItem(LS_KEY_FILENAME);
-          if (savedName) {
-            taskFileName = savedName;
-            filePathEl.textContent = savedName + ' (cached)';
-          }
-          const savedView = localStorage.getItem(LS_KEY_VIEW);
-          if (savedView) currentView = savedView;
-          return true;
-        }
-      } catch (e) { console.log('localStorage load error:', e); }
-      return false;
+        const v = localStorage.getItem(LS_KEY_VIEW);
+        if (v) currentView = v;
+      } catch (e) {}
     }
 
     const weekView = document.getElementById('weekView');
@@ -4547,10 +4566,10 @@
 
           // Extract planBucket like [[schedule]] from full text first
           let planBucket = '';
-          const bucketMatch = text.match(/\[\[(asap|schedule|someday|maybe)\]\]/);
+          const bucketMatch = text.match(/\[\[(asap|schedule|someday|maybe|waitingon)\]\]/);
           if (bucketMatch) {
             planBucket = bucketMatch[1];
-            text = text.replace(/\[\[(asap|schedule|someday|maybe)\]\]/, '').trim();
+            text = text.replace(/\[\[(asap|schedule|someday|maybe|waitingon)\]\]/, '').trim();
           }
 
           // Extract scheduled date like <<2026-02-19>> from full text first
@@ -4645,11 +4664,11 @@
       card.dataset.id = task.id;
 
       let html = `
+        <button class="delete-btn" data-action="delete" title="Delete task">&times;</button>
         <div style="display: flex; align-items: flex-start; gap: 8px;">
-          <button class="delete-btn" data-action="delete" title="Delete task">&times;</button>
           <span class="checkbox ${task.checked ? 'checked' : ''}" data-action="toggle"></span>
-          <button class="star-toggle star-toggle-sm${task.starred ? ' starred' : ''}" data-action="star" title="중요">${task.starred ? '★' : '☆'}</button>
-          <div class="card-title" data-action="edit-title">${task.title}</div>
+          <div class="card-title" data-action="edit-title" style="flex:1;">${task.title}</div>
+          <button class="star-toggle star-toggle-sm${task.starred ? ' starred' : ''}" data-action="star" title="중요" style="flex-shrink:0;">${task.starred ? '★' : '☆'}</button>
         </div>
       `;
 
@@ -5166,8 +5185,7 @@
     function markChanged() {
       hasChanges = true;
       saveBtn.disabled = false;
-      saveToLocalStorage();
-      scheduleSyncToSupabase();
+      scheduleTaskSync();
       if (saveTimeout) clearTimeout(saveTimeout);
       saveTimeout = setTimeout(autoSave, 500);
     }
@@ -5175,7 +5193,6 @@
     async function autoSave() {
       if (!hasChanges || isSaving) return;
       isSaving = true;
-      saveToLocalStorage();
       if (taskFileHandle) {
         try {
           const writable = await taskFileHandle.createWritable();
@@ -5208,7 +5225,7 @@
           const result = parseTaskMarkdown(content);
           sections = result.sections;
           tasks = result.tasks;
-          saveToLocalStorage();
+          scheduleTaskSync();
           renderTasks();
           showStatus('Reloaded');
         }
@@ -5715,6 +5732,7 @@
     function switchTaskView(view) {
       if (view === 'board' || view === 'list' || view === 'timeline') view = 'tags';
       currentView = view;
+      saveViewPreference();
       const views = { week: weekView, tags: tagView };
       const btns = { tags: tagViewBtn };
       Object.entries(views).forEach(([k, el]) => {
@@ -5844,9 +5862,7 @@
 
     function renderTagView() {
       tagView.innerHTML = '';
-      // Exclude Ideas & References sections
-      const planExclude = ['ideas', 'references'];
-      const allTasks = getAllTasks().filter(t => !planExclude.includes(t.sectionId));
+      const allTasks = getAllTasks();
       const allTags = ['VD', 'CQ', 'AI', 'BIZ', 'TEAM', 'PERSONAL'];
 
       // Helper: create a draggable card with checkbox
@@ -5892,16 +5908,16 @@
 
         card.innerHTML = `
           <input type="checkbox" class="plan-checkbox" ${t.checked ? 'checked' : ''} title="완료 표시">
-          <button class="star-toggle star-toggle-sm${t.starred ? ' starred' : ''}" title="중요">${t.starred ? '★' : '☆'}</button>
-          <div class="tg-body">
+          <div class="tg-body" style="flex:1;">
+            ${msBadgeHtml ? `<div class="tg-quest-line">${msBadgeHtml}</div>` : ''}
             <div class="tg-title">${t.title}${overdueHtml(t)}</div>
             ${t.note ? `<div class="tg-note">${t.note}</div>` : ''}
             ${subtasksHtml}
             <div class="tg-meta">
-              <span class="tg-section">${t.sectionName}</span>
-              ${srcHtml}${tagsHtml}${msBadgeHtml}${dateHtml}
+              ${srcHtml}${tagsHtml}${dateHtml}
             </div>
           </div>
+          <button class="star-toggle star-toggle-sm${t.starred ? ' starred' : ''}" title="중요" style="flex-shrink:0;align-self:flex-start;">${t.starred ? '★' : '☆'}</button>
         `;
 
         // Star toggle
@@ -6019,8 +6035,8 @@
       const scrollArea = document.createElement('div');
       scrollArea.className = 'plan-left-scroll';
 
-      // Left panel only shows tasks NOT scheduled and NOT in any bucket
-      const unscheduledTasks = allTasks.filter(t => !t.scheduledDate && !t.planBucket);
+      // Left panel only shows tasks NOT scheduled, NOT in any bucket, and NOT done
+      const unscheduledTasks = allTasks.filter(t => !t.scheduledDate && !t.planBucket && !t.checked);
 
       // Filter by search query
       const query = (window._planSearchQuery || '').trim().toLowerCase();
@@ -6119,7 +6135,7 @@
       rightPanel.appendChild(header);
 
       // ===== ASAP PANEL (above calendar) =====
-      const asapTasks = allTasks.filter(t => t.planBucket === 'asap' && !t.scheduledDate);
+      const asapTasks = allTasks.filter(t => t.planBucket === 'asap' && !t.scheduledDate && !t.checked);
       const asapPanel = makeBucketPanel('asap', '⚡', 'ASAP', asapTasks, '드롭 시 오늘 배정 후 사라짐');
       asapPanel.addEventListener('dragover', (e) => { e.preventDefault(); asapPanel.classList.add('drag-over'); });
       asapPanel.addEventListener('dragleave', () => asapPanel.classList.remove('drag-over'));
@@ -6201,8 +6217,8 @@
             tasksContainer.appendChild(addBtn);
           }
 
-          // Find tasks for this day
-          const dayTasks = allTasks.filter(t => t.scheduledDate === ds);
+          // Find tasks for this day (hide done)
+          const dayTasks = allTasks.filter(t => t.scheduledDate === ds && !t.checked);
           dayTasks.forEach(t => {
             const chip = document.createElement('div');
             chip.className = 'plan-cal-task' + (t.checked ? ' is-checked' : '');
@@ -6327,19 +6343,36 @@
         return chip;
       }
 
-      function makeBucketPanel(bucket, icon, title, taskList, hint) {
+      function makeBucketPanel(bucket, icon, title, taskList, hint, opts = {}) {
         const panel = document.createElement('div');
         panel.className = `plan-bucket-panel bucket-${bucket}`;
 
         const hdr = document.createElement('div');
         hdr.className = 'plan-bucket-header';
-        hdr.innerHTML = `<span class="bucket-icon">${icon}</span> ${title} <span class="bucket-count">${taskList.length}</span>${hint ? `<span class="bucket-hint">${hint}</span>` : ''}`;
+
+        const collapsible = !!opts.collapsible;
+        const storageKey = `bucket_collapsed_${bucket}`;
+        let collapsed = collapsible && (localStorage.getItem(storageKey) !== 'false');
+
+        const chevron = collapsible ? `<span class="bucket-chevron">${collapsed ? '▸' : '▾'}</span>` : '';
+        hdr.innerHTML = `${chevron}<span class="bucket-icon">${icon}</span> ${title} <span class="bucket-count">${taskList.length}</span>${hint ? `<span class="bucket-hint">${hint}</span>` : ''}`;
         panel.appendChild(hdr);
 
         const items = document.createElement('div');
         items.className = 'plan-bucket-items';
+        if (collapsed) items.style.display = 'none';
         taskList.forEach(t => items.appendChild(makeDraggableChip(t)));
         panel.appendChild(items);
+
+        if (collapsible) {
+          hdr.style.cursor = 'pointer';
+          hdr.addEventListener('click', () => {
+            collapsed = !collapsed;
+            items.style.display = collapsed ? 'none' : '';
+            hdr.querySelector('.bucket-chevron').textContent = collapsed ? '▸' : '▾';
+            localStorage.setItem(storageKey, collapsed ? 'true' : 'false');
+          });
+        }
 
         return panel;
       }
@@ -6365,20 +6398,25 @@
         });
       }
 
-      const scheduleTasks = allTasks.filter(t => t.planBucket === 'schedule' && !t.scheduledDate);
+      const scheduleTasks = allTasks.filter(t => t.planBucket === 'schedule' && !t.scheduledDate && !t.checked);
       const schedulePanel = makeBucketPanel('schedule', '📅', 'Schedule', scheduleTasks, '이후 캘린더로 이동');
       attachBucketDrop(schedulePanel, 'schedule', 'Schedule에 추가됨');
       rightPanel.appendChild(schedulePanel);
 
-      const somedayTasks = allTasks.filter(t => t.planBucket === 'someday');
+      const somedayTasks = allTasks.filter(t => t.planBucket === 'someday' && !t.checked);
       const somedayPanel = makeBucketPanel('someday', '🌤️', 'Someday', somedayTasks);
       attachBucketDrop(somedayPanel, 'someday', 'Someday에 추가됨');
       rightPanel.appendChild(somedayPanel);
 
-      const maybeTasks = allTasks.filter(t => t.planBucket === 'maybe');
-      const maybePanel = makeBucketPanel('maybe', '💭', 'Maybe', maybeTasks);
+      const maybeTasks = allTasks.filter(t => t.planBucket === 'maybe' && !t.checked);
+      const maybePanel = makeBucketPanel('maybe', '💭', 'Maybe', maybeTasks, '', { collapsible: true });
       attachBucketDrop(maybePanel, 'maybe', 'Maybe에 추가됨');
       rightPanel.appendChild(maybePanel);
+
+      const waitingonTasks = allTasks.filter(t => t.planBucket === 'waitingon' && !t.checked);
+      const waitingonPanel = makeBucketPanel('waitingon', '⏳', 'Waiting On', waitingonTasks);
+      attachBucketDrop(waitingonPanel, 'waitingon', 'Waiting On에 추가됨');
+      rightPanel.appendChild(waitingonPanel);
 
       // Resizable divider
       const divider = document.createElement('div');
@@ -6516,9 +6554,11 @@
       });
       titleInput.addEventListener('input', () => { ref.title = titleInput.value; markChanged(); });
 
+      titleInput.style.flex = '1';
+      starBtn.style.flexShrink = '0';
       titleRow.appendChild(mainCb);
-      titleRow.appendChild(starBtn);
       titleRow.appendChild(titleInput);
+      titleRow.appendChild(starBtn);
       body.appendChild(titleRow);
 
       const noteBlock = document.createElement('div');
@@ -6554,14 +6594,69 @@
       tagsBlock.appendChild(tagsRow);
       body.appendChild(tagsBlock);
 
-      // === Topbar: 퀘스트 전환 버튼만 ===
+      // === Topbar: 퀘스트 전환 버튼 (태스크→퀘스트 변환) ===
       if (!ref.milestoneId) ref.milestoneId = null;
       const topbarQuestArea = topbar.querySelector('.topbar-quest-area');
-      topbarQuestArea.innerHTML = `<button class="quest-switch-btn" style="font-size:11px;padding:3px 8px;">퀘스트 전환</button>`;
-      topbarQuestArea.querySelector('.quest-switch-btn').addEventListener('click', () => {
-        closeDetail();
-        setTimeout(() => switchMainTab('compass'), 300);
-      });
+      topbarQuestArea.innerHTML = `<button class="quest-switch-btn" style="font-size:11px;padding:3px 8px;pointer-events:auto;position:relative;z-index:10;">퀘스트 전환</button>`;
+      const questSwitchBtn = topbarQuestArea.querySelector('.quest-switch-btn');
+      questSwitchBtn.onclick = function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!confirm(`"${ref.title}"을(를) 퀘스트로 전환하시겠습니까?\n\n· 태스크 → 퀘스트(마일스톤)\n· 서브태스크 → 일반 태스크로 변환`)) return;
+
+        // 1) 새 퀘스트 생성
+        const newQuestId = 'm' + Date.now();
+        const epic = (ref.tags && ref.tags.length > 0) ? ref.tags[0] : 'GENERAL';
+        const color = { VD: '#7C3AED', CQ: '#D97706', BIZ: '#DC2626', TEAM: '#059669', PERSONAL: '#6B7280' }[epic] || '#7C3AED';
+        compassMilestones.push({
+          id: newQuestId,
+          project: epic,
+          title: ref.title,
+          date: ref.scheduledDate || '',
+          color: color,
+          showOnCompass: true
+        });
+
+        // 2) 서브태스크 → 일반 태스크로 변환
+        const targetSectionId = refSectionId || sections[0]?.id;
+        if (ref.subtasks && ref.subtasks.length > 0 && targetSectionId) {
+          ref.subtasks.forEach((st, stIdx) => {
+            const newTask = {
+              id: Date.now() + stIdx + 1,
+              title: st.text,
+              checked: !!st.checked,
+              starred: false,
+              note: '',
+              userNote: '',
+              tags: ref.tags ? [...ref.tags] : [],
+              url: '',
+              scheduledDate: ref.scheduledDate || '',
+              planBucket: ref.planBucket || '',
+              milestoneId: newQuestId,
+              subtasks: [],
+              linkedEvents: []
+            };
+            if (!tasks[targetSectionId]) tasks[targetSectionId] = [];
+            tasks[targetSectionId].push(newTask);
+          });
+          console.log('[퀘스트 전환] 서브태스크 → 태스크 변환:', ref.subtasks.length, '개, section:', targetSectionId);
+        }
+
+        // 3) 원래 태스크 삭제
+        for (const s of sections) {
+          const arr = tasks[s.id] || [];
+          const idx = arr.findIndex(t => t.id === ref.id);
+          if (idx !== -1) { arr.splice(idx, 1); break; }
+        }
+
+        // 4) 저장 & UI 업데이트
+        saveQuestsToSupabase(); // 퀘스트 즉시 DB 저장
+        markChanged();
+        renderTasks();
+        switchTaskView(currentView);
+        panel.classList.remove('show'); overlay.classList.remove('show');
+        setTimeout(() => { overlay.remove(); panel.remove(); }, 250);
+      };
 
       // === Quest dropdown (body) ===
       const questBlock = document.createElement('div');
@@ -6678,7 +6773,7 @@
       bucketBlock.innerHTML = `<div class="plan-detail-section-label">우선순위</div>`;
       const bucketRow = document.createElement('div');
       bucketRow.className = 'plan-detail-edit-row';
-      const bucketOptions = { asap: '⚡ ASAP', schedule: '📋 Schedule', someday: '💭 Someday', maybe: '🤔 Maybe' };
+      const bucketOptions = { asap: '⚡ ASAP', schedule: '📋 Schedule', someday: '💭 Someday', maybe: '🤔 Maybe', waitingon: '⏳ Waiting On' };
       function renderDetailBucket() {
         bucketRow.innerHTML = Object.entries(bucketOptions).map(([bkt, label]) => {
           const sel = ref.planBucket === bkt ? ' selected' : '';
@@ -6713,31 +6808,6 @@
       dateBlock.appendChild(dateRow);
       body.appendChild(dateBlock);
 
-      const secBlock = document.createElement('div');
-      secBlock.innerHTML = `<div class="plan-detail-section-label">섹션</div>`;
-      const secSelect = document.createElement('select');
-      secSelect.style.cssText = 'font-size:13px;padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:var(--bg-card);color:var(--text-primary);font-family:inherit;outline:none;';
-      sections.forEach(s => {
-        const opt = document.createElement('option');
-        opt.value = s.id; opt.textContent = s.name;
-        if (s.id === refSectionId) opt.selected = true;
-        secSelect.appendChild(opt);
-      });
-      secSelect.addEventListener('change', () => {
-        const newSecId = secSelect.value;
-        if (newSecId !== refSectionId) {
-          const oldArr = tasks[refSectionId] || [];
-          const idx = oldArr.indexOf(ref);
-          if (idx >= 0) oldArr.splice(idx, 1);
-          if (!tasks[newSecId]) tasks[newSecId] = [];
-          tasks[newSecId].unshift(ref);
-          refSectionId = newSecId;
-          ref.sectionName = sections.find(s => s.id === newSecId)?.name || '';
-          markChanged();
-        }
-      });
-      secBlock.appendChild(secSelect);
-      body.appendChild(secBlock);
 
       body.appendChild(questBlock);
 
@@ -6752,26 +6822,131 @@
         body.appendChild(srcBlock);
       }
 
-      if (ref.subtasks && ref.subtasks.length > 0) {
-        const stBlock = document.createElement('div');
-        stBlock.innerHTML = `<div class="plan-detail-section-label">하위 작업 (${ref.subtasks.filter(s=>s.checked).length}/${ref.subtasks.length})</div>`;
+      // --- 서브태스크 섹션 (CRUD) ---
+      if (!ref.subtasks) ref.subtasks = [];
+      const stBlock = document.createElement('div');
+      function renderDetailSubtasks() {
+        stBlock.innerHTML = '';
+        const label = document.createElement('div');
+        label.className = 'plan-detail-section-label';
+        label.textContent = ref.subtasks.length > 0
+          ? `하위 작업 (${ref.subtasks.filter(s=>s.checked).length}/${ref.subtasks.length})`
+          : '하위 작업';
+        stBlock.appendChild(label);
+
         const stList = document.createElement('div');
         stList.className = 'plan-detail-subtasks';
+
         ref.subtasks.forEach((st, idx) => {
           const stItem = document.createElement('div');
           stItem.className = 'plan-detail-subtask' + (st.checked ? ' is-done' : '');
-          stItem.innerHTML = `<input type="checkbox" ${st.checked ? 'checked' : ''}><span>${st.text}</span>`;
-          stItem.querySelector('input').addEventListener('change', (e) => {
-            ref.subtasks[idx].checked = e.target.checked;
-            stItem.classList.toggle('is-done', e.target.checked);
-            stBlock.querySelector('.plan-detail-section-label').textContent = `하위 작업 (${ref.subtasks.filter(s=>s.checked).length}/${ref.subtasks.length})`;
+
+          const cb = document.createElement('input');
+          cb.type = 'checkbox';
+          cb.checked = st.checked;
+          cb.addEventListener('change', () => {
+            ref.subtasks[idx].checked = cb.checked;
+            stItem.classList.toggle('is-done', cb.checked);
+            label.textContent = `하위 작업 (${ref.subtasks.filter(s=>s.checked).length}/${ref.subtasks.length})`;
             markChanged();
           });
+
+          const textSpan = document.createElement('span');
+          textSpan.className = 'plan-detail-subtask-text';
+          textSpan.textContent = st.text;
+          textSpan.addEventListener('click', () => {
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'plan-detail-subtask-input';
+            input.value = st.text;
+            textSpan.replaceWith(input);
+            input.focus();
+            input.select();
+            let saved = false;
+            const saveEdit = () => {
+              if (saved) return;
+              saved = true;
+              const newText = input.value.trim();
+              if (newText) { ref.subtasks[idx].text = newText; }
+              else { ref.subtasks.splice(idx, 1); }
+              markChanged();
+              renderDetailSubtasks();
+            };
+            input.addEventListener('keydown', (e) => {
+              if (e.key === 'Enter') { e.preventDefault(); saveEdit(); }
+              else if (e.key === 'Escape') { saved = true; renderDetailSubtasks(); }
+            });
+            input.addEventListener('blur', saveEdit);
+          });
+
+          const delBtn = document.createElement('button');
+          delBtn.className = 'plan-detail-subtask-del';
+          delBtn.textContent = '×';
+          delBtn.title = '삭제';
+          delBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            ref.subtasks.splice(idx, 1);
+            markChanged();
+            renderDetailSubtasks();
+          });
+
+          stItem.appendChild(cb);
+          stItem.appendChild(textSpan);
+          stItem.appendChild(delBtn);
           stList.appendChild(stItem);
         });
+
+        // 추가 버튼
+        const addBtn = document.createElement('div');
+        addBtn.className = 'plan-detail-add-subtask';
+        addBtn.textContent = '+ 하위 작업 추가';
+        addBtn.addEventListener('click', () => {
+          const inputRow = document.createElement('div');
+          inputRow.style.cssText = 'display:flex;align-items:center;gap:8px;';
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.className = 'plan-detail-subtask-input';
+          input.placeholder = '새 하위 작업...';
+          input.style.width = '100%';
+          inputRow.appendChild(input);
+          addBtn.replaceWith(inputRow);
+          input.focus();
+          let saved = false;
+          const saveAdd = () => {
+            if (saved) return;
+            saved = true;
+            const text = input.value.trim();
+            if (text) {
+              ref.subtasks.push({ text, checked: false });
+              markChanged();
+            }
+            renderDetailSubtasks();
+          };
+          input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              const text = input.value.trim();
+              if (text) {
+                saved = true;
+                ref.subtasks.push({ text, checked: false });
+                markChanged();
+                renderDetailSubtasks();
+                // 연속 추가: 다시 추가 모드 진입
+                setTimeout(() => {
+                  const newAddBtn = stBlock.querySelector('.plan-detail-add-subtask');
+                  if (newAddBtn) newAddBtn.click();
+                }, 0);
+              }
+            } else if (e.key === 'Escape') { saved = true; renderDetailSubtasks(); }
+          });
+          input.addEventListener('blur', saveAdd);
+        });
+
+        stList.appendChild(addBtn);
         stBlock.appendChild(stList);
-        body.appendChild(stBlock);
       }
+      renderDetailSubtasks();
+      body.appendChild(stBlock);
 
       const noteArea = document.createElement('div');
       noteArea.className = 'plan-detail-user-note-area';
@@ -6862,9 +7037,11 @@
       return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
     }
 
+    const hiddenSections = ['ideas', 'references'];
     function getAllTasks() {
       const all = [];
       sections.forEach(s => {
+        if (hiddenSections.includes(s.id)) return;
         (tasks[s.id] || []).forEach(t => {
           all.push({ ...t, sectionId: s.id, sectionName: s.name });
         });
@@ -7277,9 +7454,8 @@
         grid.appendChild(col);
       });
 
-      // Unscheduled tasks panel — exclude Ideas & References, group by tag, show source
-      const excludeSections = ['ideas', 'references'];
-      const unscheduled = allTasks.filter(t => !t.scheduledDate && !t.checked && !excludeSections.includes(t.sectionId));
+      // Unscheduled tasks panel
+      const unscheduled = allTasks.filter(t => !t.scheduledDate && !t.checked);
 
       const panel = document.createElement('div');
       panel.className = 'unscheduled-panel';
@@ -7517,7 +7693,7 @@
         sections = result.sections;
         tasks = result.tasks;
         taskFileName = file.name;
-        saveToLocalStorage();
+        scheduleTaskSync();
         switchTaskView('tags');
         startWatching();
         filePathEl.textContent = file.name;
@@ -7530,14 +7706,17 @@
     if (openTaskBtn) openTaskBtn.addEventListener('click', openTaskFile);
     document.getElementById('openBtnLarge')?.addEventListener('click', openTaskFile);
 
-    // 임베딩/localStorage 로드 후, Supabase에서 최신 데이터 비동기 로드
+    // View 설정 복원
+    loadViewPreference();
+
+    // Supabase에서 태스크 로드 (DB가 source of truth)
     (async () => {
       if (!sb) return;
       try {
-        const loaded = await loadFromSupabase();
+        const loaded = await loadTasksFromSupabase();
         if (loaded) {
+          renderCompassView(); // tasks 로드 후 milestone 연결 반영
           checkOverdueTasks();
-          saveToLocalStorage();
           renderTasks();
           switchTaskView(currentView);
           showStatus('Loaded from cloud');
@@ -8183,171 +8362,12 @@
     window.filterMemoryDirectory = filterMemoryDirectory;
 
     // ============================================================
-    // ===== AUTO-LOAD EMBEDDED TASKS =====
+    // ===== AUTO-LOAD EMBEDDED MEMORY =====
     // ============================================================
-    (function autoLoadTasks() {
-      // Skip embedded data if localStorage already has data
-      if (sections.length > 0) return;
+    (function autoLoadEmbeddedData() {
+      // 태스크는 Supabase에서 로드 (DB가 source of truth)
+      // 아래는 메모리 데이터만 로드
 
-      const embeddedContent = `# Tasks
-
-## DELAYED (3mo+ repeat)
-- [ ] **퍼블리셔 대응/정리** - 워크플로우 세팅, 중국/북미 에이전시, 사업지원 체계 (5회+ 반복, 12월~) #VD #BIZ {{https://www.notion.so/2fcba9422534809d9ccaf1a39cbeac12}}
-  - [ ] 퍼블리셔 체크리스트 만들기
-  - [ ] 에이전시 PR 대응 (중국편, 북미, 로드컴플릿)
-  - [ ] 사업쪽 지원 어떻게 받는가 구조화
-- [ ] **중국 시장 대응** - 계약, QQ그룹, 빌리빌리 마케팅, 중문 스토어 최적화 (5회+ 반복, 12월~) #VD
-  - [ ] 중국 퍼블리셔 추가 계약 알아보기
-  - [ ] QQ 그룹 세팅
-  - [ ] 빌리빌리→Heybox→Steam 위시 퍼널 구축
-  - [ ] Sologame 스토어 페이지 중문 설명 퀄리티 점검
-- [ ] **게임 지표 기준 설립** - 선제지표, 위시리스트 기준, Retention DD, 게임애널리틱스 (5회+ 반복) #VD #CQ {{https://www.notion.so/2e7ba942253480dab259d60f0848b998}}
-  - [ ] 지표 열어주기 (게임애널)
-  - [ ] 간단 리포트 + 복잡 리포트 준비
-  - [ ] 데이터팀 결과 공유
-- [ ] **AI TF / AI 조직** - AI assist + AI TF 합체, 에이전트 워크플로우, 사업화 오케스트레이션 (4회+) #AI
-  - [ ] AI assist조직과 AI TF 합체 방향 결정
-  - [ ] 에이전트 리서치 + 파이프라인 자동화 검토
-  - [ ] AI 통합 문서 월별 정리
-- [ ] **영규님 관련** - GDC 3/16, 양채우기, 커뮤니케이션, 레딧, DM방 (4회+) #VD
-  - [ ] GDC 3/16 준비 지원
-  - [ ] 영규 DM방 개설
-  - [ ] 레딧 커뮤니티 세팅
-- [ ] **CQ 방향성 결정** - 스팀 vs 모바일, CQ IP, CQ Town, CQ Rebirth (4회+) #CQ
-  - [ ] CQ 스팀이냐 모바일이냐 결론
-  - [ ] CQIP 넘기는 문제 정리
-  - [ ] CQ Town 넥스트 플랜 + 매출 예상
-  - [ ] CQ Rebirth write-up (to 최고)
-- [ ] **영상 제작 / 트레일러** - 새 영상, 킥스타터 시너지, Never Way 트레일러 (4회+) #VD
-  - [ ] 영상 새로 만들기
-  - [ ] Never Way 트레일러
-  - [ ] 킥스타터 + 트레일러 시너지 검토 (INARI 참고)
-- [ ] **벨브(Valve) 콘택** - 스팀 직접 콘택 (3회, 2월부터) #VD
-- [ ] **캐주얼 게임 방향** - 프로토 그만, 한국만 할수있는것, 콜라보 (3회) #BIZ
-- [ ] **학교/인재원 알리기** - 청강, 게임인재원, 교수님 연락 (3회) #BIZ
-- [ ] **차상훈 관련** - 모닝커피, 일정, CQ 관련 (3회) #CQ
-- [ ] **회사 브리프 자료** - 수정대표 피드, 에이전트 학습용 자료 (3회) #BIZ
-
-## Active
-- [ ] **넥페(Next Fest) 전략** - 2월 vs 6월 장단점, 프롤로그 vs demo2.0 #VD {{https://www.notion.so/2fdba942253480bb89c2f3ee31326d47}}
-  - [ ] 넥페 참가 여부 결정
-  - [ ] 얼리엑세스 여부 결정
-  - [ ] 2~6월 프롤로그때 다양한 피처 실험
-- [ ] **그린라이트 회의 팔로업** - 선언 + 인원지원 + 체크리스트 #TEAM {{https://www.notion.so/2efba94225348121a70dfd1629210e83}}
-- [ ] **스팀덱 지원** - 넥페 이전 구현 필요, Deck Verified 마케팅 효과 큼 #VD {{https://loadcomplete.slack.com/archives/C06CWM6AQJY/p1769481369847959}}
-- [ ] **마이크로인플루언서 전략** - 스트리머 캠페인 #VD
-- [ ] **에이전시 PR 대응** - 기초 PR 중국편, 북미, 대행사 #VD #BIZ
-- [ ] **캡슐 이미지 리프레시** - Search Suggestions CTR 하락, 새 캐릭터 추가시 동시 교체 #VD {{https://loadcomplete.slack.com/archives/C05ML4UR7GE/p1769476733236209}}
-- [ ] **팀 구조 안정화** - 기획보강, 핵심멤버 리스트업 #TEAM
-  - [ ] 애니메이터 포트폴리오 (예쓸님)
-  - [ ] 이펙트 쿼터뷰
-  - [ ] 크퀘 리버스 단계별 핵심멤버 정리
-- [ ] **벨류에이션 / 투자** - 디벨류에이션, 한투파 설득, 유상증자 #BIZ
-  - [ ] 투자사 미팅 팔로업 (12월, 2월, 5월)
-- [ ] **호영 아젠다 정리** - 인턴, 중헌, 피드백채널, Ice, 업데이트, 크래프톤, 데모, KV, 로드맵 #VD #TEAM
-- [ ] **세이브 데이터 정책** - 보상 연동 방식, 유저 기대 관리 #VD
-- [ ] **유저 유지 콘텐츠** - 무한모드? 뱀서같은? #VD
-- [ ] **중국 카피 대응** - 시범런치 후 선빵 전략 #VD
-- [ ] **DRG 자료 공개** - 매출 시뮬레이션, 생존자 편향 방어 #VD #BIZ
-- [ ] **마솽 콘택** - 다녀와서 미팅 세팅 #BIZ
-- [ ] **미니테일즈 미팅** - #BIZ
-- [ ] **인포그래픽 통합 관리** - MM트래킹 + seed/alpha/beta 프로덕션 상태 통합 #TEAM {{https://loadcomplete.slack.com/archives/C07UE1WCZHD/p1767938589887059}}
-- [ ] **25년 소재 제작 리뷰** - 총 263개, 풀AI 7개, 캠페인 투입 0 #AI {{https://loadcomplete.slack.com/archives/C09EBJWV4GL/p1768210365055669}}
-- [ ] **시드 프로세스** - 유닛 검증 방식 (메카닉 or 아트 KPI) #TEAM {{https://loadcomplete.slack.com/archives/C09FPR1C8HZ/p1768298780340749}}
-- [ ] **CQ-TOWN 26.03 출시 스펙** - 연출 추가, 폴리싱 #CQ {{https://loadcomplete.slack.com/archives/C09TVNKV8M8/p1768543008953159}}
-- [ ] **커스텀 케이크 / 런칭격려금** - 정책 디테일 논의 #TEAM
-- [ ] **부동산 공부** - #PERSONAL
-- [ ] **데스크 구매** - 메이우드, 칙칙한 느낌 탈피 #PERSONAL
-- [ ] **디자인 레퍼런스 수집** - awwwards.com 등에서 UI/UX 디자인 참고 가져오기 #PERSONAL
-
-## Waiting On
-- [ ] **성은 - 신작 프로젝트 현황/월별 보고** - 쓰레드 참고 (since 01-16) #TEAM {{https://loadcomplete.slack.com/archives/C07UE1WCZHD/p1768530619236049}}
-- [ ] **최고 - CQ 스팀 vs 모바일 괌 숙제** - 답변 대기 (since 02-10) #CQ
-- [ ] **호영 - 보고 체계** - 요청은 너가 (since 02-13) #VD #TEAM
-- [ ] **찬솔 - CQ Town 매출 예상** - 정기회의 세팅 (since 02-10) #CQ
-- [ ] **수정대표 - 회사 자료 피드** - transform, 청강, 중헌 (since 02-10) #BIZ
-
-## Ideas
-- [ ] **웹툰 제작** - 울트라미디어 (모기전쟁, 더복서) 참고 #VD
-- [ ] **CQ Reimagined for Steam** - DQ7 리이매진드 참고, 스팀 맞춤 리메이크 #CQ
-- [ ] **나홍진 스타일 영상** - AI 아닌 한국적 영상 방향 #VD
-- [ ] **킥스타터 INARI** - 넥페 직전 홍보수단 #VD
-- [ ] **원버튼 게임 코어 메카닉 검증** - Claude로 빠르게, 직군 무관 검증 #AI {{https://loadcomplete.slack.com/archives/C09FPR1C8HZ/p1767922524038429}}
-- [ ] **AI 에이전트 공정 자동화** - 아이디어→영상→배포→리포트 전체 파이프라인 #AI
-- [ ] **DE NEXT** - 기다릴 필요? 우리도 뭔가 보여주자 #BIZ
-- [ ] **슬랙 UX봇 / 파이어베이스** - 프로젝트 후보 #AI
-- [ ] **인터랙티브 게임 프로젝트** - 프로젝트 아이디어 #BIZ
-- [ ] **Deferred Server Integration** - Agile Dev 서버 통합 #VD
-
-## References
-- [ ] **Cast n Chill (Steam)** - 낚시 게임, 압긍! #VD {{https://store.steampowered.com/app/3261020/Cast_n_Chill/}}
-- [ ] **GamesBeat Summit - Jenova Chen** - Thatgamecompany 감성 게임 강연 #VD {{https://www.notion.so/2fbba9422534800aaf58c53945380b9f}}
-- [ ] **한국 모바일 게임 시장 트렌드** - mmorpg 매출50%, 한국 신작 부재 #BIZ {{https://loadcomplete.slack.com/archives/CG5G13YCX/p1768968069019129}}
-- [ ] **멀티플레이어 픽셀 탈출류 UX** - 현진2 분석, 숙련도 시스템 제안 #VD {{https://loadcomplete.slack.com/archives/C05ML4UR7GE/p1770864287819849}}
-- [ ] **Void Diver 투자자 관점** - 데모 1주 위시20K, 리뷰90%+, PR미사용 #VD #BIZ {{https://www.notion.so/2f5ba942253480d598f1ce88a7bc55e3}}
-- [ ] **성공 레퍼런스들** - 펍지+림버스, 블랙서바이벌, 데이브더다이버, Shape of Dream #VD
-- [ ] **DRG 분석** - 매출 시뮬레이션, 소규모팀 효율 #VD
-- [ ] **일정 관리툴** - loadcomplete-scheduler.web.app (진평) #TEAM {{https://loadcomplete.slack.com/archives/C0A79SLGBGQ/p1769561508755129}}
-- [ ] **비교군 소스** - gamecompany.co 스팀 데이터 #VD {{https://loadcomplete.slack.com/archives/C06DPD4985N/p1769740421972289}}
-- [ ] **애나 렘키 - 도파민 중독 탈출** - 균형잡힌 삶 #PERSONAL
-- [ ] **곽근봉 원지랩스** - AI는 HR이다, AX=HR #AI {{https://www.notion.so/1ecba9422534802db3abee069d7f2f9e}}
-- [ ] **덕코프 스팀페이지 운영 조사** - 빌리빌리 산하 팀소다 벤치마크 #VD {{https://www.notion.so/2f0ba942253480cdb87cf1a3f87f93e1}}
-
-## STEAM TODO (Notion)
-- [ ] **출시전략 정하기** - 6월 넥페 확정, 2~5월 PR+스트리머 위시 확보, 디스코드 플레이테스트 #VD {{https://www.notion.so/2fdba942253480bb89c2f3ee31326d47}}
-  - [ ] 세이브 데이터 이전/보상 정책 결정
-  - [ ] 플레이테스트 빈도/콘텐츠 계획
-  - [ ] Early Access 여부 최종 결정
-- [ ] **지표툴 팔로업** - 게임애널리틱스 트래킹 구조 변경, 튜토리얼 퍼널 #VD #CQ {{https://www.notion.so/2e7ba942253480dab259d60f0848b998}}
-- [ ] **데모 버전 2 제안** - To 개발팀 #VD {{https://www.notion.so/2f4ba9422534801c8592de1b2943c310}}
-- [ ] **스케일 업 단계 고민** - 개발 10%, Demo1 완료 후 방향 #VD {{https://www.notion.so/2fbba94225348048aaeadb798ed34a14}}
-- [ ] **유명 게임 대표 레퍼런스 부탁** - 림버스, 펍지, 데더다, 타파스, 마녀의샘 #VD #BIZ
-
-## SecondBrain TODO (Notion)
-- [ ] **퍼블리셔 확정** - 명료화: 일정 (3/12) #BIZ [[schedule]] {{https://www.notion.so/1a5ba942-2534-81a2-9a27-c12a1da11faf}}
-- [ ] **변호사들한테 30일에** - 명료화: 다음행동 #BIZ [[asap]] {{https://www.notion.so/1a5ba942-2534-81ed-9ba3-d8adb3327a78}}
-- [ ] **온보딩** - 명료화 미지정 {{https://www.notion.so/1a5ba942-2534-81c9-ae3e-d8c72eba0e3e}}
-- [ ] **샤론 등록** - 명료화 미지정 {{https://www.notion.so/1a5ba942-2534-8152-9370-c99b9b39a4b2}}
-- [ ] **빌드업 해보기 >> 중헌** - 명료화: 위임 #VD {{https://www.notion.so/1a5ba942-2534-8103-b3e1-c1e68f24ddf1}}
-- [ ] **네오위즈 콘택** - 명료화 미지정 #BIZ {{https://www.notion.so/1a5ba942-2534-81c7-a4b8-e24f3bec9a44}}
-- [ ] **연말정산 마감** - 명료화: 일정 (1/21) #PERSONAL [[schedule]] {{https://www.notion.so/1a5ba942-2534-8185-a7c3-c6e2eaeb14b2}}
-- [ ] **다흥님 납치** - 명료화: 일정 (1/6) #BIZ [[schedule]] {{https://www.notion.so/1a5ba942-2534-8183-b4f4-cb33e9e75d99}}
-- [ ] **제안서 작성** - 명료화: 일정 (2/28) #BIZ [[schedule]] {{https://www.notion.so/1a5ba942-2534-81a3-95e7-db78e06b498d}}
-- [ ] **기존 포폴 검토** - 명료화 미지정 {{https://www.notion.so/1a5ba942-2534-81f5-8d78-f25acd5c2f2b}}
-- [ ] **정기 회의 만들기** - 명료화: 일정 (1/8) #TEAM [[schedule]] {{https://www.notion.so/1a5ba942-2534-81d7-bf19-f2b80e1b8af0}}
-- [ ] **주간,월간회의 조정** - 명료화: 일정 #TEAM [[schedule]] {{https://www.notion.so/1a5ba942-2534-8161-926e-f3e98ce28aa4}}
-- [ ] **호영미팅잡기** - 명료화: 일정 (1/21) #VD [[schedule]] {{https://www.notion.so/1a5ba942-2534-81c5-8a0c-e49ef208e0c4}}
-- [ ] **디볼버 피치 준비** - 명료화: Maybe #VD [[maybe]] {{https://www.notion.so/1a5ba942-2534-81db-b04d-c64e66b61d85}}
-- [ ] **지표들 확인** - 명료화 미지정 #VD {{https://www.notion.so/1a5ba942-2534-810c-8da6-c11b7e3e7ad1}}
-- [ ] **수정 지표 요청 대응** - 명료화 미지정 #BIZ {{https://www.notion.so/1a5ba942-2534-810e-9a0b-eaaab5e9adf6}}
-- [ ] **기획자들 역할확인 & 면담** - 명료화: 일정 (1/8) #TEAM [[schedule]] {{https://www.notion.so/1a5ba942-2534-81a1-b3f1-e58ceea1113b}}
-- [ ] **ai 공부하자 n8n부터!** - 명료화: 일정 #AI [[schedule]] {{https://www.notion.so/1a5ba942-2534-817a-a8e2-d1fefc97f6e2}}
-- [ ] **피드백 폼 호영 전달** - 명료화 미지정 #VD {{https://www.notion.so/1a5ba942-2534-8180-9e8e-e2ec2e0f6f89}}
-- [ ] **ai de 요청** - 명료화 미지정 #AI {{https://www.notion.so/1a5ba942-2534-816c-8aff-ed4f61e63dc3}}
-- [ ] **게임 소개 자료 만들기 보이드 다이버** - 명료화 미지정 #VD {{https://www.notion.so/1a5ba942-2534-8117-816c-ea2e8b67f7b1}}
-- [x] **리뷰어500확보** {{https://www.notion.so/1a5ba942-2534-8130-8917-cc4b1fa8bbc3}}
-- [x] **후원** {{https://www.notion.so/1a5ba942-2534-81db-a80a-c2d8e4e06f3e}}
-- [x] **TGS신청** {{https://www.notion.so/1a5ba942-2534-81cd-a178-e3a2f3be4840}}
-- [x] **클로드코워크** {{https://www.notion.so/1a5ba942-2534-81ab-b8f8-d94e67e7a1d5}}
-- [x] **습관화** {{https://www.notion.so/1a5ba942-2534-81aa-b43a-e93f24b8d2f8}}
-- [x] **계획서** {{https://www.notion.so/1a5ba942-2534-8122-9f96-c3217e0b7e50}}
-- [x] **VD이름확정** {{https://www.notion.so/1a5ba942-2534-819d-ab2e-c2f0a2d6fc54}}
-- [x] **포지션확인** {{https://www.notion.so/1a5ba942-2534-8184-a4c1-f7e8b01e97e3}}
-- [x] **진성님고민** {{https://www.notion.so/1a5ba942-2534-8154-a43b-c4bce32b52f1}}
-
-## Done
-- [x] **커밍아웃 - 퍼블리셔 명 교체** - 완료 (2/23), 스팀 내 공지 후 이름 교체 #VD {{https://www.notion.so/305ba9422534802486c7cc52bc33e86b}}
-- [x] **2026 행사 정리** - 아카이브드, INDIE Live Expo 지원완료, 플레이엑스포 신청중, 게임스컴 전시신청 #VD {{https://www.notion.so/2feba942253480e9aa95c4d13ce73f20}}
-`;
-
-      const result = parseTaskMarkdown(embeddedContent);
-      sections = result.sections;
-      tasks = result.tasks;
-      taskFileName = 'TASKS.md (임베드)';
-      filePathEl.textContent = '3개월 종합 — Slack · NotePlan · Notion (+ SecondBrain TODO)';
-      saveToLocalStorage();
-      checkOverdueTasks();
-      switchTaskView('tags');
 
       // === AUTO-LOAD MEMORY ===
       const claudeMdContent = `# Memory
@@ -8624,7 +8644,7 @@
 
       // Bucket
       if (m.bucket) {
-        const bucketLabels = { asap: '⚡ ASAP', schedule: '📋 Schedule', someday: '💭 Someday', maybe: '🤔 Maybe' };
+        const bucketLabels = { asap: '⚡ ASAP', schedule: '📋 Schedule', someday: '💭 Someday', maybe: '🤔 Maybe', waitingon: '⏳ Waiting On' };
         html += `<div class="quick-add-preview-row"><span class="label">버킷</span><span class="quick-add-chip" style="background:var(--bg-card);border:1px solid var(--border);" data-remove-bucket="1">${bucketLabels[m.bucket] || m.bucket}<span class="chip-remove">&times;</span></span></div>`;
       }
 
@@ -8698,7 +8718,7 @@
       }).join('');
 
       // Buckets
-      const bucketList = { asap: '⚡ ASAP', schedule: '📋 Schedule', someday: '💭 Someday', maybe: '🤔 Maybe' };
+      const bucketList = { asap: '⚡ ASAP', schedule: '📋 Schedule', someday: '💭 Someday', maybe: '🤔 Maybe', waitingon: '⏳ Waiting On' };
       qaBucketBtns.innerHTML = Object.entries(bucketList).map(([bkt, label]) => {
         const selected = m.bucket === bkt ? ' selected' : '';
         return `<button class="quick-add-manual-btn${selected}" data-qa-bucket="${bkt}">${label}</button>`;
@@ -9406,21 +9426,8 @@
     // ===== COMPASS MODE =====
     // ============================================================
 
-    const LS_KEY_COMPASS_MILESTONES = 'dashboard_compass_milestones';
     const LS_KEY_COMPASS_GOALS = 'dashboard_compass_goals';
     let compassHalfOffset = 0; // 0 = current half-year
-
-    const _defaultCompassMilestones = [
-      { id: 'm1', project: 'VD', title: 'GDC 참가', date: '2026-03-16', color: '#7C3AED', showOnCompass: true },
-      { id: 'm2', project: 'VD', title: '넥페 출품', date: '2026-05-10', color: '#7C3AED', showOnCompass: true },
-      { id: 'm3', project: 'VD', title: '출시', date: '2026-06-30', color: '#7C3AED', showOnCompass: true },
-      { id: 'm4', project: 'CQ', title: '출시', date: '2026-03-01', color: '#D97706', showOnCompass: true },
-      { id: 'm5', project: 'BIZ', title: '투자 미팅', date: '2026-02-28', color: '#DC2626', showOnCompass: true },
-      { id: 'm6', project: 'BIZ', title: 'IR', date: '2026-05-20', color: '#DC2626', showOnCompass: true },
-      { id: 'm7', project: 'TEAM', title: '온보딩', date: '2026-03-15', color: '#059669', showOnCompass: true },
-      { id: 'm8', project: 'PERSONAL', title: '운동 루틴 정착', date: '2026-04-01', color: '#6B7280', showOnCompass: true },
-      { id: 'm9', project: 'PERSONAL', title: '독서 12권 달성', date: '2026-06-30', color: '#6B7280', showOnCompass: true },
-    ];
 
     const _defaultCompassGoals = {
       categories: [
@@ -9474,24 +9481,18 @@
 
     function loadCompassData() {
       try {
-        const ms = localStorage.getItem(LS_KEY_COMPASS_MILESTONES);
-        compassMilestones = ms ? JSON.parse(ms) : JSON.parse(JSON.stringify(_defaultCompassMilestones));
+        // Goals/OKR만 localStorage에서 로드 (퀘스트는 Supabase 전용)
         const gs = localStorage.getItem(LS_KEY_COMPASS_GOALS);
         compassGoals = gs ? JSON.parse(gs) : JSON.parse(JSON.stringify(_defaultCompassGoals));
-        // Migrate: ensure all quests have showOnCompass field
-        let migrated = false;
-        compassMilestones.forEach(m => {
-          if (m.showOnCompass === undefined) { m.showOnCompass = true; migrated = true; }
-        });
-        if (migrated) saveCompassData();
       } catch(e) { console.log('Compass data load error:', e); }
     }
 
     function saveCompassData() {
       try {
-        localStorage.setItem(LS_KEY_COMPASS_MILESTONES, JSON.stringify(compassMilestones));
+        // Goals/OKR → localStorage
         localStorage.setItem(LS_KEY_COMPASS_GOALS, JSON.stringify(compassGoals));
-        scheduleSyncToSupabase();
+        // Quests → Supabase (디바운스)
+        scheduleQuestSync();
       } catch(e) { console.log('Compass data save error:', e); }
     }
 
@@ -9621,7 +9622,9 @@
                 <div class="compass-lane-label">${proj}</div>
                 <div class="compass-lane-track">
                   ${showTodayLine ? `<div class="compass-today-line" style="left: ${todayPos}%"></div>` : ''}
-                  ${projMilestones.filter(m => m.showOnCompass !== false).map(m => {
+                  ${(() => {
+                    let visIdx = 0;
+                    return projMilestones.filter(m => m.showOnCompass !== false).map(m => {
                     const mDate = new Date(m.date + 'T00:00:00');
                     const inRange = mDate >= rangeStart && mDate <= rangeEnd;
                     if (!inRange) return '';
@@ -9634,11 +9637,14 @@
                         <div class="compass-milestone-progress-fill" style="width:${progPct}%;background:${progColor};"></div>
                       </div>
                       <span class="compass-milestone-progress-label">${prog.done}/${prog.total}</span>` : '';
-                    return `<div class="compass-milestone" style="left: ${pos}%; background: ${m.color || projColor};" data-milestone-id="${m.id}" title="${m.title} (${m.date})${prog.total > 0 ? ` — ${prog.done}/${prog.total} 완료` : ''}">
+                    const labelPos = visIdx % 2 === 0 ? 'label-top' : 'label-bottom';
+                    visIdx++;
+                    return `<div class="compass-milestone ${labelPos}" style="left: ${pos}%; background: ${m.color || projColor};" data-milestone-id="${m.id}" title="${m.title} (${m.date})${prog.total > 0 ? ` — ${prog.done}/${prog.total} 완료` : ''}">
                       <span class="compass-milestone-label">${m.title}</span>
                       ${progBar}
                     </div>`;
-                  }).join('')}
+                  }).join('');
+                  })()}
                 </div>
               </div>`;
             }).join('')}
@@ -9913,8 +9919,12 @@
     }
 
     // Load compass data on startup
-    loadCompassData();
-    renderCompassView();
+    loadCompassData();  // Goals/OKR만 localStorage에서 로드
+    // 퀘스트는 Supabase에서 로드 후 렌더
+    (async () => {
+      await loadQuestsFromSupabase();
+      renderCompassView();
+    })();
     loadWeeklyNotes();
 
     // ============================================================
