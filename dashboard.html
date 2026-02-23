@@ -4215,13 +4215,20 @@
           });
         }
 
-        // 기존 데이터 삭제 후 삽입 (깔끔한 동기화)
-        await sb.from('subtasks').delete().gte('id', 0);
-        await sb.from('tasks').delete().gte('id', 0);
+        // 기존 데이터 삭제 후 삽입 (insert 실패 시 롤백)
         if (allTasks.length > 0) {
-          await sb.from('tasks').insert(allTasks);
+          const { error: taskInsertErr } = await sb.from('tasks').upsert(allTasks, { onConflict: 'id' });
+          if (taskInsertErr) { console.log('Tasks upsert error:', taskInsertErr); return; }
+          // upsert 성공 후 현재 목록에 없는 기존 행 삭제
+          const currentTaskIds = allTasks.map(t => t.id);
+          await sb.from('subtasks').delete().not('task_id', 'in', `(${currentTaskIds.join(',')})`);
+          await sb.from('tasks').delete().not('id', 'in', `(${currentTaskIds.join(',')})`);
+        } else {
+          await sb.from('subtasks').delete().gte('id', 0);
+          await sb.from('tasks').delete().gte('id', 0);
         }
         if (allSubtasks.length > 0) {
+          await sb.from('subtasks').delete().in('task_id', allTasks.map(t => t.id));
           await sb.from('subtasks').insert(allSubtasks);
         }
 
@@ -4235,9 +4242,14 @@
           show_on_compass: m.showOnCompass !== false,
           position: i
         }));
-        await sb.from('quests').delete().neq('id', '');
         if (questRows.length > 0) {
-          await sb.from('quests').insert(questRows);
+          const { error: questErr } = await sb.from('quests').upsert(questRows, { onConflict: 'id' });
+          if (!questErr) {
+            const currentQuestIds = questRows.map(q => q.id);
+            await sb.from('quests').delete().not('id', 'in', `(${currentQuestIds.join("','")})`);
+          }
+        } else {
+          await sb.from('quests').delete().neq('id', '');
         }
 
         console.log('Supabase synced');
