@@ -4338,11 +4338,19 @@
           if (taskInsertErr) {
             console.log('Tasks upsert error:', taskInsertErr);
           } else {
+            // DB에 있지만 로컬에 없는 태스크만 삭제
             const currentTaskIds = allTasks.map(t => t.id);
-            await sb.from('subtasks').delete().not('task_id', 'in', `(${currentTaskIds.join(',')})`);
-            await sb.from('tasks').delete().not('id', 'in', `(${currentTaskIds.join(',')})`);
+            const { data: dbTasks } = await sb.from('tasks').select('id');
+            if (dbTasks) {
+              const toDelete = dbTasks.filter(t => !currentTaskIds.includes(t.id)).map(t => t.id);
+              if (toDelete.length > 0) {
+                await sb.from('subtasks').delete().in('task_id', toDelete);
+                await sb.from('tasks').delete().in('id', toDelete);
+              }
+            }
+            // subtasks 갱신
             if (allSubtasks.length > 0) {
-              await sb.from('subtasks').delete().in('task_id', allTasks.map(t => t.id));
+              await sb.from('subtasks').delete().in('task_id', currentTaskIds);
               await sb.from('subtasks').insert(allSubtasks);
             }
           }
@@ -4363,11 +4371,16 @@
           if (questErr) {
             console.log('Quests upsert error:', questErr);
           } else {
+            // DB에 있지만 로컬에 없는 퀘스트만 삭제
             const currentQuestIds = questRows.map(q => q.id);
-            await sb.from('quests').delete().not('id', 'in', `('${currentQuestIds.join("','")}')`);
+            const { data: dbQuests } = await sb.from('quests').select('id');
+            if (dbQuests) {
+              const toDelete = dbQuests.filter(q => !currentQuestIds.includes(q.id)).map(q => q.id);
+              if (toDelete.length > 0) {
+                await sb.from('quests').delete().in('id', toDelete);
+              }
+            }
           }
-        } else {
-          await sb.from('quests').delete().neq('id', '');
         }
 
         console.log('Supabase synced');
