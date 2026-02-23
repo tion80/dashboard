@@ -3659,6 +3659,36 @@
       flex-shrink: 0;
     }
 
+    /* ===== Quest dropdown in task detail ===== */
+    .quest-dropdown-btn {
+      display: flex; align-items: center; gap: 6px;
+      width: 100%; padding: 8px 12px; font-size: 13px;
+      border: 1px solid var(--border); border-radius: 8px;
+      background: var(--bg-card); cursor: pointer;
+      font-family: inherit; text-align: left;
+    }
+    .quest-dropdown-btn:hover { border-color: var(--accent); }
+    .quest-dd-arrow { margin-left: auto; font-size: 11px; color: var(--text-muted); }
+    .quest-dropdown-list {
+      position: absolute; top: 100%; left: 0; right: 0;
+      margin-top: 4px; z-index: 100;
+      border: 1px solid var(--border); border-radius: 8px;
+      background: var(--bg-card); box-shadow: 0 4px 16px var(--shadow);
+      max-height: 220px; overflow-y: auto;
+    }
+    .quest-dd-epic {
+      padding: 6px 12px 2px; font-size: 11px; font-weight: 600; color: var(--text-muted);
+    }
+    .quest-dd-item {
+      display: flex; align-items: center; gap: 6px;
+      padding: 7px 12px; font-size: 13px; cursor: pointer;
+    }
+    .quest-dd-item:hover { background: var(--bg-secondary); }
+    .quest-dd-item.is-selected { background: var(--accent-light, rgba(99,102,241,0.08)); }
+    .quest-dd-meta { font-size: 11px; color: var(--text-muted); margin-left: auto; }
+    .quest-dd-none { color: var(--text-muted); font-style: italic; }
+    .quest-dd-create { color: var(--accent); font-weight: 500; border-top: 1px solid var(--border-light); }
+
     /* ===== Quest (Epic → Quest → Task) hierarchy styles ===== */
     .milestone-badge {
       display: inline-flex;
@@ -6506,41 +6536,43 @@
       tagsBlock.appendChild(tagsRow);
       body.appendChild(tagsBlock);
 
-      // === Quest indicator (topbar) ===
+      // === Topbar: 퀘스트 전환 버튼만 ===
       if (!ref.milestoneId) ref.milestoneId = null;
       const topbarQuestArea = topbar.querySelector('.topbar-quest-area');
-      function renderTopbarQuest() {
-        const currentMs = ref.milestoneId ? getMilestoneById(ref.milestoneId) : null;
-        let html = '';
-        if (currentMs) {
-          html += `<span class="quest-current-chip" style="color:${currentMs.color};border-color:${currentMs.color}33;background:${currentMs.color}14;font-size:12px;padding:3px 8px;">
-            <span class="quest-chip-dot" style="background:${currentMs.color}"></span>
-            ${currentMs.title}
-          </span>`;
-        }
-        html += `<button class="quest-switch-btn" style="font-size:11px;padding:3px 8px;" id="topbarQuestNavBtn">퀘스트 전환</button>`;
-        topbarQuestArea.innerHTML = html;
-        topbarQuestArea.querySelector('#topbarQuestNavBtn').addEventListener('click', () => {
-          panel.classList.remove('show'); overlay.classList.remove('show');
-          setTimeout(() => { overlay.remove(); panel.remove(); }, 250);
-          switchMainTab('compass');
-        });
-      }
-      renderTopbarQuest();
+      topbarQuestArea.innerHTML = `<button class="quest-switch-btn" style="font-size:11px;padding:3px 8px;">퀘스트 전환</button>`;
+      topbarQuestArea.querySelector('.quest-switch-btn').addEventListener('click', () => {
+        panel.classList.remove('show'); overlay.classList.remove('show');
+        setTimeout(() => { overlay.remove(); panel.remove(); }, 250);
+        switchMainTab('compass');
+      });
 
-      // === Quest picker (body) ===
+      // === Quest dropdown (body) ===
       const questBlock = document.createElement('div');
       questBlock.innerHTML = `<div class="plan-detail-section-label">퀘스트</div>`;
-      const questListEl = document.createElement('div');
-      questListEl.className = 'quest-picker-popup';
-      questListEl.style.cssText = 'position:static;margin-top:4px;';
+      const questDropWrap = document.createElement('div');
+      questDropWrap.style.cssText = 'position:relative;';
 
-      function renderQuestList() {
+      const questSelectBtn = document.createElement('button');
+      questSelectBtn.className = 'quest-dropdown-btn';
+      const questDropdown = document.createElement('div');
+      questDropdown.className = 'quest-dropdown-list';
+      questDropdown.style.display = 'none';
+      let _qdOpen = false;
+
+      function renderQuestDropdown() {
+        const currentMs = ref.milestoneId ? getMilestoneById(ref.milestoneId) : null;
+        if (currentMs) {
+          questSelectBtn.innerHTML = `<span class="quest-chip-dot" style="background:${currentMs.color};width:8px;height:8px;border-radius:50%;display:inline-block;"></span> ${currentMs.title} <span class="quest-dd-arrow">▾</span>`;
+          questSelectBtn.style.color = currentMs.color;
+        } else {
+          questSelectBtn.innerHTML = `퀘스트 선택 <span class="quest-dd-arrow">▾</span>`;
+          questSelectBtn.style.color = 'var(--text-muted)';
+        }
+
         const activeTags = ref.tags && ref.tags.length > 0 ? ref.tags : [];
         const availableMs = activeTags.length > 0
           ? compassMilestones.filter(m => activeTags.includes(m.project))
           : compassMilestones;
-        const currentMs = ref.milestoneId ? getMilestoneById(ref.milestoneId) : null;
 
         const byEpic = {};
         availableMs.forEach(m => {
@@ -6548,96 +6580,81 @@
           byEpic[m.project].push(m);
         });
 
-        let listHtml = '<div class="quest-picker-list">';
+        let html = '';
         if (ref.milestoneId) {
-          listHtml += `<div class="quest-picker-none" data-quest-id="">퀘스트 해제</div>`;
+          html += `<div class="quest-dd-item quest-dd-none" data-quest-id="">해제</div>`;
         }
         Object.keys(byEpic).forEach(ep => {
           const tc = tagColors[ep] || { bg: '#F3F4F6', color: '#6B7280', label: ep };
-          listHtml += `<div style="padding:6px 12px 2px;font-size:11px;font-weight:600;color:var(--text-muted);">
-            <span style="background:${tc.bg};color:${tc.color};padding:1px 6px;border-radius:3px;font-size:10px;">${tc.label || ep}</span>
-          </div>`;
+          html += `<div class="quest-dd-epic"><span style="background:${tc.bg};color:${tc.color};padding:1px 6px;border-radius:3px;font-size:10px;">${tc.label || ep}</span></div>`;
           byEpic[ep].forEach(m => {
-            const prog = getMilestoneProgress(m.id);
             const isSel = ref.milestoneId === m.id;
             const dateLabel = m.date ? m.date.slice(5).replace('-', '/') : '';
-            listHtml += `<div class="quest-picker-item${isSel ? ' is-selected' : ''}" data-quest-id="${m.id}">
+            html += `<div class="quest-dd-item${isSel ? ' is-selected' : ''}" data-quest-id="${m.id}">
               <span class="qp-dot" style="background:${m.color}"></span>
-              <div class="qp-info">
-                <div class="qp-title">${m.title}</div>
-                <div class="qp-meta">${dateLabel}${prog.total > 0 ? ` · ${prog.done}/${prog.total}` : ''}</div>
-              </div>
+              <span>${m.title}</span>
+              <span class="quest-dd-meta">${dateLabel}</span>
               ${isSel ? '<span class="qp-check">✓</span>' : ''}
             </div>`;
           });
         });
 
         if (currentMs && !availableMs.find(am => am.id === currentMs.id)) {
-          listHtml += `<div style="padding:6px 12px 2px;font-size:11px;font-weight:600;color:#DC2626;">다른 에픽</div>`;
-          listHtml += `<div class="quest-picker-item is-selected" data-quest-id="${currentMs.id}">
+          html += `<div class="quest-dd-item is-selected" data-quest-id="${currentMs.id}">
             <span class="qp-dot" style="background:${currentMs.color}"></span>
-            <div class="qp-info"><div class="qp-title">${currentMs.title}</div><div class="qp-meta">${currentMs.project}</div></div>
+            <span>${currentMs.title}</span>
+            <span class="quest-dd-meta">${currentMs.project}</span>
             <span class="qp-check">✓</span>
           </div>`;
         }
-        listHtml += '</div>';
 
         const defaultProject = activeTags.length > 0 ? activeTags[0] : 'VD';
-        questListEl.innerHTML = `
-          <div class="quest-picker-header">
-            <span>퀘스트 선택</span>
-            <button class="quest-create-btn" style="font-size:11px;padding:2px 8px;">+ 새 퀘스트</button>
-          </div>
-          ${listHtml}
-        `;
+        html += `<div class="quest-dd-item quest-dd-create">+ 새 퀘스트</div>`;
+        questDropdown.innerHTML = html;
 
-        // Select quest
-        questListEl.querySelectorAll('[data-quest-id]').forEach(item => {
-          item.addEventListener('click', () => {
+        questDropdown.querySelectorAll('[data-quest-id]').forEach(item => {
+          item.addEventListener('click', (e) => {
+            e.stopPropagation();
             ref.milestoneId = item.dataset.questId || null;
+            _qdOpen = false;
+            questDropdown.style.display = 'none';
             markChanged();
-            renderQuestList();
-            renderTopbarQuest();
+            renderQuestDropdown();
           });
         });
 
-        // Create new quest
-        questListEl.querySelector('.quest-create-btn').addEventListener('click', () => {
-          const form = document.createElement('div');
-          form.className = 'milestone-create-inline';
-          form.innerHTML = `
-            <input type="text" class="new-ms-title" placeholder="퀘스트 이름" style="flex:1;">
-            <input type="date" class="new-ms-date" value="${dateStr(new Date())}">
-            <button class="primary new-ms-save" style="font-size:12px;padding:4px 10px;">생성</button>
-            <button class="new-ms-cancel" style="font-size:12px;padding:4px 10px;">취소</button>
-          `;
-          questListEl.appendChild(form);
-          form.querySelector('.new-ms-title').focus();
-          form.querySelector('.new-ms-save').addEventListener('click', () => {
-            const title = form.querySelector('.new-ms-title').value.trim();
-            const date = form.querySelector('.new-ms-date').value;
-            if (!title) return;
-            const color = (tagColors[defaultProject]?.color) || '#7C3AED';
-            const newMs = { id: 'm' + Date.now(), project: defaultProject, title, date, color, showOnCompass: false };
-            compassMilestones.push(newMs);
-            saveCompassData();
-            ref.milestoneId = newMs.id;
-            markChanged();
-            renderQuestList();
-            renderTopbarQuest();
-          });
-          form.querySelector('.new-ms-cancel').addEventListener('click', () => form.remove());
+        questDropdown.querySelector('.quest-dd-create')?.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const title = prompt('새 퀘스트 이름:');
+          if (!title || !title.trim()) return;
+          const color = (tagColors[defaultProject]?.color) || '#7C3AED';
+          const newMs = { id: 'm' + Date.now(), project: defaultProject, title: title.trim(), date: '', color, showOnCompass: false };
+          compassMilestones.push(newMs);
+          saveCompassData();
+          ref.milestoneId = newMs.id;
+          _qdOpen = false;
+          questDropdown.style.display = 'none';
+          markChanged();
+          renderQuestDropdown();
         });
       }
-      renderQuestList();
-      questBlock.appendChild(questListEl);
 
-      // Re-render quest list when tags change
+      questSelectBtn.addEventListener('click', () => {
+        _qdOpen = !_qdOpen;
+        questDropdown.style.display = _qdOpen ? 'block' : 'none';
+        if (_qdOpen) renderQuestDropdown();
+      });
+
+      renderQuestDropdown();
+      questDropWrap.appendChild(questSelectBtn);
+      questDropWrap.appendChild(questDropdown);
+      questBlock.appendChild(questDropWrap);
+
+      // Re-render quest dropdown when tags change
       const _origRenderDetailTags = renderDetailTags;
       renderDetailTags = function() {
         _origRenderDetailTags();
-        renderQuestList();
-        renderTopbarQuest();
+        renderQuestDropdown();
       };
 
       const bucketBlock = document.createElement('div');
