@@ -4244,28 +4244,31 @@
           }
         }
 
-        // 2) tasks + subtasks 저장
-        const allTasks = [];
+        // 2) tasks + subtasks 저장 (ID 중복 제거)
+        const taskMap = new Map();
         const allSubtasks = [];
         for (const secId of Object.keys(tasks)) {
           (tasks[secId] || []).forEach((t, i) => {
-            allTasks.push({
-              id: Math.round(t.id),
-              title: t.title || '',
-              section: secId,
-              checked: !!t.checked,
-              note: t.note || '',
-              user_note: t.userNote || '',
-              tags: t.tags || [],
-              url: t.url || '',
-              scheduled_date: t.scheduledDate || null,
-              plan_bucket: t.planBucket || null,
-              milestone_id: t.milestoneId || null,
-              position: i
-            });
+            const tid = Math.round(t.id);
+            if (!taskMap.has(tid)) {
+              taskMap.set(tid, {
+                id: tid,
+                title: t.title || '',
+                section: secId,
+                checked: !!t.checked,
+                note: t.note || '',
+                user_note: t.userNote || '',
+                tags: t.tags || [],
+                url: t.url || '',
+                scheduled_date: t.scheduledDate || null,
+                plan_bucket: t.planBucket || null,
+                milestone_id: t.milestoneId || null,
+                position: i
+              });
+            }
             (t.subtasks || []).forEach((st, si) => {
               allSubtasks.push({
-                task_id: Math.round(t.id),
+                task_id: tid,
                 text: st.text,
                 checked: !!st.checked,
                 position: si
@@ -4273,6 +4276,7 @@
             });
           });
         }
+        const allTasks = Array.from(taskMap.values());
 
         if (allTasks.length > 0) {
           const { error: taskInsertErr } = await sb.from('tasks').upsert(allTasks, { onConflict: 'id' });
