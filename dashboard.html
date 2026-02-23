@@ -4166,9 +4166,68 @@
     catch(e) { console.log('Supabase init failed:', e); }
     let supabaseSaveTimeout = null;
 
+    async function backupToSupabase() {
+      if (!sb) return;
+      try {
+        const { count } = await sb.from('tasks').select('*', { count: 'exact', head: true });
+        if (!count || count === 0) return; // 백업할 데이터 없음
+        const ts = new Date().toISOString();
+        const { data: allTasks } = await sb.from('tasks').select('*');
+        const { data: allQuests } = await sb.from('quests').select('*');
+        await sb.from('backups').upsert({
+          id: 'latest',
+          created_at: ts,
+          tasks_data: allTasks || [],
+          quests_data: allQuests || []
+        }, { onConflict: 'id' });
+        console.log('Backup saved:', ts, `(${(allTasks||[]).length} tasks, ${(allQuests||[]).length} quests)`);
+      } catch(e) { console.log('Backup skip (table may not exist):', e.message); }
+    }
+
+    async function restoreFromBackup() {
+      if (!sb) { alert('Supabase 연결 없음'); return; }
+      try {
+        const { data } = await sb.from('backups').select('*').eq('id', 'latest').single();
+        if (!data) { alert('백업 없음'); return; }
+        const taskCount = (data.tasks_data || []).length;
+        const questCount = (data.quests_data || []).length;
+        if (!confirm(`백업 복원: ${data.created_at}\n태스크 ${taskCount}개, 퀘스트 ${questCount}개\n\n현재 데이터를 덮어씁니다. 진행?`)) return;
+        // tasks 복원
+        if (data.tasks_data && data.tasks_data.length > 0) {
+          await sb.from('tasks').delete().gte('id', 0);
+          await sb.from('tasks').insert(data.tasks_data);
+        }
+        // quests 복원
+        if (data.quests_data && data.quests_data.length > 0) {
+          await sb.from('quests').delete().neq('id', '');
+          await sb.from('quests').insert(data.quests_data);
+        }
+        alert('복원 완료! 새로고침합니다.');
+        location.reload();
+      } catch(e) { alert('복원 실패: ' + e.message); }
+    }
+
     async function saveToSupabase() {
       if (!sb) return;
       try {
+        // 로컬 태스크 수 계산
+        let localTaskCount = 0;
+        for (const secId of Object.keys(tasks)) {
+          localTaskCount += (tasks[secId] || []).length;
+        }
+
+        // 안전 체크: 클라우드에 데이터가 있는데 로컬이 비어있으면 저장 차단
+        const { count: cloudCount } = await sb.from('tasks').select('*', { count: 'exact', head: true });
+        if (cloudCount > 5 && localTaskCount === 0) {
+          console.warn('Save blocked: cloud has', cloudCount, 'tasks but local is empty');
+          return;
+        }
+
+        // 클라우드 데이터가 있으면 백업 먼저
+        if (cloudCount > 0) {
+          await backupToSupabase();
+        }
+
         // 1) sections 저장 (upsert)
         const sectionRows = sections.map((s, i) => ({ id: s.id, name: s.name, position: i }));
         if (sectionRows.length > 0) {
@@ -4215,17 +4274,12 @@
           });
         }
 
-        // 기존 데이터 삭제 후 삽입 (insert 실패 시 롤백)
         if (allTasks.length > 0) {
           const { error: taskInsertErr } = await sb.from('tasks').upsert(allTasks, { onConflict: 'id' });
           if (taskInsertErr) { console.log('Tasks upsert error:', taskInsertErr); return; }
-          // upsert 성공 후 현재 목록에 없는 기존 행 삭제
           const currentTaskIds = allTasks.map(t => t.id);
           await sb.from('subtasks').delete().not('task_id', 'in', `(${currentTaskIds.join(',')})`);
           await sb.from('tasks').delete().not('id', 'in', `(${currentTaskIds.join(',')})`);
-        } else {
-          await sb.from('subtasks').delete().gte('id', 0);
-          await sb.from('tasks').delete().gte('id', 0);
         }
         if (allSubtasks.length > 0) {
           await sb.from('subtasks').delete().in('task_id', allTasks.map(t => t.id));
@@ -10159,6 +10213,13 @@
           `).join('')}
         </div>
         <button id="addRoutineBtn" style="margin-top: 12px; width: 100%; padding: 10px; font-size: 13px; border: 1px dashed var(--border); border-radius: 10px; background: transparent; color: var(--text-muted); cursor: pointer;">+ 새 루틴 추가</button>
+
+        <div class="settings-section-header" style="margin-top:20px;">데이터 백업</div>
+        <div style="display:flex;gap:8px;">
+          <button id="backupNowBtn" style="flex:1;padding:10px;font-size:13px;border:1px solid var(--border);border-radius:10px;background:var(--bg-card);color:var(--text-primary);cursor:pointer;">💾 지금 백업</button>
+          <button id="restoreBackupBtn" style="flex:1;padding:10px;font-size:13px;border:1px solid #DC262644;border-radius:10px;background:var(--bg-card);color:#DC2626;cursor:pointer;">🔄 백업 복원</button>
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:6px;">클라우드 저장 전 자동 백업됩니다. 수동 백업/복원도 가능합니다.</div>
       `;
 
       // Notification permission button
@@ -10186,6 +10247,13 @@
 
       // Add new routine
       document.getElementById('addRoutineBtn').addEventListener('click', () => openRoutineEditModal(null));
+
+      // Backup / Restore
+      document.getElementById('backupNowBtn')?.addEventListener('click', async () => {
+        await backupToSupabase();
+        alert('백업 완료!');
+      });
+      document.getElementById('restoreBackupBtn')?.addEventListener('click', () => restoreFromBackup());
     }
 
     // ============================================================
