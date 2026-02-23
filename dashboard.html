@@ -6511,14 +6511,20 @@
       const topbarQuestArea = topbar.querySelector('.topbar-quest-area');
       function renderTopbarQuest() {
         const currentMs = ref.milestoneId ? getMilestoneById(ref.milestoneId) : null;
+        let html = '';
         if (currentMs) {
-          topbarQuestArea.innerHTML = `<span class="quest-current-chip" style="color:${currentMs.color};border-color:${currentMs.color}33;background:${currentMs.color}14;font-size:12px;padding:3px 8px;">
+          html += `<span class="quest-current-chip" style="color:${currentMs.color};border-color:${currentMs.color}33;background:${currentMs.color}14;font-size:12px;padding:3px 8px;">
             <span class="quest-chip-dot" style="background:${currentMs.color}"></span>
             ${currentMs.title}
           </span>`;
-        } else {
-          topbarQuestArea.innerHTML = '';
         }
+        html += `<button class="quest-switch-btn" style="font-size:11px;padding:3px 8px;" id="topbarQuestNavBtn">퀘스트 전환</button>`;
+        topbarQuestArea.innerHTML = html;
+        topbarQuestArea.querySelector('#topbarQuestNavBtn').addEventListener('click', () => {
+          panel.classList.remove('show'); overlay.classList.remove('show');
+          setTimeout(() => { overlay.remove(); panel.remove(); }, 250);
+          switchMainTab('compass');
+        });
       }
       renderTopbarQuest();
 
