@@ -67,7 +67,6 @@
 
     .input-area {
       display: flex;
-      gap: 10px;
       margin-bottom: 8px;
     }
 
@@ -93,60 +92,103 @@
       color: var(--text-muted);
     }
 
-    .input-area button {
-      padding: 14px 20px;
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .action-buttons button {
+      flex: 1;
+      padding: 14px 0;
       font-size: 15px;
       font-weight: 600;
       font-family: inherit;
       border: 2px solid transparent;
       border-radius: 12px;
       cursor: pointer;
-      flex-shrink: 0;
       transition: all 0.15s;
       -webkit-appearance: none;
     }
 
-    .input-area button:active {
+    .action-buttons button:active {
       transform: scale(0.96);
     }
 
-    .input-area button:disabled {
+    .action-buttons button:disabled {
       opacity: 0.4;
       pointer-events: none;
     }
 
     /* 하이라이트 상태 (추천 버튼) */
-    .input-area button.highlighted {
+    .action-buttons button.highlighted {
       background: var(--accent);
       color: white;
       border-color: var(--accent);
     }
 
-    .input-area button.highlighted:active {
+    .action-buttons button.highlighted:active {
       background: var(--accent-hover);
     }
 
     /* 디밍 상태 (비추천 버튼) */
-    .input-area button.dimmed {
+    .action-buttons button.dimmed {
       background: transparent;
       color: var(--text-muted);
       border-color: var(--border);
     }
 
-    .input-area button.dimmed:active {
+    .action-buttons button.dimmed:active {
       background: var(--bg);
-    }
-
-    .input-area .idea-btn {
-      padding: 14px 16px;
-      font-size: 18px;
-      line-height: 1;
     }
 
     .today-item .idea-icon {
       font-size: 14px;
       flex-shrink: 0;
       line-height: 1;
+    }
+
+    .picker-section {
+      margin-bottom: 10px;
+    }
+
+    .picker-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .picker-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .picker-chip {
+      font-size: 13px;
+      font-weight: 500;
+      font-family: inherit;
+      padding: 6px 12px;
+      border-radius: 20px;
+      border: 1.5px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text-sub);
+      cursor: pointer;
+      transition: all 0.15s;
+      -webkit-appearance: none;
+    }
+
+    .picker-chip.selected {
+      border-color: var(--chip-color, #7C3AED);
+      background: var(--chip-color, #7C3AED);
+      color: white;
+    }
+
+    .picker-chip:active {
+      transform: scale(0.96);
     }
 
     .status-toast {
@@ -210,12 +252,11 @@
       border-bottom: none;
     }
 
-    .today-item .bullet {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: var(--accent);
+    .today-item .task-check {
+      font-size: 15px;
       flex-shrink: 0;
+      color: var(--text-muted);
+      line-height: 1;
     }
 
     .today-item .time {
@@ -264,8 +305,18 @@
 
   <div class="input-area">
     <input type="text" id="taskInput" placeholder="할 일 또는 아이디어를 입력하세요" enterkeyhint="send" autocomplete="off" autofocus>
-    <button id="addBtn" disabled>할일</button>
-    <button id="ideaBtn" class="idea-btn" disabled>💡</button>
+  </div>
+
+  <div class="picker-section" id="epicSection">
+    <div class="picker-chips" id="epicChips"></div>
+  </div>
+  <div class="picker-section" id="questSection" style="display:none;">
+    <div class="picker-chips" id="questChips"></div>
+  </div>
+
+  <div class="action-buttons">
+    <button id="addBtn" disabled>✓ 할일</button>
+    <button id="ideaBtn" disabled>💡 아이디어</button>
   </div>
 
   <div class="status-toast" id="statusToast"></div>
@@ -300,9 +351,25 @@
   const todayEmpty = document.getElementById('todayEmpty');
   const connStatus = document.getElementById('connStatus');
 
+  const epicChipsEl = document.getElementById('epicChips');
+  const questChipsEl = document.getElementById('questChips');
+  const questSection = document.getElementById('questSection');
+
   // ===== Local state =====
   const LS_KEY = 'locus_mobile_today';
   let defaultSection = null;
+  let quests = [];
+  let selectedEpic = null;
+  let selectedQuestId = null;
+
+  const epicColors = {
+    VD: { bg: '#EDE9FE', color: '#7C3AED', label: 'VOID DIVER' },
+    CQ: { bg: '#FEF3C7', color: '#D97706', label: 'CQ' },
+    AI: { bg: '#DBEAFE', color: '#2563EB', label: 'AI' },
+    BIZ: { bg: '#FEE2E2', color: '#DC2626', label: 'BIZ' },
+    TEAM: { bg: '#D1FAE5', color: '#059669', label: 'TEAM' },
+    PERSONAL: { bg: '#F3F4F6', color: '#6B7280', label: 'PERSONAL' },
+  };
 
   function todayKey() {
     const d = new Date();
@@ -347,6 +414,72 @@
     } catch(e) {
       connStatus.innerHTML = '<span class="dot err"></span>연결 실패';
     }
+
+    // 퀘스트 로드
+    try {
+      const { data: qData } = await sb.from('quests').select('id, title, epic, color, completed').order('position');
+      if (qData) {
+        quests = qData.filter(q => !q.completed);
+        renderEpicChips();
+      }
+    } catch(e) { console.log('Quest load error:', e); }
+  }
+
+  function renderEpicChips() {
+    epicChipsEl.innerHTML = '';
+    // 퀘스트에서 에픽 목록 추출
+    const epics = [...new Set(quests.map(q => q.epic).filter(Boolean))];
+
+    epics.forEach(epic => {
+      const ec = epicColors[epic] || { bg: '#F3F4F6', color: '#6B7280', label: epic };
+      const chip = document.createElement('button');
+      chip.className = 'picker-chip';
+      chip.textContent = ec.label;
+      chip.style.setProperty('--chip-color', ec.color);
+      chip.addEventListener('click', () => {
+        if (selectedEpic === epic) {
+          // 에픽 해제 → 퀘스트도 해제
+          selectedEpic = null;
+          selectedQuestId = null;
+          chip.classList.remove('selected');
+          questSection.style.display = 'none';
+        } else {
+          selectedEpic = epic;
+          selectedQuestId = null;
+          epicChipsEl.querySelectorAll('.picker-chip').forEach(c => c.classList.remove('selected'));
+          chip.classList.add('selected');
+          renderQuestChips(epic);
+        }
+      });
+      epicChipsEl.appendChild(chip);
+    });
+  }
+
+  function renderQuestChips(epic) {
+    questChipsEl.innerHTML = '';
+    const filtered = quests.filter(q => q.epic === epic);
+    if (filtered.length === 0) {
+      questSection.style.display = 'none';
+      return;
+    }
+    questSection.style.display = 'block';
+    filtered.forEach(q => {
+      const chip = document.createElement('button');
+      chip.className = 'picker-chip';
+      chip.textContent = q.title;
+      chip.style.setProperty('--chip-color', q.color || '#7C3AED');
+      chip.addEventListener('click', () => {
+        if (selectedQuestId === q.id) {
+          selectedQuestId = null;
+          chip.classList.remove('selected');
+        } else {
+          selectedQuestId = q.id;
+          questChipsEl.querySelectorAll('.picker-chip').forEach(c => c.classList.remove('selected'));
+          chip.classList.add('selected');
+        }
+      });
+      questChipsEl.appendChild(chip);
+    });
   }
 
   // ===== Add task =====
@@ -378,21 +511,28 @@
         checked: false,
         note: '',
         user_note: '',
-        tags: [],
+        tags: selectedEpic ? [selectedEpic] : [],
         url: '',
         scheduled_date: null,
         plan_bucket: null,
         position: nextPos,
+        milestone_id: selectedQuestId,
       });
 
       if (error) throw error;
 
       // Save to local today list
       const items = loadTodayItems();
-      items.unshift({ title, time: timeStr, id: taskId, type: 'task' });
+      const epicLabel = selectedEpic ? (epicColors[selectedEpic]?.label || selectedEpic) : '';
+      const questName = selectedQuestId ? (quests.find(q => q.id === selectedQuestId)?.title || '') : '';
+      items.unshift({ title, time: timeStr, id: taskId, type: 'task', epic: epicLabel, quest: questName });
       saveTodayItems(items);
 
       taskInput.value = '';
+      selectedEpic = null;
+      selectedQuestId = null;
+      epicChipsEl.querySelectorAll('.picker-chip').forEach(c => c.classList.remove('selected'));
+      questSection.style.display = 'none';
       showToast('추가 완료');
       renderTodayList();
     } catch(e) {
@@ -475,8 +615,10 @@
       row.className = 'today-item';
       const icon = item.type === 'idea'
         ? '<span class="idea-icon">💡</span>'
-        : '<span class="bullet"></span>';
-      row.innerHTML = `${icon}<span>${escHtml(item.title)}</span><span class="time">${item.time}</span>`;
+        : '<span class="task-check">☐</span>';
+      const labels = [item.epic, item.quest].filter(Boolean).join(' / ');
+      const questTag = labels ? `<span style="font-size:11px;color:var(--text-muted);margin-left:4px;">${escHtml(labels)}</span>` : '';
+      row.innerHTML = `${icon}<span>${escHtml(item.title)}${questTag}</span><span class="time">${item.time}</span>`;
       frag.appendChild(row);
     });
 
@@ -522,17 +664,17 @@
 
     if (!hasText) {
       addBtn.className = '';
-      ideaBtn.className = 'idea-btn';
+      ideaBtn.className = '';
       return;
     }
 
     const isIdea = !looksActionable(text);
     if (isIdea) {
-      ideaBtn.className = 'idea-btn highlighted';
+      ideaBtn.className = 'highlighted';
       addBtn.className = 'dimmed';
     } else {
       addBtn.className = 'highlighted';
-      ideaBtn.className = 'idea-btn dimmed';
+      ideaBtn.className = 'dimmed';
     }
   }
 

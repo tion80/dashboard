@@ -1727,6 +1727,74 @@
       padding: 0 4px 0 8px;
     }
 
+    /* === PARA VIEW === */
+    .para-view { display: flex; height: 100%; gap: 0; }
+    .para-left {
+      width: 180px; flex-shrink: 0; border-right: 1px solid var(--border);
+      overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 16px;
+    }
+    .para-center { flex: 1; overflow-y: auto; padding: 16px; }
+    .para-right {
+      width: 360px; max-width: 40vw; flex-shrink: 0;
+      border-left: 1px solid var(--border); overflow-y: auto; padding: 16px;
+      display: none; flex-direction: column; gap: 14px;
+    }
+    .para-right.show { display: flex; }
+
+    .para-filter-label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px; }
+    .para-filter-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .para-filter-chip {
+      font-size: 12px; font-weight: 500; padding: 4px 10px; border-radius: 14px;
+      border: 1.5px solid var(--border); background: var(--bg-card); color: var(--text-sub);
+      cursor: pointer; transition: all 0.15s;
+    }
+    .para-filter-chip.active { border-color: var(--accent); background: var(--accent); color: white; }
+    .para-filter-chip:hover { border-color: var(--text-muted); }
+
+    .para-search { width: 100%; padding: 8px 10px; font-size: 13px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg-card); color: var(--text-primary); outline: none; font-family: inherit; }
+    .para-search:focus { border-color: var(--accent); }
+
+    .para-date-header { font-size: 12px; font-weight: 600; color: var(--text-muted); padding: 12px 0 6px; border-bottom: 1px solid var(--border); margin-bottom: 4px; }
+    .para-item {
+      display: flex; flex-direction: column; gap: 4px; padding: 10px 12px; border-radius: 8px;
+      cursor: pointer; transition: background 0.12s; border: 1.5px solid transparent;
+    }
+    .para-item:hover { background: var(--bg-secondary); }
+    .para-item.selected { border-color: var(--accent); background: rgba(217,119,87,0.06); }
+    .para-item-top { display: flex; align-items: flex-start; gap: 8px; }
+    .para-item-icon { font-size: 14px; flex-shrink: 0; line-height: 1.4; }
+    .para-item-content { flex: 1; font-size: 13px; color: var(--text-primary); line-height: 1.4; word-break: break-word; }
+    .para-item-time { font-size: 11px; color: var(--text-muted); flex-shrink: 0; }
+    .para-item-meta { display: flex; align-items: center; gap: 6px; padding-left: 22px; }
+    .para-item-url { font-size: 11px; color: var(--accent); text-decoration: none; }
+    .para-item-url:hover { text-decoration: underline; }
+    .para-item-tag { font-size: 10px; padding: 1px 6px; border-radius: 6px; font-weight: 600; }
+
+    .para-detail-label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; }
+    .para-detail-textarea {
+      width: 100%; min-height: 60px; resize: vertical; padding: 8px 10px;
+      border: 1px solid var(--border); border-radius: 8px; background: var(--bg-card);
+      color: var(--text-primary); font-size: 13px; font-family: inherit; outline: none; line-height: 1.5;
+    }
+    .para-detail-textarea:focus { border-color: var(--accent); }
+    .para-detail-url-input {
+      width: 100%; padding: 8px 10px; font-size: 13px; border: 1px solid var(--border);
+      border-radius: 8px; background: var(--bg-card); color: var(--text-primary); font-family: inherit; outline: none;
+    }
+    .para-detail-url-input:focus { border-color: var(--accent); }
+    .para-detail-actions { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 8px; border-top: 1px solid var(--border); }
+    .para-detail-btn {
+      font-size: 12px; font-weight: 500; padding: 6px 12px; border-radius: 8px;
+      border: 1px solid var(--border); background: var(--bg-card); color: var(--text-sub);
+      cursor: pointer; transition: all 0.12s; font-family: inherit;
+    }
+    .para-detail-btn:hover { border-color: var(--text-muted); }
+    .para-detail-btn.danger { color: #DC2626; }
+    .para-detail-btn.danger:hover { background: #FEE2E2; border-color: #DC2626; }
+    .para-detail-btn.primary { background: var(--accent); color: white; border-color: var(--accent); }
+
+    .para-empty { text-align: center; padding: 60px 20px; color: var(--text-muted); font-size: 14px; }
+
     .plan-right-header {
       display: flex;
       align-items: center;
@@ -4770,6 +4838,7 @@
         <button id="tasksTabBtn">Plan</button>
         <button id="focusTabBtn">Focus</button>
         <button id="memoryTabBtn">Memory</button>
+        <button id="paraTabBtn">PARA</button>
         <button id="reviewTabBtn">회고</button>
         <button id="settingsTabBtn">설정</button>
       </div>
@@ -4810,6 +4879,11 @@
         <div id="memoryContentContainer"></div>
       </div>
     </div>
+  </div>
+
+  <!-- PARA TAB PANEL -->
+  <div class="tab-panel" id="paraPanel">
+    <div class="para-view" id="paraView"></div>
   </div>
 
   <!-- REVIEW TAB PANEL -->
@@ -4895,6 +4969,8 @@
         <div class="quick-add-manual-row" id="quickAddDateBtns"></div>
         <div class="quick-add-manual-label" style="margin-top: 4px;">퀘스트</div>
         <div class="quick-add-manual-row qa-milestone-row" id="quickAddMsBtns"></div>
+        <div class="quick-add-manual-label" style="margin-top: 4px;">노트</div>
+        <textarea class="quick-add-textarea" id="quickAddNote" placeholder="메모 (선택사항)" rows="2" style="min-height:48px;max-height:100px;"></textarea>
       </div>
       <div id="quickAddSuccessMsg"></div>
       <div class="quick-add-actions">
@@ -4928,12 +5004,14 @@
     const focusTabBtn = document.getElementById('focusTabBtn');
     const compassTabBtn = document.getElementById('compassTabBtn');
     const memoryTabBtn = document.getElementById('memoryTabBtn');
+    const paraTabBtn = document.getElementById('paraTabBtn');
     const reviewTabBtn = document.getElementById('reviewTabBtn');
     const settingsTabBtn = document.getElementById('settingsTabBtn');
     const tasksPanel = document.getElementById('tasksPanel');
     const focusPanel = document.getElementById('focusPanel');
     const compassPanel = document.getElementById('compassPanel');
     const memoryPanel = document.getElementById('memoryPanel');
+    const paraPanel = document.getElementById('paraPanel');
     const reviewPanel = document.getElementById('reviewPanel');
     const settingsPanel = document.getElementById('settingsPanel');
     const openTaskBtn = document.getElementById('openTaskBtn');
@@ -4964,6 +5042,7 @@
       focusTabBtn.classList.toggle('active', tab === 'focus');
       compassTabBtn.classList.toggle('active', tab === 'compass');
       memoryTabBtn.classList.toggle('active', tab === 'memory');
+      paraTabBtn.classList.toggle('active', tab === 'para');
       reviewTabBtn.classList.toggle('active', tab === 'review');
       settingsTabBtn.classList.toggle('active', tab === 'settings');
 
@@ -4971,6 +5050,7 @@
       focusPanel.classList.toggle('active', tab === 'focus');
       compassPanel.classList.toggle('active', tab === 'compass');
       memoryPanel.classList.toggle('active', tab === 'memory');
+      paraPanel.classList.toggle('active', tab === 'para');
       reviewPanel.classList.toggle('active', tab === 'review');
       settingsPanel.classList.toggle('active', tab === 'settings');
 
@@ -4995,6 +5075,7 @@
       // Render focus/compass/review/settings on switch
       if (tab === 'focus') renderFocusView();
       if (tab === 'compass') renderCompassView();
+      if (tab === 'para') renderParaView();
       if (tab === 'review') renderReviewView();
       if (tab === 'settings') renderSettingsView();
     }
@@ -5003,6 +5084,7 @@
     focusTabBtn.addEventListener('click', () => switchMainTab('focus'));
     compassTabBtn.addEventListener('click', () => switchMainTab('compass'));
     memoryTabBtn.addEventListener('click', () => switchMainTab('memory'));
+    paraTabBtn.addEventListener('click', () => switchMainTab('para'));
     reviewTabBtn.addEventListener('click', () => switchMainTab('review'));
     settingsTabBtn.addEventListener('click', () => switchMainTab('settings'));
 
@@ -5216,7 +5298,6 @@
                 section: secId,
                 checked: !!t.checked,
                 note: t.note || '',
-                user_note: t.userNote || '',
                 tags: t.tags || [],
                 url: t.url || '',
                 scheduled_date: t.scheduledDate || null,
@@ -5367,7 +5448,6 @@
             section: t.section,
             checked: t.checked,
             note: t.note || '',
-            userNote: t.user_note || '',
             tags: t.tags || [],
             url: t.url || '',
             scheduledDate: t.scheduled_date || '',
@@ -5449,11 +5529,11 @@
           let title = text;
           let note = '';
 
-          // Extract userNote like @@...@@
-          let userNote = '';
+          // Extract userNote like @@...@@ (legacy, merge into note)
+          let extraNote = '';
           const userNoteMatch = text.match(/@@([\s\S]*?)@@/);
           if (userNoteMatch) {
-            userNote = userNoteMatch[1].replace(/\\n/g, '\n');
+            extraNote = userNoteMatch[1].replace(/\\n/g, '\n');
             text = text.replace(/@@[\s\S]*?@@/, '').trim();
           }
 
@@ -5503,8 +5583,7 @@
           currentTask = {
             id: Date.now() + Math.random(),
             title,
-            note,
-            userNote,
+            note: [note, extraNote].filter(Boolean).join('\n\n'),
             url,
             scheduledDate,
             scheduledTime,
@@ -5540,9 +5619,8 @@
           const urlStr = t.url ? ` {{${t.url}}}` : '';
           const dateStr = t.scheduledDate ? ` <<${t.scheduledDate}${t.scheduledTime ? ' ' + t.scheduledTime : ''}>>` : '';
           const bucketStr = t.planBucket ? ` [[${t.planBucket}]]` : '';
-          const userNoteStr = t.userNote ? ` @@${t.userNote.replace(/\n/g, '\\n')}@@` : '';
           const note = t.note ? ` - ${t.note}` : '';
-          md += `- ${checkbox} **${t.title}**${note}${tagStr}${urlStr}${dateStr}${bucketStr}${userNoteStr}\n`;
+          md += `- ${checkbox} **${t.title}**${note}${tagStr}${urlStr}${dateStr}${bucketStr}\n`;
           t.subtasks.forEach(st => {
             const stCheckbox = st.checked ? '[x]' : '[ ]';
             md += `  - ${stCheckbox} ${st.text}\n`;
@@ -7034,8 +7112,8 @@
           openTaskDetail(t.id);
         });
 
-        // Visual hint: memo icon if userNote exists
-        if (t.userNote) {
+        // Visual hint: memo icon if note exists
+        if (t.note) {
           const memoIcon = document.createElement('span');
           memoIcon.textContent = '📝';
           memoIcon.style.cssText = 'font-size:10px;position:absolute;top:3px;right:5px;';
@@ -7592,10 +7670,10 @@
       body.appendChild(titleRow);
 
       const noteBlock = document.createElement('div');
-      noteBlock.innerHTML = `<div class="plan-detail-section-label">설명</div>`;
+      noteBlock.innerHTML = `<div class="plan-detail-section-label">노트</div>`;
       const noteInput = document.createElement('textarea');
       noteInput.className = 'plan-detail-note-input';
-      noteInput.placeholder = '설명을 입력하세요...';
+      noteInput.placeholder = '메모를 입력하세요...';
       noteInput.value = ref.note || '';
       noteInput.addEventListener('input', () => { ref.note = noteInput.value; markChanged(false); });
       noteBlock.appendChild(noteInput);
@@ -7657,7 +7735,6 @@
               checked: !!st.checked,
               starred: false,
               note: '',
-              userNote: '',
               tags: ref.tags ? [...ref.tags] : [],
               url: '',
               scheduledDate: ref.scheduledDate || '',
@@ -7982,7 +8059,6 @@
               id: Date.now() + Math.random(),
               title: st.text,
               note: '',
-              userNote: '',
               url: '',
               scheduledDate: ref.scheduledDate || '',
               scheduledTime: '',
@@ -8076,20 +8152,6 @@
       renderDetailSubtasks();
       body.appendChild(stBlock);
 
-      const noteArea = document.createElement('div');
-      noteArea.className = 'plan-detail-user-note-area';
-      noteArea.innerHTML = `<div class="plan-detail-section-label">내 메모</div>`;
-      const textarea = document.createElement('textarea');
-      textarea.className = 'plan-detail-user-note';
-      textarea.placeholder = '이 태스크에 대한 메모를 남겨보세요...';
-      textarea.value = ref.userNote || '';
-      let _noteTimer = null;
-      textarea.addEventListener('input', () => {
-        clearTimeout(_noteTimer);
-        _noteTimer = setTimeout(() => { ref.userNote = textarea.value; markChanged(false); }, 400);
-      });
-      noteArea.appendChild(textarea);
-      body.appendChild(noteArea);
 
       // --- 관련 미팅 섹션 ---
       if (!ref.linkedEvents) ref.linkedEvents = [];
@@ -8150,7 +8212,6 @@
       requestAnimationFrame(() => { overlay.classList.add('show'); panel.classList.add('show'); });
 
       function closeDetail() {
-        ref.userNote = textarea.value;
         ref.title = titleInput.value;
         ref.note = noteInput.value;
         markChanged(false); renderTasks();
@@ -8913,6 +8974,7 @@
       try {
         const loaded = await loadTasksFromSupabase();
         await loadMeetingNotesFromSupabase();
+        await loadIdeasFromSupabase();
         if (loaded) {
           renderCompassView(); // tasks 로드 후 milestone 연결 반영
           checkOverdueTasks();
@@ -9682,6 +9744,7 @@
     const qaBucketBtns = document.getElementById('quickAddBucketBtns');
     const qaDateBtns = document.getElementById('quickAddDateBtns');
     const qaMsBtns = document.getElementById('quickAddMsBtns');
+    const qaNoteTextarea = document.getElementById('quickAddNote');
 
     let qaParsed = { title: '', tags: [], bucket: null, date: null, milestone: null };
     let qaManualTags = new Set();
@@ -10012,6 +10075,7 @@
 
     function resetQuickAddForm() {
       qaTextarea.value = '';
+      qaNoteTextarea.value = '';
       qaParsed = { title: '', tags: [], bucket: null, date: null, milestone: null };
       qaManualTags = new Set();
       qaManualBucket = null;
@@ -10043,10 +10107,11 @@
         : [m.title];
 
       titles.forEach((title, i) => {
+        const noteText = (qaNoteTextarea.value || '').trim();
         const newTask = {
           id: Date.now() + Math.random() + i,
           title,
-          note: '',
+          note: noteText,
           checked: false,
           subtasks: [],
           section: targetSectionId,
@@ -10072,6 +10137,7 @@
 
       // Reset form for continuous add
       qaTextarea.value = '';
+      qaNoteTextarea.value = '';
       qaParsed = { title: '', tags: [], bucket: null, date: null, milestone: null };
       qaManualTags = new Set();
       qaManualBucket = null;
@@ -12658,6 +12724,372 @@
         }
       }
       return { completed, total };
+    }
+
+    // ============================================================
+    // ===== PARA VIEW =====
+    // ============================================================
+    let ideas = [];
+    let paraFilterTag = null;
+    let paraFilterStatus = 'active';
+    let paraSelectedId = null;
+    let paraSearchQuery = '';
+
+    async function loadIdeasFromSupabase() {
+      if (!sb) return;
+      try {
+        const { data, error } = await sb.from('ideas').select('*').order('created_at', { ascending: false });
+        if (error) { console.error('Ideas load error:', error); return; }
+        if (data) ideas = data;
+      } catch(e) { console.error('Ideas load error:', e); }
+    }
+
+    async function saveIdeaToSupabase(idea) {
+      if (!sb) return;
+      try {
+        await sb.from('ideas').upsert({
+          id: idea.id, content: idea.content, source_url: idea.source_url || '',
+          tags: idea.tags || [], note: idea.note || '', status: idea.status || 'active',
+        });
+      } catch(e) { console.error('Idea save error:', e); }
+    }
+
+    async function deleteIdeaFromSupabase(id) {
+      if (!sb) return;
+      try { await sb.from('ideas').delete().eq('id', id); } catch(e) { console.error('Idea delete error:', e); }
+    }
+
+    let _ideaSaveTimer = null;
+    function scheduleIdeaSave(idea) {
+      clearTimeout(_ideaSaveTimer);
+      _ideaSaveTimer = setTimeout(() => saveIdeaToSupabase(idea), 400);
+    }
+
+    function getFilteredIdeas() {
+      let filtered = ideas.filter(i => i.status === paraFilterStatus);
+      if (paraFilterTag) filtered = filtered.filter(i => i.tags && i.tags.includes(paraFilterTag));
+      if (paraSearchQuery) {
+        const q = paraSearchQuery.toLowerCase();
+        filtered = filtered.filter(i => (i.content || '').toLowerCase().includes(q) || (i.note || '').toLowerCase().includes(q) || (i.source_url || '').toLowerCase().includes(q));
+      }
+      return filtered;
+    }
+
+    function renderParaView() {
+      const paraView = document.getElementById('paraView');
+      paraView.innerHTML = '';
+
+      // === LEFT ===
+      const left = document.createElement('div');
+      left.className = 'para-left';
+
+      // Search
+      const searchInput = document.createElement('input');
+      searchInput.className = 'para-search';
+      searchInput.placeholder = '검색...';
+      searchInput.value = paraSearchQuery;
+      searchInput.addEventListener('input', () => { paraSearchQuery = searchInput.value; renderParaCenter(); });
+      left.appendChild(searchInput);
+
+      // Epic filter
+      const epicSection = document.createElement('div');
+      epicSection.innerHTML = '<div class="para-filter-label">에픽</div>';
+      const epicChips = document.createElement('div');
+      epicChips.className = 'para-filter-chips';
+
+      const allChip = document.createElement('button');
+      allChip.className = 'para-filter-chip' + (!paraFilterTag ? ' active' : '');
+      allChip.textContent = 'ALL';
+      allChip.addEventListener('click', () => { paraFilterTag = null; renderParaView(); });
+      epicChips.appendChild(allChip);
+
+      Object.entries(tagColors).forEach(([tag, tc]) => {
+        const chip = document.createElement('button');
+        chip.className = 'para-filter-chip' + (paraFilterTag === tag ? ' active' : '');
+        chip.textContent = tc.label;
+        chip.style.setProperty('--chip-color', tc.color);
+        if (paraFilterTag === tag) { chip.style.background = tc.color; chip.style.borderColor = tc.color; chip.style.color = 'white'; }
+        chip.addEventListener('click', () => { paraFilterTag = paraFilterTag === tag ? null : tag; renderParaView(); });
+        epicChips.appendChild(chip);
+      });
+      epicSection.appendChild(epicChips);
+      left.appendChild(epicSection);
+
+      // Status filter
+      const statusSection = document.createElement('div');
+      statusSection.innerHTML = '<div class="para-filter-label">상태</div>';
+      const statusChips = document.createElement('div');
+      statusChips.className = 'para-filter-chips';
+      ['active', 'archived'].forEach(st => {
+        const chip = document.createElement('button');
+        chip.className = 'para-filter-chip' + (paraFilterStatus === st ? ' active' : '');
+        chip.textContent = st === 'active' ? '활성' : '보관';
+        chip.addEventListener('click', () => { paraFilterStatus = st; paraSelectedId = null; renderParaView(); });
+        statusChips.appendChild(chip);
+      });
+      statusSection.appendChild(statusChips);
+      left.appendChild(statusSection);
+
+      // Count
+      const countEl = document.createElement('div');
+      countEl.style.cssText = 'font-size:12px;color:var(--text-muted);margin-top:auto;';
+      const filtered = getFilteredIdeas();
+      countEl.textContent = `${filtered.length}개 아이디어`;
+      left.appendChild(countEl);
+
+      paraView.appendChild(left);
+
+      // === CENTER ===
+      const center = document.createElement('div');
+      center.className = 'para-center';
+      center.id = 'paraCenterCol';
+      paraView.appendChild(center);
+
+      // === RIGHT ===
+      const right = document.createElement('div');
+      right.className = 'para-right' + (paraSelectedId ? ' show' : '');
+      right.id = 'paraRightCol';
+      paraView.appendChild(right);
+
+      renderParaCenter();
+      if (paraSelectedId) renderParaDetail();
+    }
+
+    function renderParaCenter() {
+      const center = document.getElementById('paraCenterCol');
+      if (!center) return;
+      center.innerHTML = '';
+
+      const filtered = getFilteredIdeas();
+      if (filtered.length === 0) {
+        center.innerHTML = '<div class="para-empty">아직 아이디어가 없습니다.<br>QuickAdd에서 💡로 추가하세요</div>';
+        return;
+      }
+
+      // Group by date
+      const groups = {};
+      filtered.forEach(idea => {
+        const d = new Date(idea.created_at);
+        const key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(idea);
+      });
+
+      const today = new Date();
+      const todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+      const yesterday = new Date(today); yesterday.setDate(yesterday.getDate()-1);
+      const yesterdayStr = yesterday.getFullYear() + '-' + String(yesterday.getMonth()+1).padStart(2,'0') + '-' + String(yesterday.getDate()).padStart(2,'0');
+
+      Object.keys(groups).sort((a,b) => b.localeCompare(a)).forEach(dateKey => {
+        const header = document.createElement('div');
+        header.className = 'para-date-header';
+        if (dateKey === todayStr) header.textContent = '오늘';
+        else if (dateKey === yesterdayStr) header.textContent = '어제';
+        else { const [y,m,d] = dateKey.split('-'); header.textContent = `${parseInt(m)}/${parseInt(d)}`; }
+        center.appendChild(header);
+
+        groups[dateKey].forEach(idea => {
+          const item = document.createElement('div');
+          item.className = 'para-item' + (paraSelectedId === idea.id ? ' selected' : '');
+          item.addEventListener('click', () => { paraSelectedId = idea.id; renderParaCenter(); renderParaDetail(); document.getElementById('paraRightCol')?.classList.add('show'); });
+
+          const top = document.createElement('div');
+          top.className = 'para-item-top';
+          top.innerHTML = `<span class="para-item-icon">💡</span>`;
+
+          const content = document.createElement('span');
+          content.className = 'para-item-content';
+          content.textContent = idea.content;
+          top.appendChild(content);
+
+          const d = new Date(idea.created_at);
+          const time = document.createElement('span');
+          time.className = 'para-item-time';
+          time.textContent = String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+          top.appendChild(time);
+          item.appendChild(top);
+
+          // Meta row: URL + tags
+          const hasUrl = idea.source_url && idea.source_url.length > 0;
+          const hasTags = idea.tags && idea.tags.length > 0;
+          if (hasUrl || hasTags) {
+            const meta = document.createElement('div');
+            meta.className = 'para-item-meta';
+            if (hasUrl) {
+              try {
+                const domain = new URL(idea.source_url).hostname.replace('www.','');
+                meta.innerHTML += `<a class="para-item-url" href="${idea.source_url}" target="_blank" rel="noopener" onclick="event.stopPropagation()">🔗 ${domain}</a>`;
+              } catch(e) { meta.innerHTML += `<a class="para-item-url" href="${idea.source_url}" target="_blank" rel="noopener" onclick="event.stopPropagation()">🔗 링크</a>`; }
+            }
+            if (hasTags) {
+              idea.tags.forEach(tag => {
+                const tc = tagColors[tag] || { bg: '#F3F4F6', color: '#6B7280', label: tag };
+                meta.innerHTML += `<span class="para-item-tag" style="background:${tc.bg};color:${tc.color};">${tc.label}</span>`;
+              });
+            }
+            item.appendChild(meta);
+          }
+          center.appendChild(item);
+        });
+      });
+    }
+
+    function renderParaDetail() {
+      const right = document.getElementById('paraRightCol');
+      if (!right) return;
+      right.innerHTML = '';
+
+      const idea = ideas.find(i => i.id === paraSelectedId);
+      if (!idea) { right.classList.remove('show'); return; }
+
+      // Close button
+      const closeBtn = document.createElement('button');
+      closeBtn.style.cssText = 'align-self:flex-end;font-size:18px;background:none;border:none;color:var(--text-muted);cursor:pointer;padding:0;';
+      closeBtn.innerHTML = '&times;';
+      closeBtn.addEventListener('click', () => { paraSelectedId = null; right.classList.remove('show'); renderParaCenter(); });
+      right.appendChild(closeBtn);
+
+      // Content
+      const contentBlock = document.createElement('div');
+      contentBlock.innerHTML = '<div class="para-detail-label">내용</div>';
+      const contentTA = document.createElement('textarea');
+      contentTA.className = 'para-detail-textarea';
+      contentTA.value = idea.content || '';
+      contentTA.addEventListener('input', () => { idea.content = contentTA.value; scheduleIdeaSave(idea); renderParaCenter(); });
+      contentBlock.appendChild(contentTA);
+      right.appendChild(contentBlock);
+
+      // URL
+      const urlBlock = document.createElement('div');
+      urlBlock.innerHTML = '<div class="para-detail-label">URL</div>';
+      const urlInput = document.createElement('input');
+      urlInput.className = 'para-detail-url-input';
+      urlInput.placeholder = 'https://...';
+      urlInput.value = idea.source_url || '';
+      urlInput.addEventListener('input', () => { idea.source_url = urlInput.value; scheduleIdeaSave(idea); });
+      urlBlock.appendChild(urlInput);
+      if (idea.source_url) {
+        const urlLink = document.createElement('a');
+        urlLink.href = idea.source_url;
+        urlLink.target = '_blank';
+        urlLink.rel = 'noopener';
+        urlLink.style.cssText = 'font-size:12px;color:var(--accent);margin-top:4px;display:inline-block;';
+        urlLink.textContent = '열기 ↗';
+        urlBlock.appendChild(urlLink);
+      }
+      right.appendChild(urlBlock);
+
+      // Tags
+      const tagsBlock = document.createElement('div');
+      tagsBlock.innerHTML = '<div class="para-detail-label">에픽</div>';
+      const tagsRow = document.createElement('div');
+      tagsRow.className = 'para-filter-chips';
+      if (!idea.tags) idea.tags = [];
+      Object.entries(tagColors).forEach(([tag, tc]) => {
+        const chip = document.createElement('button');
+        const sel = idea.tags.includes(tag);
+        chip.className = 'para-filter-chip' + (sel ? ' active' : '');
+        chip.textContent = tc.label;
+        if (sel) { chip.style.background = tc.color; chip.style.borderColor = tc.color; chip.style.color = 'white'; }
+        chip.addEventListener('click', () => {
+          const idx = idea.tags.indexOf(tag);
+          if (idx >= 0) idea.tags.splice(idx, 1); else idea.tags.push(tag);
+          scheduleIdeaSave(idea); renderParaDetail(); renderParaCenter();
+        });
+        tagsRow.appendChild(chip);
+      });
+      tagsBlock.appendChild(tagsRow);
+      right.appendChild(tagsBlock);
+
+      // Note
+      const noteBlock = document.createElement('div');
+      noteBlock.innerHTML = '<div class="para-detail-label">노트</div>';
+      const noteTA = document.createElement('textarea');
+      noteTA.className = 'para-detail-textarea';
+      noteTA.placeholder = '메모를 남겨보세요...';
+      noteTA.value = idea.note || '';
+      noteTA.addEventListener('input', () => { idea.note = noteTA.value; scheduleIdeaSave(idea); });
+      noteBlock.appendChild(noteTA);
+      right.appendChild(noteBlock);
+
+      // Created at
+      const dateBlock = document.createElement('div');
+      const d = new Date(idea.created_at);
+      dateBlock.innerHTML = `<div class="para-detail-label">생성일</div><div style="font-size:12px;color:var(--text-muted);">${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}</div>`;
+      right.appendChild(dateBlock);
+
+      // Actions
+      const actions = document.createElement('div');
+      actions.className = 'para-detail-actions';
+
+      // Convert to task
+      const toTaskBtn = document.createElement('button');
+      toTaskBtn.className = 'para-detail-btn primary';
+      toTaskBtn.textContent = '✓ 태스크로 전환';
+      toTaskBtn.addEventListener('click', () => {
+        const targetSection = sections[0]?.id;
+        if (!targetSection) return;
+        if (!tasks[targetSection]) tasks[targetSection] = [];
+        tasks[targetSection].unshift({
+          id: Date.now() + Math.random(), title: idea.content, note: idea.note || '',
+          tags: idea.tags || [], section: targetSection, checked: false, subtasks: [],
+        });
+        idea.status = 'archived';
+        saveIdeaToSupabase(idea);
+        markChanged(false);
+        paraSelectedId = null;
+        renderParaView();
+        showStatus('태스크로 전환됨');
+      });
+      actions.appendChild(toTaskBtn);
+
+      // Convert to quest
+      const toQuestBtn = document.createElement('button');
+      toQuestBtn.className = 'para-detail-btn';
+      toQuestBtn.textContent = '🎯 퀘스트로 전환';
+      toQuestBtn.addEventListener('click', () => {
+        const epic = (idea.tags && idea.tags[0]) || 'GENERAL';
+        const color = tagColors[epic]?.color || '#7C3AED';
+        compassMilestones.push({
+          id: 'm' + Date.now(), project: epic, title: idea.content,
+          date: '', color, showOnCompass: false,
+        });
+        idea.status = 'archived';
+        saveIdeaToSupabase(idea);
+        saveQuestsToSupabase();
+        paraSelectedId = null;
+        renderParaView();
+        showStatus('퀘스트로 전환됨');
+      });
+      actions.appendChild(toQuestBtn);
+
+      // Archive / Restore
+      const archiveBtn = document.createElement('button');
+      archiveBtn.className = 'para-detail-btn';
+      archiveBtn.textContent = idea.status === 'active' ? '📦 보관' : '↩ 복원';
+      archiveBtn.addEventListener('click', () => {
+        idea.status = idea.status === 'active' ? 'archived' : 'active';
+        saveIdeaToSupabase(idea);
+        paraSelectedId = null;
+        renderParaView();
+        showStatus(idea.status === 'active' ? '복원됨' : '보관됨');
+      });
+      actions.appendChild(archiveBtn);
+
+      // Delete
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'para-detail-btn danger';
+      deleteBtn.textContent = '🗑';
+      deleteBtn.addEventListener('click', () => {
+        if (!confirm('이 아이디어를 삭제하시겠습니까?')) return;
+        deleteIdeaFromSupabase(idea.id);
+        ideas = ideas.filter(i => i.id !== idea.id);
+        paraSelectedId = null;
+        renderParaView();
+      });
+      actions.appendChild(deleteBtn);
+
+      right.appendChild(actions);
     }
 
     let reviewSaveTimers = {};
