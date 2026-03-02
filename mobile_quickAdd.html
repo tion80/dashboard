@@ -98,24 +98,55 @@
       font-size: 15px;
       font-weight: 600;
       font-family: inherit;
-      background: var(--accent);
-      color: white;
-      border: none;
+      border: 2px solid transparent;
       border-radius: 12px;
       cursor: pointer;
       flex-shrink: 0;
-      transition: background 0.15s, transform 0.1s;
+      transition: all 0.15s;
       -webkit-appearance: none;
     }
 
     .input-area button:active {
       transform: scale(0.96);
-      background: var(--accent-hover);
     }
 
     .input-area button:disabled {
       opacity: 0.4;
       pointer-events: none;
+    }
+
+    /* 하이라이트 상태 (추천 버튼) */
+    .input-area button.highlighted {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+
+    .input-area button.highlighted:active {
+      background: var(--accent-hover);
+    }
+
+    /* 디밍 상태 (비추천 버튼) */
+    .input-area button.dimmed {
+      background: transparent;
+      color: var(--text-muted);
+      border-color: var(--border);
+    }
+
+    .input-area button.dimmed:active {
+      background: var(--bg);
+    }
+
+    .input-area .idea-btn {
+      padding: 14px 16px;
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .today-item .idea-icon {
+      font-size: 14px;
+      flex-shrink: 0;
+      line-height: 1;
     }
 
     .status-toast {
@@ -232,8 +263,9 @@
   </div>
 
   <div class="input-area">
-    <input type="text" id="taskInput" placeholder="할 일을 입력하세요" enterkeyhint="send" autocomplete="off" autofocus>
-    <button id="addBtn" disabled>추가</button>
+    <input type="text" id="taskInput" placeholder="할 일 또는 아이디어를 입력하세요" enterkeyhint="send" autocomplete="off" autofocus>
+    <button id="addBtn" disabled>할일</button>
+    <button id="ideaBtn" class="idea-btn" disabled>💡</button>
   </div>
 
   <div class="status-toast" id="statusToast"></div>
@@ -244,7 +276,7 @@
   </div>
 
   <div class="today-list" id="todayList">
-    <div class="today-empty" id="todayEmpty">아직 추가한 태스크가 없습니다</div>
+    <div class="today-empty" id="todayEmpty">아직 추가한 항목이 없습니다</div>
   </div>
 
   <div class="conn-status" id="connStatus"></div>
@@ -261,6 +293,7 @@
   // ===== Elements =====
   const taskInput = document.getElementById('taskInput');
   const addBtn = document.getElementById('addBtn');
+  const ideaBtn = document.getElementById('ideaBtn');
   const statusToast = document.getElementById('statusToast');
   const todayList = document.getElementById('todayList');
   const todayCount = document.getElementById('todayCount');
@@ -326,6 +359,7 @@
     }
 
     addBtn.disabled = true;
+    ideaBtn.disabled = true;
     taskInput.disabled = true;
 
     const taskId = Math.round(Date.now() + Math.random() * 1000);
@@ -355,7 +389,7 @@
 
       // Save to local today list
       const items = loadTodayItems();
-      items.unshift({ title, time: timeStr, id: taskId });
+      items.unshift({ title, time: timeStr, id: taskId, type: 'task' });
       saveTodayItems(items);
 
       taskInput.value = '';
@@ -368,6 +402,56 @@
 
     taskInput.disabled = false;
     addBtn.disabled = false;
+    ideaBtn.disabled = false;
+    taskInput.focus();
+  }
+
+  // ===== Add idea =====
+  async function addIdea() {
+    const content = taskInput.value.trim();
+    if (!content) return;
+    if (!sb) {
+      showToast('Supabase 연결이 필요합니다');
+      return;
+    }
+
+    addBtn.disabled = true;
+    ideaBtn.disabled = true;
+    taskInput.disabled = true;
+
+    const ideaId = Math.round(Date.now() + Math.random() * 1000);
+    const now = new Date();
+    const timeStr = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+
+    // URL 자동 감지
+    const isUrl = /^https?:\/\//i.test(content);
+    const sourceUrl = isUrl ? content : '';
+
+    try {
+      const { error } = await sb.from('ideas').insert({
+        id: ideaId,
+        content: content,
+        source_url: sourceUrl,
+        status: 'active',
+      });
+
+      if (error) throw error;
+
+      const items = loadTodayItems();
+      items.unshift({ title: content, time: timeStr, id: ideaId, type: 'idea' });
+      saveTodayItems(items);
+
+      taskInput.value = '';
+      showToast('아이디어 저장 완료');
+      renderTodayList();
+    } catch(e) {
+      console.error('Idea save error:', e);
+      showToast('저장 실패 — 다시 시도해주세요');
+    }
+
+    taskInput.disabled = false;
+    addBtn.disabled = false;
+    ideaBtn.disabled = false;
     taskInput.focus();
   }
 
@@ -389,7 +473,10 @@
     items.forEach(item => {
       const row = document.createElement('div');
       row.className = 'today-item';
-      row.innerHTML = `<span class="bullet"></span><span>${escHtml(item.title)}</span><span class="time">${item.time}</span>`;
+      const icon = item.type === 'idea'
+        ? '<span class="idea-icon">💡</span>'
+        : '<span class="bullet"></span>';
+      row.innerHTML = `${icon}<span>${escHtml(item.title)}</span><span class="time">${item.time}</span>`;
       frag.appendChild(row);
     });
 
@@ -415,18 +502,56 @@
   }
 
   // ===== Events =====
-  taskInput.addEventListener('input', () => {
-    addBtn.disabled = !taskInput.value.trim();
-  });
+  // GTD: actionable한가?
+  function looksActionable(text) {
+    // URL → non-actionable (참고자료)
+    if (/^https?:\/\//i.test(text) || /^www\./i.test(text)) return false;
+    // 물음표로 끝남 → non-actionable (질문/아이디어)
+    if (/\?\s*$/.test(text)) return false;
+    // 추측/아이디어 패턴
+    if (/면\s*(어떨까|좋겠|될까)|해볼까|일수도|것\s*같|아닐까|싶다|듯$/.test(text)) return false;
+    // 나머지 → actionable
+    return true;
+  }
+
+  function updateButtonHighlight() {
+    const text = taskInput.value.trim();
+    const hasText = !!text;
+    addBtn.disabled = !hasText;
+    ideaBtn.disabled = !hasText;
+
+    if (!hasText) {
+      addBtn.className = '';
+      ideaBtn.className = 'idea-btn';
+      return;
+    }
+
+    const isIdea = !looksActionable(text);
+    if (isIdea) {
+      ideaBtn.className = 'idea-btn highlighted';
+      addBtn.className = 'dimmed';
+    } else {
+      addBtn.className = 'highlighted';
+      ideaBtn.className = 'idea-btn dimmed';
+    }
+  }
+
+  taskInput.addEventListener('input', updateButtonHighlight);
 
   taskInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && taskInput.value.trim()) {
       e.preventDefault();
-      addTask();
+      // 하이라이트된 버튼 기준으로 동작
+      if (ideaBtn.classList.contains('highlighted')) {
+        addIdea();
+      } else {
+        addTask();
+      }
     }
   });
 
   addBtn.addEventListener('click', addTask);
+  ideaBtn.addEventListener('click', addIdea);
 
   // ===== PWA SW =====
   if ('serviceWorker' in navigator) {
