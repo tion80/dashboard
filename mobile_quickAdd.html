@@ -38,141 +38,202 @@
       -webkit-tap-highlight-color: transparent;
     }
 
+    @supports (height: 100dvh) {
+      html, body { height: 100dvh; }
+    }
+
     body {
       display: flex;
       flex-direction: column;
-      padding: 0 20px;
-      padding-top: env(safe-area-inset-top, 16px);
-      padding-bottom: env(safe-area-inset-bottom, 16px);
+      padding: 0;
+      padding-top: env(safe-area-inset-top, 0px);
+      overflow: hidden;
+    }
+
+    /* === Header === */
+    .header {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 20px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
     }
 
     .brand {
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 20px 0 24px;
+      gap: 8px;
     }
 
-    .brand-icon {
-      font-size: 28px;
-      line-height: 1;
-    }
+    .brand-icon { font-size: 22px; line-height: 1; }
+    .brand-name { font-size: 18px; font-weight: 700; letter-spacing: -0.03em; color: var(--text); }
 
-    .brand-name {
-      font-size: 22px;
-      font-weight: 700;
-      letter-spacing: -0.03em;
-      color: var(--text);
-    }
-
-    .input-area {
-      display: flex;
-      margin-bottom: 8px;
-    }
-
-    .input-area input {
-      flex: 1;
-      padding: 14px 16px;
-      font-size: 16px;
-      font-family: inherit;
-      border: 2px solid var(--border);
-      border-radius: 12px;
-      background: var(--bg-card);
-      color: var(--text);
-      outline: none;
-      transition: border-color 0.15s;
-      -webkit-appearance: none;
-    }
-
-    .input-area input:focus {
-      border-color: var(--accent);
-    }
-
-    .input-area input::placeholder {
+    .conn-status {
+      font-size: 10px;
       color: var(--text-muted);
     }
-
-    .action-buttons {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 12px;
+    .conn-status .dot {
+      display: inline-block;
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      margin-right: 3px;
+      vertical-align: middle;
     }
+    .conn-status .dot.ok { background: #059669; }
+    .conn-status .dot.err { background: #DC2626; }
 
-    .action-buttons button {
+    /* === Feed === */
+    .feed {
       flex: 1;
-      padding: 14px 0;
-      font-size: 15px;
-      font-weight: 600;
-      font-family: inherit;
-      border: 2px solid transparent;
-      border-radius: 12px;
-      cursor: pointer;
-      transition: all 0.15s;
-      -webkit-appearance: none;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 8px 16px 16px;
     }
 
-    .action-buttons button:active {
-      transform: scale(0.96);
-    }
-
-    .action-buttons button:disabled {
-      opacity: 0.4;
-      pointer-events: none;
-    }
-
-    /* 하이라이트 상태 (추천 버튼) */
-    .action-buttons button.highlighted {
-      background: var(--accent);
-      color: white;
-      border-color: var(--accent);
-    }
-
-    .action-buttons button.highlighted:active {
-      background: var(--accent-hover);
-    }
-
-    /* 디밍 상태 (비추천 버튼) */
-    .action-buttons button.dimmed {
-      background: transparent;
+    .feed-empty {
+      text-align: center;
+      padding: 60px 0;
       color: var(--text-muted);
-      border-color: var(--border);
-    }
-
-    .action-buttons button.dimmed:active {
-      background: var(--bg);
-    }
-
-    .today-item .idea-icon {
       font-size: 14px;
-      flex-shrink: 0;
-      line-height: 1;
     }
 
-    .picker-section {
-      margin-bottom: 10px;
-    }
-
-    .picker-label {
+    .feed-date {
+      text-align: center;
       font-size: 11px;
       font-weight: 600;
       color: var(--text-muted);
+      margin: 20px 0 8px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .feed-date::before,
+    .feed-date::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .feed-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 10px 12px;
+      margin: 4px 0;
+      border-radius: 12px;
+      font-size: 13px;
+      animation: feedIn 0.25s ease-out;
+    }
+
+    .feed-item.capture {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+    }
+
+    .feed-item.action {
+      background: transparent;
+      color: var(--text-sub);
+      font-size: 12px;
+      padding: 6px 12px;
+    }
+
+    .feed-icon {
+      flex-shrink: 0;
+      width: 18px;
+      text-align: center;
+      font-size: 13px;
+    }
+
+    .feed-body {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .feed-title {
+      line-height: 1.4;
+      word-break: break-word;
+    }
+
+    .feed-labels {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .feed-time {
+      flex-shrink: 0;
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-left: auto;
+      padding-top: 2px;
+    }
+
+    .feed-action-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      flex-shrink: 0;
+      margin-right: 4px;
+    }
+
+    .feed-item.action .feed-title.done {
+      text-decoration: line-through;
+      color: var(--text-muted);
+    }
+
+    @keyframes feedIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* === Input Dock === */
+    .input-dock {
+      flex-shrink: 0;
+      padding: 8px 16px;
+      padding-bottom: calc(8px + env(safe-area-inset-bottom, 8px));
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+      box-shadow: 0 -2px 8px var(--shadow);
+    }
+
+    .status-toast {
+      text-align: center;
+      font-size: 12px;
+      color: var(--accent);
+      font-weight: 500;
+      height: 0;
+      overflow: hidden;
+      opacity: 0;
+      transition: all 0.2s;
+    }
+
+    .status-toast.visible {
+      height: 24px;
+      line-height: 24px;
+      opacity: 1;
+      margin-bottom: 4px;
+    }
+
+    .picker-section {
       margin-bottom: 6px;
-      text-transform: uppercase;
-      letter-spacing: 0.03em;
     }
 
     .picker-chips {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
+      gap: 6px;
     }
 
     .picker-chip {
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 500;
       font-family: inherit;
-      padding: 6px 12px;
-      border-radius: 20px;
+      padding: 4px 10px;
+      border-radius: 16px;
       border: 1.5px solid var(--border);
       background: var(--bg-card);
       color: var(--text-sub);
@@ -187,150 +248,268 @@
       color: white;
     }
 
-    .picker-chip:active {
-      transform: scale(0.96);
+    .picker-chip:active { transform: scale(0.96); }
+
+    .input-row {
+      margin-bottom: 6px;
     }
 
-    .status-toast {
-      text-align: center;
-      font-size: 13px;
-      color: var(--accent);
-      font-weight: 500;
-      height: 28px;
-      line-height: 28px;
+    .input-row input {
+      width: 100%;
+      padding: 12px 14px;
+      font-size: 16px;
+      font-family: inherit;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      background: var(--bg-card);
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.15s;
+      -webkit-appearance: none;
+    }
+
+    .input-row input:focus { border-color: var(--accent); }
+    .input-row input::placeholder { color: var(--text-muted); }
+
+    .action-buttons {
+      display: flex;
+      gap: 8px;
+    }
+
+    .action-buttons button {
+      flex: 1;
+      padding: 10px 0;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: inherit;
+      border: 2px solid transparent;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.15s;
+      -webkit-appearance: none;
+    }
+
+    .action-buttons button:active { transform: scale(0.96); }
+    .action-buttons button:disabled { opacity: 0.4; pointer-events: none; }
+
+    .action-buttons button.highlighted {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+    .action-buttons button.highlighted:active { background: var(--accent-hover); }
+
+    .action-buttons button.dimmed {
+      background: transparent;
+      color: var(--text-muted);
+      border-color: var(--border);
+    }
+    .action-buttons button.dimmed:active { background: var(--bg); }
+
+    /* === Detail Pane (Slack thread style) === */
+    .detail-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.3);
+      z-index: 100;
       opacity: 0;
-      transition: opacity 0.2s;
+      pointer-events: none;
+      transition: opacity 0.25s;
     }
-
-    .status-toast.visible {
+    .detail-overlay.open {
       opacity: 1;
+      pointer-events: auto;
     }
 
-    .today-header {
+    .detail-pane {
+      position: fixed;
+      top: 0; right: 0; bottom: 0;
+      width: 85%;
+      max-width: 360px;
+      background: var(--bg);
+      z-index: 101;
+      transform: translateX(100%);
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+      box-shadow: -4px 0 20px rgba(0,0,0,0.1);
+    }
+    .detail-pane.open {
+      transform: translateX(0);
+    }
+
+    .detail-header {
+      flex-shrink: 0;
       display: flex;
       align-items: center;
-      gap: 8px;
-      margin-top: 20px;
-      margin-bottom: 12px;
-      padding-top: 20px;
-      border-top: 1px solid var(--border);
+      justify-content: space-between;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
     }
 
-    .today-header-label {
+    .detail-header-title {
       font-size: 14px;
       font-weight: 600;
       color: var(--text-sub);
     }
 
-    .today-header-count {
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--accent);
-      background: rgba(217, 119, 87, 0.1);
-      padding: 2px 8px;
-      border-radius: 10px;
+    .detail-close {
+      font-size: 20px;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 4px 8px;
+      font-family: inherit;
+      -webkit-appearance: none;
     }
 
-    .today-list {
+    .detail-body {
       flex: 1;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
+      padding: 16px;
     }
 
-    .today-item {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 12px 0;
-      border-bottom: 1px solid var(--border);
-      font-size: 14px;
-      color: var(--text);
-      animation: fadeSlideIn 0.25s ease-out;
+    .detail-field {
+      margin-bottom: 16px;
     }
 
-    .today-item:last-child {
-      border-bottom: none;
-    }
-
-    .today-item .task-check {
-      font-size: 15px;
-      flex-shrink: 0;
+    .detail-label {
+      font-size: 11px;
+      font-weight: 600;
       color: var(--text-muted);
-      line-height: 1;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      margin-bottom: 6px;
     }
 
-    .today-item .time {
+    .detail-field textarea,
+    .detail-field input[type="text"] {
+      width: 100%;
+      font-size: 14px;
+      font-family: inherit;
+      padding: 10px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      background: var(--bg-card);
+      color: var(--text);
+      outline: none;
+      resize: vertical;
+      transition: border-color 0.15s;
+      -webkit-appearance: none;
+    }
+
+    .detail-field textarea:focus,
+    .detail-field input[type="text"]:focus {
+      border-color: var(--accent);
+    }
+
+    .detail-field textarea {
+      min-height: 80px;
+    }
+
+    .detail-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .detail-meta {
       font-size: 12px;
       color: var(--text-muted);
+      padding: 8px 0;
+    }
+
+    .detail-actions {
       flex-shrink: 0;
-      margin-left: auto;
+      display: flex;
+      gap: 8px;
+      padding: 12px 16px;
+      border-top: 1px solid var(--border);
     }
 
-    .today-empty {
-      text-align: center;
-      padding: 40px 0;
-      color: var(--text-muted);
-      font-size: 14px;
+    .detail-actions button {
+      flex: 1;
+      padding: 10px 0;
+      font-size: 13px;
+      font-weight: 600;
+      font-family: inherit;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      background: var(--bg-card);
+      color: var(--text-sub);
+      cursor: pointer;
+      -webkit-appearance: none;
+      transition: all 0.15s;
     }
 
-    @keyframes fadeSlideIn {
-      from { opacity: 0; transform: translateY(-8px); }
-      to   { opacity: 1; transform: translateY(0); }
+    .detail-actions button:active { transform: scale(0.96); }
+
+    .detail-actions button.danger {
+      color: #DC2626;
+      border-color: #FEE2E2;
     }
 
-    .conn-status {
-      text-align: center;
+    .detail-save-status {
       font-size: 11px;
-      color: var(--text-muted);
-      padding: 12px 0 4px;
+      color: var(--accent);
+      text-align: center;
+      height: 16px;
+      margin-top: 4px;
+      opacity: 0;
+      transition: opacity 0.2s;
     }
-    .conn-status .dot {
-      display: inline-block;
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      margin-right: 4px;
-      vertical-align: middle;
-    }
-    .conn-status .dot.ok { background: #059669; }
-    .conn-status .dot.err { background: #DC2626; }
+    .detail-save-status.visible { opacity: 1; }
   </style>
 </head>
 <body>
 
-  <div class="brand">
-    <span class="brand-icon">🔥</span>
-    <span class="brand-name">Locus</span>
+  <!-- ZONE 1: Header -->
+  <div class="header">
+    <div class="brand">
+      <span class="brand-icon">🔥</span>
+      <span class="brand-name">Locus</span>
+    </div>
+    <div class="conn-status" id="connStatus"></div>
   </div>
 
-  <div class="input-area">
-    <input type="text" id="taskInput" placeholder="할 일 또는 아이디어를 입력하세요" enterkeyhint="send" autocomplete="off" autofocus>
+  <!-- ZONE 2: Activity Feed -->
+  <div class="feed" id="activityFeed">
+    <div class="feed-empty" id="feedEmpty">최근 7일간 활동이 없습니다</div>
   </div>
 
-  <div class="picker-section" id="epicSection">
-    <div class="picker-chips" id="epicChips"></div>
-  </div>
-  <div class="picker-section" id="questSection" style="display:none;">
-    <div class="picker-chips" id="questChips"></div>
-  </div>
-
-  <div class="action-buttons">
-    <button id="addBtn" disabled>✓ 할일</button>
-    <button id="ideaBtn" disabled>💡 아이디어</button>
-  </div>
-
-  <div class="status-toast" id="statusToast"></div>
-
-  <div class="today-header">
-    <span class="today-header-label">오늘 추가한 것</span>
-    <span class="today-header-count" id="todayCount">0</span>
+  <!-- Detail Pane -->
+  <div class="detail-overlay" id="detailOverlay"></div>
+  <div class="detail-pane" id="detailPane">
+    <div class="detail-header">
+      <span class="detail-header-title" id="detailHeaderTitle"></span>
+      <button class="detail-close" id="detailClose">✕</button>
+    </div>
+    <div class="detail-body" id="detailBody"></div>
+    <div class="detail-actions" id="detailActions"></div>
   </div>
 
-  <div class="today-list" id="todayList">
-    <div class="today-empty" id="todayEmpty">아직 추가한 항목이 없습니다</div>
-  </div>
+  <!-- ZONE 3: Input Dock -->
+  <div class="input-dock" id="inputDock">
+    <div class="status-toast" id="statusToast"></div>
 
-  <div class="conn-status" id="connStatus"></div>
+    <div class="picker-section" id="epicSection">
+      <div class="picker-chips" id="epicChips"></div>
+    </div>
+    <div class="picker-section" id="questSection" style="display:none;">
+      <div class="picker-chips" id="questChips"></div>
+    </div>
+
+    <div class="input-row">
+      <input type="text" id="taskInput" placeholder="할 일 또는 아이디어를 입력하세요" enterkeyhint="send" autocomplete="off" autofocus>
+    </div>
+
+    <div class="action-buttons">
+      <button id="addBtn" disabled>✓ 할일</button>
+      <button id="ideaBtn" disabled>💡 아이디어</button>
+    </div>
+  </div>
 
 <script>
   // ===== Supabase =====
@@ -346,10 +525,9 @@
   const addBtn = document.getElementById('addBtn');
   const ideaBtn = document.getElementById('ideaBtn');
   const statusToast = document.getElementById('statusToast');
-  const todayList = document.getElementById('todayList');
-  const todayCount = document.getElementById('todayCount');
-  const todayEmpty = document.getElementById('todayEmpty');
   const connStatus = document.getElementById('connStatus');
+  const activityFeed = document.getElementById('activityFeed');
+  const feedEmpty = document.getElementById('feedEmpty');
 
   const epicChipsEl = document.getElementById('epicChips');
   const questChipsEl = document.getElementById('questChips');
@@ -371,51 +549,512 @@
     PERSONAL: { bg: '#F3F4F6', color: '#6B7280', label: 'PERSONAL' },
   };
 
+  // ===== Date utilities =====
   function todayKey() {
     const d = new Date();
     return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
   }
 
+  function dateKeyOffset(offsetDays) {
+    const d = new Date();
+    d.setDate(d.getDate() + offsetDays);
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  }
+
+  function formatDateHeader(dateKey) {
+    const d = new Date(dateKey + 'T00:00:00');
+    const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+    const today = todayKey();
+    const yesterday = dateKeyOffset(-1);
+    if (dateKey === today) return '오늘';
+    if (dateKey === yesterday) return '어제';
+    return `${d.getMonth()+1}/${d.getDate()} ${dayNames[d.getDay()]}`;
+  }
+
+  // ===== localStorage =====
   function loadTodayItems() {
     try {
       const stored = JSON.parse(localStorage.getItem(LS_KEY) || '{}');
-      const key = todayKey();
-      return stored[key] || [];
+      return stored[todayKey()] || [];
     } catch(e) { return []; }
   }
 
   function saveTodayItems(items) {
     try {
-      const stored = {};
+      const stored = JSON.parse(localStorage.getItem(LS_KEY) || '{}');
       stored[todayKey()] = items;
+      // 7일 초과 데이터 정리
+      const cutoff = dateKeyOffset(-7);
+      Object.keys(stored).forEach(k => { if (k < cutoff) delete stored[k]; });
       localStorage.setItem(LS_KEY, JSON.stringify(stored));
     } catch(e) {}
   }
 
-  // ===== Init =====
-  async function init() {
-    renderTodayList();
-    taskInput.focus();
+  // ===== Feed data =====
+  const ACTION_ICONS = {
+    '완료': '✓', '미완료': '↩', '삭제': '✕', '이동': '↔',
+    '인박스': '▦', '일정': '◆', '전환': '⇧', '마일스톤': '◇',
+    'ASAP': '▦', 'Schedule': '▦', 'Someday': '▦',
+    '퀘스트': '◇', '기본': '•'
+  };
 
-    if (!sb) {
-      connStatus.innerHTML = '<span class="dot err"></span>오프라인 — Supabase 연결 없음';
+  function getActionIcon(action) {
+    for (const [key, icon] of Object.entries(ACTION_ICONS)) {
+      if (action.includes(key)) return icon;
+    }
+    return '•';
+  }
+
+  function loadFeedData() {
+    const feedItems = [];
+    const cutoff = dateKeyOffset(-7);
+
+    // Source 1: QuickAdd 캡처
+    try {
+      const stored = JSON.parse(localStorage.getItem(LS_KEY) || '{}');
+      Object.keys(stored).forEach(dateKey => {
+        if (dateKey < cutoff) return;
+        (stored[dateKey] || []).forEach(item => {
+          feedItems.push({
+            source: 'capture',
+            ts: dateKey + 'T' + (item.time || '00:00') + ':00',
+            dateKey,
+            type: item.type,
+            title: item.title,
+            epic: item.epic || '',
+            quest: item.quest || '',
+            id: item.id,
+          });
+        });
+      });
+    } catch(e) {}
+
+    // Source 2: 대시보드 액션 로그
+    try {
+      const actionLog = JSON.parse(localStorage.getItem('dashboardActionLog') || '[]');
+      actionLog.forEach(entry => {
+        const dateKey = entry.ts.slice(0, 10);
+        if (dateKey < cutoff) return;
+        feedItems.push({
+          source: 'action',
+          ts: entry.ts,
+          dateKey,
+          action: entry.action,
+          title: entry.title || '',
+        });
+      });
+    } catch(e) {}
+
+    // 시간순 정렬 (오래된 것 위)
+    feedItems.sort((a, b) => a.ts.localeCompare(b.ts));
+    return feedItems;
+  }
+
+  // ===== Feed rendering =====
+  function renderFeed(scrollToBottom = true) {
+    const items = loadFeedData();
+
+    // 기존 아이템 제거
+    activityFeed.querySelectorAll('.feed-date, .feed-item').forEach(el => el.remove());
+
+    if (items.length === 0) {
+      feedEmpty.style.display = 'block';
       return;
     }
 
-    // Fetch first section as default target
+    feedEmpty.style.display = 'none';
+    const frag = document.createDocumentFragment();
+    let currentDate = null;
+
+    items.forEach(item => {
+      // 날짜 헤더
+      if (item.dateKey !== currentDate) {
+        currentDate = item.dateKey;
+        const dh = document.createElement('div');
+        dh.className = 'feed-date';
+        dh.textContent = formatDateHeader(item.dateKey);
+        frag.appendChild(dh);
+      }
+
+      const row = document.createElement('div');
+      const hm = item.ts.slice(11, 16);
+
+      if (item.source === 'capture') {
+        row.className = 'feed-item capture';
+        const icon = item.type === 'idea' ? '💡' : '☐';
+        const labels = [item.epic, item.quest].filter(Boolean).join(' / ');
+        const labelHtml = labels ? `<div class="feed-labels">${escHtml(labels)}</div>` : '';
+        row.innerHTML =
+          `<span class="feed-icon">${icon}</span>` +
+          `<div class="feed-body"><div class="feed-title">${escHtml(item.title)}</div>${labelHtml}</div>` +
+          `<span class="feed-time">${hm}</span>`;
+        row.style.cursor = 'pointer';
+        row.addEventListener('click', () => openDetail(item));
+      } else {
+        row.className = 'feed-item action';
+        const icon = getActionIcon(item.action);
+        const isDone = item.action === '완료';
+        row.innerHTML =
+          `<span class="feed-icon">${icon}</span>` +
+          `<span class="feed-action-label">${escHtml(item.action)}</span>` +
+          `<span class="feed-title${isDone ? ' done' : ''}">${escHtml(item.title)}</span>` +
+          `<span class="feed-time">${hm}</span>`;
+      }
+
+      frag.appendChild(row);
+    });
+
+    activityFeed.insertBefore(frag, feedEmpty);
+
+    if (scrollToBottom) {
+      requestAnimationFrame(() => {
+        activityFeed.scrollTop = activityFeed.scrollHeight;
+      });
+    }
+  }
+
+  function escHtml(s) {
+    const d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+  }
+
+  // ===== Detail Pane =====
+  const detailOverlay = document.getElementById('detailOverlay');
+  const detailPane = document.getElementById('detailPane');
+  const detailBody = document.getElementById('detailBody');
+  const detailActions = document.getElementById('detailActions');
+  const detailHeaderTitle = document.getElementById('detailHeaderTitle');
+  const detailClose = document.getElementById('detailClose');
+
+  let detailSaveTimer = null;
+
+  function openDetail(feedItem) {
+    if (!sb) return;
+    if (feedItem.type === 'task') {
+      loadTaskDetail(feedItem.id);
+    } else if (feedItem.type === 'idea') {
+      loadIdeaDetail(feedItem.id);
+    }
+  }
+
+  async function loadTaskDetail(taskId) {
+    detailHeaderTitle.textContent = '할일 상세';
+    detailBody.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);">로딩...</div>';
+    detailActions.innerHTML = '';
+    showPane();
+
+    try {
+      const { data } = await sb.from('tasks').select('*').eq('id', taskId).single();
+      if (!data) { detailBody.innerHTML = '<div style="padding:20px;color:var(--text-muted);">데이터를 찾을 수 없습니다</div>'; return; }
+      renderTaskDetail(data);
+    } catch(e) {
+      detailBody.innerHTML = '<div style="padding:20px;color:var(--text-muted);">로드 실패</div>';
+    }
+  }
+
+  function renderTaskDetail(task) {
+    detailBody.innerHTML = '';
+
+    // Title
+    const titleField = makeField('제목');
+    const titleInput = document.createElement('input');
+    titleInput.type = 'text';
+    titleInput.value = task.title || '';
+    titleInput.addEventListener('input', () => {
+      task.title = titleInput.value;
+      scheduleDetailSave('task', task);
+    });
+    titleField.appendChild(titleInput);
+    detailBody.appendChild(titleField);
+
+    // Note
+    const noteField = makeField('노트');
+    const noteArea = document.createElement('textarea');
+    noteArea.value = task.note || '';
+    noteArea.placeholder = '메모 추가...';
+    noteArea.addEventListener('input', () => {
+      task.note = noteArea.value;
+      scheduleDetailSave('task', task);
+    });
+    noteField.appendChild(noteArea);
+    detailBody.appendChild(noteField);
+
+    // Epic tags
+    const tagField = makeField('에픽');
+    const tagChips = document.createElement('div');
+    tagChips.className = 'detail-chips';
+    const currentTags = task.tags || [];
+    Object.entries(epicColors).forEach(([key, ec]) => {
+      const chip = document.createElement('button');
+      chip.className = 'picker-chip' + (currentTags.includes(key) ? ' selected' : '');
+      chip.textContent = ec.label;
+      chip.style.setProperty('--chip-color', ec.color);
+      chip.addEventListener('click', () => {
+        const idx = task.tags.indexOf(key);
+        if (idx >= 0) { task.tags.splice(idx, 1); chip.classList.remove('selected'); }
+        else { task.tags = [key]; tagChips.querySelectorAll('.picker-chip').forEach(c => c.classList.remove('selected')); chip.classList.add('selected'); }
+        scheduleDetailSave('task', task);
+      });
+      tagChips.appendChild(chip);
+    });
+    tagField.appendChild(tagChips);
+    detailBody.appendChild(tagField);
+
+    // Quest
+    if (quests.length > 0) {
+      const qField = makeField('퀘스트');
+      const qChips = document.createElement('div');
+      qChips.className = 'detail-chips';
+      const epicFilter = (task.tags && task.tags[0]) || null;
+      const filtered = epicFilter ? quests.filter(q => q.epic === epicFilter) : quests;
+      filtered.forEach(q => {
+        const chip = document.createElement('button');
+        chip.className = 'picker-chip' + (task.milestone_id === q.id ? ' selected' : '');
+        chip.textContent = q.title;
+        chip.style.setProperty('--chip-color', q.color || '#7C3AED');
+        chip.addEventListener('click', () => {
+          if (task.milestone_id === q.id) { task.milestone_id = null; chip.classList.remove('selected'); }
+          else { task.milestone_id = q.id; qChips.querySelectorAll('.picker-chip').forEach(c => c.classList.remove('selected')); chip.classList.add('selected'); }
+          scheduleDetailSave('task', task);
+        });
+        qChips.appendChild(chip);
+      });
+      qField.appendChild(qChips);
+      detailBody.appendChild(qField);
+    }
+
+    // Save status
+    const saveStatus = document.createElement('div');
+    saveStatus.className = 'detail-save-status';
+    saveStatus.id = 'detailSaveStatus';
+    detailBody.appendChild(saveStatus);
+
+    // Actions
+    detailActions.innerHTML = '';
+    const doneBtn = document.createElement('button');
+    doneBtn.textContent = task.checked ? '↩ 미완료' : '✓ 완료';
+    doneBtn.addEventListener('click', async () => {
+      task.checked = !task.checked;
+      await sb.from('tasks').update({ checked: task.checked }).eq('id', task.id);
+      closePane();
+      showToast(task.checked ? '완료 처리됨' : '미완료로 변경');
+    });
+    detailActions.appendChild(doneBtn);
+
+    const delBtn = document.createElement('button');
+    delBtn.className = 'danger';
+    delBtn.textContent = '삭제';
+    delBtn.addEventListener('click', async () => {
+      if (!confirm('이 할일을 삭제할까요?')) return;
+      await sb.from('tasks').delete().eq('id', task.id);
+      // localStorage에서도 제거
+      removeFromLocal(task.id);
+      closePane();
+      renderFeed();
+      showToast('삭제됨');
+    });
+    detailActions.appendChild(delBtn);
+  }
+
+  async function loadIdeaDetail(ideaId) {
+    detailHeaderTitle.textContent = '아이디어 상세';
+    detailBody.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);">로딩...</div>';
+    detailActions.innerHTML = '';
+    showPane();
+
+    try {
+      const { data } = await sb.from('ideas').select('*').eq('id', ideaId).single();
+      if (!data) { detailBody.innerHTML = '<div style="padding:20px;color:var(--text-muted);">데이터를 찾을 수 없습니다</div>'; return; }
+      renderIdeaDetail(data);
+    } catch(e) {
+      detailBody.innerHTML = '<div style="padding:20px;color:var(--text-muted);">로드 실패</div>';
+    }
+  }
+
+  function renderIdeaDetail(idea) {
+    detailBody.innerHTML = '';
+
+    // Content
+    const contentField = makeField('내용');
+    const contentArea = document.createElement('textarea');
+    contentArea.value = idea.content || '';
+    contentArea.addEventListener('input', () => {
+      idea.content = contentArea.value;
+      scheduleDetailSave('idea', idea);
+    });
+    contentField.appendChild(contentArea);
+    detailBody.appendChild(contentField);
+
+    // Source URL
+    const urlField = makeField('URL');
+    const urlInput = document.createElement('input');
+    urlInput.type = 'text';
+    urlInput.value = idea.source_url || '';
+    urlInput.placeholder = 'https://...';
+    urlInput.addEventListener('input', () => {
+      idea.source_url = urlInput.value;
+      scheduleDetailSave('idea', idea);
+    });
+    urlField.appendChild(urlInput);
+    if (idea.source_url) {
+      const link = document.createElement('a');
+      link.href = idea.source_url;
+      link.target = '_blank';
+      link.textContent = new URL(idea.source_url).hostname;
+      link.style.cssText = 'font-size:12px;color:var(--accent);display:block;margin-top:4px;';
+      urlField.appendChild(link);
+    }
+    detailBody.appendChild(urlField);
+
+    // Note
+    const noteField = makeField('노트');
+    const noteArea = document.createElement('textarea');
+    noteArea.value = idea.note || '';
+    noteArea.placeholder = '메모 추가...';
+    noteArea.addEventListener('input', () => {
+      idea.note = noteArea.value;
+      scheduleDetailSave('idea', idea);
+    });
+    noteField.appendChild(noteArea);
+    detailBody.appendChild(noteField);
+
+    // Tags
+    const tagField = makeField('에픽');
+    const tagChips = document.createElement('div');
+    tagChips.className = 'detail-chips';
+    const currentTags = idea.tags || [];
+    Object.entries(epicColors).forEach(([key, ec]) => {
+      const chip = document.createElement('button');
+      chip.className = 'picker-chip' + (currentTags.includes(key) ? ' selected' : '');
+      chip.textContent = ec.label;
+      chip.style.setProperty('--chip-color', ec.color);
+      chip.addEventListener('click', () => {
+        if (!idea.tags) idea.tags = [];
+        const idx = idea.tags.indexOf(key);
+        if (idx >= 0) { idea.tags.splice(idx, 1); chip.classList.remove('selected'); }
+        else { idea.tags = [key]; tagChips.querySelectorAll('.picker-chip').forEach(c => c.classList.remove('selected')); chip.classList.add('selected'); }
+        scheduleDetailSave('idea', idea);
+      });
+      tagChips.appendChild(chip);
+    });
+    tagField.appendChild(tagChips);
+    detailBody.appendChild(tagField);
+
+    // Save status
+    const saveStatus = document.createElement('div');
+    saveStatus.className = 'detail-save-status';
+    saveStatus.id = 'detailSaveStatus';
+    detailBody.appendChild(saveStatus);
+
+    // Actions
+    detailActions.innerHTML = '';
+
+    // Convert to task
+    const toTaskBtn = document.createElement('button');
+    toTaskBtn.textContent = '✓ 할일로';
+    toTaskBtn.addEventListener('click', async () => {
+      if (!defaultSection) { showToast('섹션 없음'); return; }
+      const taskId = Math.round(Date.now() + Math.random() * 1000);
+      await sb.from('tasks').insert({
+        id: taskId, title: idea.content, section: defaultSection,
+        checked: false, note: idea.note || '',
+        tags: idea.tags || [], url: idea.source_url || '',
+        scheduled_date: null, plan_bucket: null, position: 0,
+      });
+      await sb.from('ideas').update({ status: 'archived' }).eq('id', idea.id);
+      closePane();
+      showToast('할일로 전환됨');
+    });
+    detailActions.appendChild(toTaskBtn);
+
+    const delBtn = document.createElement('button');
+    delBtn.className = 'danger';
+    delBtn.textContent = '삭제';
+    delBtn.addEventListener('click', async () => {
+      if (!confirm('이 아이디어를 삭제할까요?')) return;
+      await sb.from('ideas').delete().eq('id', idea.id);
+      removeFromLocal(idea.id);
+      closePane();
+      renderFeed();
+      showToast('삭제됨');
+    });
+    detailActions.appendChild(delBtn);
+  }
+
+  function makeField(label) {
+    const div = document.createElement('div');
+    div.className = 'detail-field';
+    const lbl = document.createElement('div');
+    lbl.className = 'detail-label';
+    lbl.textContent = label;
+    div.appendChild(lbl);
+    return div;
+  }
+
+  function scheduleDetailSave(type, data) {
+    clearTimeout(detailSaveTimer);
+    detailSaveTimer = setTimeout(async () => {
+      try {
+        if (type === 'task') {
+          await sb.from('tasks').update({
+            title: data.title, note: data.note, tags: data.tags, milestone_id: data.milestone_id
+          }).eq('id', data.id);
+        } else {
+          await sb.from('ideas').update({
+            content: data.content, source_url: data.source_url, note: data.note, tags: data.tags
+          }).eq('id', data.id);
+        }
+        const ss = document.getElementById('detailSaveStatus');
+        if (ss) { ss.textContent = '저장됨'; ss.classList.add('visible'); setTimeout(() => ss.classList.remove('visible'), 1200); }
+      } catch(e) { console.error('Detail save error:', e); }
+    }, 500);
+  }
+
+  function removeFromLocal(id) {
+    try {
+      const stored = JSON.parse(localStorage.getItem(LS_KEY) || '{}');
+      Object.keys(stored).forEach(dateKey => {
+        stored[dateKey] = stored[dateKey].filter(item => item.id !== id);
+      });
+      localStorage.setItem(LS_KEY, JSON.stringify(stored));
+    } catch(e) {}
+  }
+
+  function showPane() {
+    detailOverlay.classList.add('open');
+    detailPane.classList.add('open');
+  }
+
+  function closePane() {
+    detailOverlay.classList.remove('open');
+    detailPane.classList.remove('open');
+  }
+
+  detailClose.addEventListener('click', closePane);
+  detailOverlay.addEventListener('click', closePane);
+
+  // ===== Init =====
+  async function init() {
+    renderFeed();
+
+    if (!sb) {
+      connStatus.innerHTML = '<span class="dot err"></span>오프라인';
+      return;
+    }
+
     try {
       const { data: secs } = await sb.from('sections').select('id, name').order('position').limit(1);
       if (secs && secs.length > 0) {
         defaultSection = secs[0].id;
         connStatus.innerHTML = '<span class="dot ok"></span>연결됨';
       } else {
-        connStatus.innerHTML = '<span class="dot err"></span>섹션 없음 — 대시보드에서 먼저 데이터를 불러오세요';
+        connStatus.innerHTML = '<span class="dot err"></span>섹션 없음';
       }
     } catch(e) {
       connStatus.innerHTML = '<span class="dot err"></span>연결 실패';
     }
 
-    // 퀘스트 로드
     try {
       const { data: qData } = await sb.from('quests').select('id, title, epic, color, completed').order('position');
       if (qData) {
@@ -425,9 +1064,9 @@
     } catch(e) { console.log('Quest load error:', e); }
   }
 
+  // ===== Epic / Quest chips =====
   function renderEpicChips() {
     epicChipsEl.innerHTML = '';
-    // 퀘스트에서 에픽 목록 추출
     const epics = [...new Set(quests.map(q => q.epic).filter(Boolean))];
 
     epics.forEach(epic => {
@@ -438,7 +1077,6 @@
       chip.style.setProperty('--chip-color', ec.color);
       chip.addEventListener('click', () => {
         if (selectedEpic === epic) {
-          // 에픽 해제 → 퀘스트도 해제
           selectedEpic = null;
           selectedQuestId = null;
           chip.classList.remove('selected');
@@ -458,10 +1096,7 @@
   function renderQuestChips(epic) {
     questChipsEl.innerHTML = '';
     const filtered = quests.filter(q => q.epic === epic);
-    if (filtered.length === 0) {
-      questSection.style.display = 'none';
-      return;
-    }
+    if (filtered.length === 0) { questSection.style.display = 'none'; return; }
     questSection.style.display = 'block';
     filtered.forEach(q => {
       const chip = document.createElement('button');
@@ -500,31 +1135,23 @@
     const timeStr = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
 
     try {
-      // Get current max position in the section
       const { data: existing } = await sb.from('tasks').select('position').eq('section', defaultSection).order('position', { ascending: false }).limit(1);
       const nextPos = (existing && existing.length > 0) ? existing[0].position + 1 : 0;
 
       const { error } = await sb.from('tasks').insert({
-        id: taskId,
-        title: title,
-        section: defaultSection,
-        checked: false,
-        note: '',
+        id: taskId, title, section: defaultSection,
+        checked: false, note: '',
         tags: selectedEpic ? [selectedEpic] : [],
-        url: '',
-        scheduled_date: null,
-        plan_bucket: null,
-        position: nextPos,
-        milestone_id: selectedQuestId,
+        url: '', scheduled_date: null, plan_bucket: null,
+        position: nextPos, milestone_id: selectedQuestId,
       });
 
       if (error) throw error;
 
-      // Save to local today list
       const items = loadTodayItems();
       const epicLabel = selectedEpic ? (epicColors[selectedEpic]?.label || selectedEpic) : '';
       const questName = selectedQuestId ? (quests.find(q => q.id === selectedQuestId)?.title || '') : '';
-      items.unshift({ title, time: timeStr, id: taskId, type: 'task', epic: epicLabel, quest: questName });
+      items.push({ title, time: timeStr, id: taskId, type: 'task', epic: epicLabel, quest: questName });
       saveTodayItems(items);
 
       taskInput.value = '';
@@ -533,7 +1160,7 @@
       epicChipsEl.querySelectorAll('.picker-chip').forEach(c => c.classList.remove('selected'));
       questSection.style.display = 'none';
       showToast('추가 완료');
-      renderTodayList();
+      renderFeed();
     } catch(e) {
       console.error('Save error:', e);
       showToast('저장 실패 — 다시 시도해주세요');
@@ -562,27 +1189,23 @@
     const now = new Date();
     const timeStr = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
 
-    // URL 자동 감지
     const isUrl = /^https?:\/\//i.test(content);
     const sourceUrl = isUrl ? content : '';
 
     try {
       const { error } = await sb.from('ideas').insert({
-        id: ideaId,
-        content: content,
-        source_url: sourceUrl,
-        status: 'active',
+        id: ideaId, content, source_url: sourceUrl, status: 'active',
       });
 
       if (error) throw error;
 
       const items = loadTodayItems();
-      items.unshift({ title: content, time: timeStr, id: ideaId, type: 'idea' });
+      items.push({ title: content, time: timeStr, id: ideaId, type: 'idea' });
       saveTodayItems(items);
 
       taskInput.value = '';
       showToast('아이디어 저장 완료');
-      renderTodayList();
+      renderFeed();
     } catch(e) {
       console.error('Idea save error:', e);
       showToast('저장 실패 — 다시 시도해주세요');
@@ -592,45 +1215,6 @@
     addBtn.disabled = false;
     ideaBtn.disabled = false;
     taskInput.focus();
-  }
-
-  // ===== Render today list =====
-  function renderTodayList() {
-    const items = loadTodayItems();
-    todayCount.textContent = items.length;
-
-    if (items.length === 0) {
-      todayEmpty.style.display = 'block';
-      // Clear everything except the empty state
-      const existing = todayList.querySelectorAll('.today-item');
-      existing.forEach(el => el.remove());
-      return;
-    }
-
-    todayEmpty.style.display = 'none';
-    const frag = document.createDocumentFragment();
-    items.forEach(item => {
-      const row = document.createElement('div');
-      row.className = 'today-item';
-      const icon = item.type === 'idea'
-        ? '<span class="idea-icon">💡</span>'
-        : '<span class="task-check">☐</span>';
-      const labels = [item.epic, item.quest].filter(Boolean).join(' / ');
-      const questTag = labels ? `<span style="font-size:11px;color:var(--text-muted);margin-left:4px;">${escHtml(labels)}</span>` : '';
-      row.innerHTML = `${icon}<span>${escHtml(item.title)}${questTag}</span><span class="time">${item.time}</span>`;
-      frag.appendChild(row);
-    });
-
-    // Remove old items
-    const old = todayList.querySelectorAll('.today-item');
-    old.forEach(el => el.remove());
-    todayList.insertBefore(frag, todayEmpty);
-  }
-
-  function escHtml(s) {
-    const d = document.createElement('div');
-    d.textContent = s;
-    return d.innerHTML;
   }
 
   // ===== Toast =====
@@ -643,15 +1227,10 @@
   }
 
   // ===== Events =====
-  // GTD: actionable한가?
   function looksActionable(text) {
-    // URL → non-actionable (참고자료)
     if (/^https?:\/\//i.test(text) || /^www\./i.test(text)) return false;
-    // 물음표로 끝남 → non-actionable (질문/아이디어)
     if (/\?\s*$/.test(text)) return false;
-    // 추측/아이디어 패턴
     if (/면\s*(어떨까|좋겠|될까)|해볼까|일수도|것\s*같|아닐까|싶다|듯$/.test(text)) return false;
-    // 나머지 → actionable
     return true;
   }
 
@@ -682,7 +1261,6 @@
   taskInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && taskInput.value.trim()) {
       e.preventDefault();
-      // 하이라이트된 버튼 기준으로 동작
       if (ideaBtn.classList.contains('highlighted')) {
         addIdea();
       } else {
@@ -693,6 +1271,16 @@
 
   addBtn.addEventListener('click', addTask);
   ideaBtn.addEventListener('click', addIdea);
+
+  // ===== iOS keyboard handling =====
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', () => {
+      const dock = document.getElementById('inputDock');
+      const offset = window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop;
+      dock.style.paddingBottom = Math.max(8, offset) + 'px';
+      activityFeed.scrollTop = activityFeed.scrollHeight;
+    });
+  }
 
   // ===== PWA SW =====
   if ('serviceWorker' in navigator) {
