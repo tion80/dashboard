@@ -571,6 +571,18 @@
     return `${d.getMonth()+1}/${d.getDate()} ${dayNames[d.getDay()]}`;
   }
 
+  // UTC → 로컬 시간 변환
+  function toLocalTS(utcStr) {
+    const d = new Date(utcStr);
+    const y = d.getFullYear();
+    const mo = String(d.getMonth()+1).padStart(2,'0');
+    const da = String(d.getDate()).padStart(2,'0');
+    const h = String(d.getHours()).padStart(2,'0');
+    const mi = String(d.getMinutes()).padStart(2,'0');
+    const s = String(d.getSeconds()).padStart(2,'0');
+    return `${y}-${mo}-${da}T${h}:${mi}:${s}`;
+  }
+
   // ===== localStorage =====
   function loadTodayItems() {
     try {
@@ -623,7 +635,7 @@
         .order('id', { ascending: true });
       if (taskData) {
         taskData.forEach(t => {
-          const ts = t.created_at || new Date(t.id).toISOString();
+          const ts = toLocalTS(t.created_at || new Date(t.id).toISOString());
           const dateKey = ts.slice(0, 10);
           const epicKey = (t.tags && t.tags[0]) || '';
           const epicLabel = epicKey ? (epicColors[epicKey]?.label || epicKey) : '';
@@ -647,7 +659,7 @@
         .order('created_at', { ascending: true });
       if (ideaData) {
         ideaData.forEach(i => {
-          const ts = i.created_at;
+          const ts = toLocalTS(i.created_at);
           const dateKey = ts.slice(0, 10);
           const epicKey = (i.tags && i.tags[0]) || '';
           const epicLabel = epicKey ? (epicColors[epicKey]?.label || epicKey) : '';
