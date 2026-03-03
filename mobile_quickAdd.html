@@ -605,54 +605,83 @@
     return '•';
   }
 
-  function loadFeedData() {
-    const feedItems = [];
-    const cutoff = dateKeyOffset(-7);
+  let feedCache = [];
 
-    // Source 1: QuickAdd 캡처
+  async function loadFeedFromSupabase() {
+    if (!sb) return;
+    const feedItems = [];
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - 7);
+    const cutoffISO = cutoff.toISOString();
+    const cutoffId = cutoff.getTime();
+
+    // Source 1: Tasks (id는 Date.now() 기반)
     try {
-      const stored = JSON.parse(localStorage.getItem(LS_KEY) || '{}');
-      Object.keys(stored).forEach(dateKey => {
-        if (dateKey < cutoff) return;
-        (stored[dateKey] || []).forEach(item => {
+      const { data: taskData } = await sb.from('tasks')
+        .select('id, title, tags, checked, milestone_id, created_at')
+        .gte('id', cutoffId)
+        .order('id', { ascending: true });
+      if (taskData) {
+        taskData.forEach(t => {
+          const ts = t.created_at || new Date(t.id).toISOString();
+          const dateKey = ts.slice(0, 10);
+          const epicKey = (t.tags && t.tags[0]) || '';
+          const epicLabel = epicKey ? (epicColors[epicKey]?.label || epicKey) : '';
+          const quest = t.milestone_id ? (quests.find(q => q.id === t.milestone_id)?.title || '') : '';
           feedItems.push({
-            source: 'capture',
-            ts: dateKey + 'T' + (item.time || '00:00') + ':00',
-            dateKey,
-            type: item.type,
-            title: item.title,
-            epic: item.epic || '',
-            quest: item.quest || '',
-            id: item.id,
+            source: 'capture', ts, dateKey,
+            type: 'task', title: t.title,
+            epic: epicLabel, quest,
+            id: t.id, checked: t.checked,
           });
         });
-      });
-    } catch(e) {}
+      }
+    } catch(e) { console.log('Feed tasks error:', e); }
 
-    // Source 2: 대시보드 액션 로그
+    // Source 2: Ideas (created_at 기반)
+    try {
+      const { data: ideaData } = await sb.from('ideas')
+        .select('id, content, source_url, tags, status, created_at')
+        .gte('created_at', cutoffISO)
+        .eq('status', 'active')
+        .order('created_at', { ascending: true });
+      if (ideaData) {
+        ideaData.forEach(i => {
+          const ts = i.created_at;
+          const dateKey = ts.slice(0, 10);
+          const epicKey = (i.tags && i.tags[0]) || '';
+          const epicLabel = epicKey ? (epicColors[epicKey]?.label || epicKey) : '';
+          feedItems.push({
+            source: 'capture', ts, dateKey,
+            type: 'idea', title: i.content,
+            epic: epicLabel, quest: '',
+            id: i.id,
+          });
+        });
+      }
+    } catch(e) { console.log('Feed ideas error:', e); }
+
+    // Source 3: 로컬 액션 로그 (같은 브라우저면 보너스)
     try {
       const actionLog = JSON.parse(localStorage.getItem('dashboardActionLog') || '[]');
+      const cutoffDateKey = dateKeyOffset(-7);
       actionLog.forEach(entry => {
         const dateKey = entry.ts.slice(0, 10);
-        if (dateKey < cutoff) return;
+        if (dateKey < cutoffDateKey) return;
         feedItems.push({
-          source: 'action',
-          ts: entry.ts,
-          dateKey,
-          action: entry.action,
-          title: entry.title || '',
+          source: 'action', ts: entry.ts, dateKey,
+          action: entry.action, title: entry.title || '',
         });
       });
     } catch(e) {}
 
-    // 시간순 정렬 (오래된 것 위)
     feedItems.sort((a, b) => a.ts.localeCompare(b.ts));
-    return feedItems;
+    feedCache = feedItems;
   }
 
   // ===== Feed rendering =====
   function renderFeed(scrollToBottom = true) {
-    const items = loadFeedData();
+    const items = feedCache;
 
     // 기존 아이템 제거
     activityFeed.querySelectorAll('.feed-date, .feed-item').forEach(el => el.remove());
@@ -681,13 +710,16 @@
 
       if (item.source === 'capture') {
         row.className = 'feed-item capture';
-        const icon = item.type === 'idea' ? '💡' : '☐';
+        const isChecked = item.checked;
+        const icon = item.type === 'idea' ? '💡' : (isChecked ? '✓' : '☐');
         const labels = [item.epic, item.quest].filter(Boolean).join(' / ');
         const labelHtml = labels ? `<div class="feed-labels">${escHtml(labels)}</div>` : '';
+        const titleClass = isChecked ? ' done' : '';
         row.innerHTML =
           `<span class="feed-icon">${icon}</span>` +
-          `<div class="feed-body"><div class="feed-title">${escHtml(item.title)}</div>${labelHtml}</div>` +
+          `<div class="feed-body"><div class="feed-title${titleClass}">${escHtml(item.title)}</div>${labelHtml}</div>` +
           `<span class="feed-time">${hm}</span>`;
+        if (isChecked) row.style.opacity = '0.5';
         row.style.cursor = 'pointer';
         row.addEventListener('click', () => openDetail(item));
       } else {
@@ -1036,12 +1068,15 @@
 
   // ===== Init =====
   async function init() {
-    renderFeed();
-
     if (!sb) {
       connStatus.innerHTML = '<span class="dot err"></span>오프라인';
+      feedEmpty.textContent = '서버 연결이 필요합니다';
+      feedEmpty.style.display = 'block';
       return;
     }
+
+    feedEmpty.textContent = '로딩 중...';
+    feedEmpty.style.display = 'block';
 
     try {
       const { data: secs } = await sb.from('sections').select('id, name').order('position').limit(1);
@@ -1062,6 +1097,10 @@
         renderEpicChips();
       }
     } catch(e) { console.log('Quest load error:', e); }
+
+    // 퀘스트 로드 후 피드 로드 (퀘스트명 표시를 위해)
+    await loadFeedFromSupabase();
+    renderFeed();
   }
 
   // ===== Epic / Quest chips =====
@@ -1160,6 +1199,7 @@
       epicChipsEl.querySelectorAll('.picker-chip').forEach(c => c.classList.remove('selected'));
       questSection.style.display = 'none';
       showToast('추가 완료');
+      await loadFeedFromSupabase();
       renderFeed();
     } catch(e) {
       console.error('Save error:', e);
@@ -1205,6 +1245,7 @@
 
       taskInput.value = '';
       showToast('아이디어 저장 완료');
+      await loadFeedFromSupabase();
       renderFeed();
     } catch(e) {
       console.error('Idea save error:', e);
