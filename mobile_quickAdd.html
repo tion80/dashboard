@@ -985,6 +985,29 @@
     tagField.appendChild(tagChips);
     detailBody.appendChild(tagField);
 
+    // Quest
+    if (quests.length > 0) {
+      const qField = makeField('퀘스트');
+      const qChips = document.createElement('div');
+      qChips.className = 'detail-chips';
+      const epicFilter = (idea.tags && idea.tags[0]) || null;
+      const filtered = epicFilter ? quests.filter(q => q.epic === epicFilter) : quests;
+      filtered.forEach(q => {
+        const chip = document.createElement('button');
+        chip.className = 'picker-chip' + (idea.milestone_id === q.id ? ' selected' : '');
+        chip.textContent = q.title;
+        chip.style.setProperty('--chip-color', q.color || '#7C3AED');
+        chip.addEventListener('click', () => {
+          if (idea.milestone_id === q.id) { idea.milestone_id = null; chip.classList.remove('selected'); }
+          else { idea.milestone_id = q.id; qChips.querySelectorAll('.picker-chip').forEach(c => c.classList.remove('selected')); chip.classList.add('selected'); }
+          scheduleDetailSave('idea', idea);
+        });
+        qChips.appendChild(chip);
+      });
+      qField.appendChild(qChips);
+      detailBody.appendChild(qField);
+    }
+
     // Save status
     const saveStatus = document.createElement('div');
     saveStatus.className = 'detail-save-status';
@@ -1046,7 +1069,7 @@
           }).eq('id', data.id);
         } else {
           await sb.from('ideas').update({
-            content: data.content, source_url: data.source_url, note: data.note, tags: data.tags
+            content: data.content, source_url: data.source_url, note: data.note, tags: data.tags, milestone_id: data.milestone_id
           }).eq('id', data.id);
         }
         const ss = document.getElementById('detailSaveStatus');
