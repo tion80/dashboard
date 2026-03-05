@@ -839,6 +839,7 @@
         if (idx >= 0) { task.tags.splice(idx, 1); chip.classList.remove('selected'); }
         else { task.tags = [key]; tagChips.querySelectorAll('.picker-chip').forEach(c => c.classList.remove('selected')); chip.classList.add('selected'); }
         scheduleDetailSave('task', task);
+        renderQuestChipsForDetail(task, questContainer);
       });
       tagChips.appendChild(chip);
     });
@@ -858,14 +859,27 @@
       }
       task.tags = [key];
       scheduleDetailSave('task', task);
-      renderTaskDetail(task);
+      tagChips.querySelectorAll('.picker-chip').forEach(c => c.classList.remove('selected'));
+      // select the new/existing chip
+      const allChips = tagChips.querySelectorAll('.picker-chip[data-epic]');
+      allChips.forEach(c => { if (c.dataset.epic === key) c.classList.add('selected'); });
+      renderQuestChipsForDetail(task, questContainer);
     });
     tagChips.appendChild(addEpicChip);
+    // data-epic 속성 추가 (에픽 + 버튼에서 선택 표시용)
+    tagChips.querySelectorAll('.picker-chip').forEach((c, i) => {
+      const keys = Object.keys(epicColors);
+      if (i < keys.length) c.dataset.epic = keys[i];
+    });
     tagField.appendChild(tagChips);
     detailBody.appendChild(tagField);
 
     // Quest
-    {
+    const questContainer = document.createElement('div');
+    detailBody.appendChild(questContainer);
+
+    function renderQuestChipsForDetail(task, container) {
+      container.innerHTML = '';
       const qField = makeField('퀘스트');
       const qChips = document.createElement('div');
       qChips.className = 'detail-chips';
@@ -902,12 +916,13 @@
         quests.push({ id: newId, title: title.trim(), epic: epicKey, color, completed: false });
         task.milestone_id = newId;
         scheduleDetailSave('task', task);
-        renderTaskDetail(task);
+        renderQuestChipsForDetail(task, container);
       });
       qChips.appendChild(addQuestChip);
       qField.appendChild(qChips);
-      detailBody.appendChild(qField);
+      container.appendChild(qField);
     }
+    renderQuestChipsForDetail(task, questContainer);
 
     // Save status
     const saveStatus = document.createElement('div');
