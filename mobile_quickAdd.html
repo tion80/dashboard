@@ -800,16 +800,30 @@
   function renderTaskDetail(task) {
     detailBody.innerHTML = '';
 
-    // Title
+    // Starred + Title row
     const titleField = makeField('제목');
+    const titleRow = document.createElement('div');
+    titleRow.style.cssText = 'display:flex;align-items:center;gap:8px;';
+    const starBtn = document.createElement('button');
+    starBtn.textContent = task.starred ? '★' : '☆';
+    starBtn.style.cssText = `font-size:20px;background:none;border:none;cursor:pointer;color:${task.starred ? '#F59E0B' : 'var(--text-muted)'};flex-shrink:0;padding:0;-webkit-appearance:none;`;
+    starBtn.addEventListener('click', () => {
+      task.starred = !task.starred;
+      starBtn.textContent = task.starred ? '★' : '☆';
+      starBtn.style.color = task.starred ? '#F59E0B' : 'var(--text-muted)';
+      scheduleDetailSave('task', task);
+    });
     const titleInput = document.createElement('input');
     titleInput.type = 'text';
     titleInput.value = task.title || '';
+    titleInput.style.cssText = 'flex:1;min-width:0;';
     titleInput.addEventListener('input', () => {
       task.title = titleInput.value;
       scheduleDetailSave('task', task);
     });
-    titleField.appendChild(titleInput);
+    titleRow.appendChild(starBtn);
+    titleRow.appendChild(titleInput);
+    titleField.appendChild(titleRow);
     detailBody.appendChild(titleField);
 
     // Note
@@ -923,6 +937,124 @@
       container.appendChild(qField);
     }
     renderQuestChipsForDetail(task, questContainer);
+
+    // Bucket (우선순위)
+    const bucketField = makeField('버킷');
+    const bucketChips = document.createElement('div');
+    bucketChips.className = 'detail-chips';
+    const bucketOptions = [
+      { key: 'asap', label: '⚡ ASAP' },
+      { key: 'schedule', label: '📋 Schedule' },
+      { key: 'someday', label: '💭 Someday' },
+      { key: 'maybe', label: '🤔 Maybe' },
+      { key: 'waitingon', label: '⏳ Waiting' },
+    ];
+    bucketOptions.forEach(b => {
+      const chip = document.createElement('button');
+      chip.className = 'picker-chip' + (task.plan_bucket === b.key ? ' selected' : '');
+      chip.textContent = b.label;
+      chip.style.setProperty('--chip-color', '#6B7280');
+      chip.addEventListener('click', () => {
+        if (task.plan_bucket === b.key) { task.plan_bucket = null; chip.classList.remove('selected'); }
+        else { task.plan_bucket = b.key; bucketChips.querySelectorAll('.picker-chip').forEach(c => c.classList.remove('selected')); chip.classList.add('selected'); }
+        scheduleDetailSave('task', task);
+      });
+      bucketChips.appendChild(chip);
+    });
+    bucketField.appendChild(bucketChips);
+    detailBody.appendChild(bucketField);
+
+    // Scheduled Date (예정일)
+    const dateField = makeField('예정일');
+    const dateRow = document.createElement('div');
+    dateRow.style.cssText = 'display:flex;align-items:center;gap:8px;';
+    const dateInput = document.createElement('input');
+    dateInput.type = 'date';
+    dateInput.value = task.scheduled_date || '';
+    dateInput.style.cssText = 'flex:1;font-size:14px;font-family:inherit;padding:8px 12px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg-card);color:var(--text);-webkit-appearance:none;';
+    dateInput.addEventListener('change', () => {
+      task.scheduled_date = dateInput.value || null;
+      scheduleDetailSave('task', task);
+      clearDateBtn.style.display = dateInput.value ? 'block' : 'none';
+    });
+    const clearDateBtn = document.createElement('button');
+    clearDateBtn.textContent = '✕';
+    clearDateBtn.style.cssText = `font-size:16px;background:none;border:none;color:var(--text-muted);cursor:pointer;padding:4px 8px;display:${task.scheduled_date ? 'block' : 'none'};-webkit-appearance:none;`;
+    clearDateBtn.addEventListener('click', () => {
+      dateInput.value = '';
+      task.scheduled_date = null;
+      clearDateBtn.style.display = 'none';
+      scheduleDetailSave('task', task);
+    });
+    dateRow.appendChild(dateInput);
+    dateRow.appendChild(clearDateBtn);
+    dateField.appendChild(dateRow);
+    detailBody.appendChild(dateField);
+
+    // Subtasks (서브태스크)
+    const stField = makeField('서브태스크');
+    const stContainer = document.createElement('div');
+    stContainer.id = 'subtaskContainer';
+
+    async function loadAndRenderSubtasks() {
+      stContainer.innerHTML = '';
+      let subtasks = [];
+      try {
+        const { data } = await sb.from('subtasks').select('*').eq('task_id', task.id).order('position');
+        if (data) subtasks = data;
+      } catch(e) {}
+
+      subtasks.forEach((st, idx) => {
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid var(--border);';
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.checked = !!st.checked;
+        cb.style.cssText = 'width:18px;height:18px;flex-shrink:0;accent-color:var(--accent);';
+        cb.addEventListener('change', async () => {
+          await sb.from('subtasks').update({ checked: cb.checked }).eq('task_id', task.id).eq('position', st.position);
+          stText.style.textDecoration = cb.checked ? 'line-through' : 'none';
+          stText.style.color = cb.checked ? 'var(--text-muted)' : 'var(--text)';
+        });
+        const stText = document.createElement('span');
+        stText.textContent = st.text;
+        stText.style.cssText = `flex:1;font-size:13px;${st.checked ? 'text-decoration:line-through;color:var(--text-muted);' : ''}`;
+        const delSt = document.createElement('button');
+        delSt.textContent = '✕';
+        delSt.style.cssText = 'font-size:12px;background:none;border:none;color:var(--text-muted);cursor:pointer;padding:2px 6px;-webkit-appearance:none;';
+        delSt.addEventListener('click', async () => {
+          await sb.from('subtasks').delete().eq('task_id', task.id).eq('position', st.position);
+          loadAndRenderSubtasks();
+        });
+        row.appendChild(cb);
+        row.appendChild(stText);
+        row.appendChild(delSt);
+        stContainer.appendChild(row);
+      });
+
+      // Add subtask input
+      const addRow = document.createElement('div');
+      addRow.style.cssText = 'display:flex;align-items:center;gap:6px;padding:6px 0;';
+      const addInput = document.createElement('input');
+      addInput.type = 'text';
+      addInput.placeholder = '서브태스크 추가...';
+      addInput.style.cssText = 'flex:1;font-size:13px;font-family:inherit;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;background:var(--bg-card);color:var(--text);outline:none;-webkit-appearance:none;';
+      addInput.addEventListener('keydown', async (e) => {
+        if (e.key === 'Enter' && addInput.value.trim()) {
+          e.preventDefault();
+          const text = addInput.value.trim();
+          const nextPos = subtasks.length;
+          await sb.from('subtasks').insert({ task_id: task.id, text, checked: false, position: nextPos });
+          addInput.value = '';
+          loadAndRenderSubtasks();
+        }
+      });
+      addRow.appendChild(addInput);
+      stContainer.appendChild(addRow);
+    }
+    stField.appendChild(stContainer);
+    detailBody.appendChild(stField);
+    loadAndRenderSubtasks();
 
     // Save status
     const saveStatus = document.createElement('div');
@@ -1121,7 +1253,8 @@
       try {
         if (type === 'task') {
           await sb.from('tasks').update({
-            title: data.title, note: data.note, tags: data.tags, milestone_id: data.milestone_id
+            title: data.title, note: data.note, tags: data.tags, milestone_id: data.milestone_id,
+            plan_bucket: data.plan_bucket || null, scheduled_date: data.scheduled_date || null, starred: !!data.starred
           }).eq('id', data.id);
         } else {
           await sb.from('ideas').update({
