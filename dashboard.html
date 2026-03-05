@@ -6351,8 +6351,22 @@
     }
 
     function renderTasks() {
+      // 스크롤 위치 저장
+      const leftScroll = document.querySelector('.plan-left-scroll');
+      const rightScroll = document.querySelector('.plan-right');
+      const savedLeft = leftScroll ? leftScroll.scrollTop : 0;
+      const savedRight = rightScroll ? rightScroll.scrollTop : 0;
+
       if (currentView === 'week') { renderWeekCalendar(); }
       else { renderTagView(); }
+
+      // 스크롤 위치 복원
+      requestAnimationFrame(() => {
+        const newLeft = document.querySelector('.plan-left-scroll');
+        const newRight = document.querySelector('.plan-right');
+        if (newLeft) newLeft.scrollTop = savedLeft;
+        if (newRight) newRight.scrollTop = savedRight;
+      });
     }
 
     function renderList() { }
@@ -10392,6 +10406,12 @@
     let _focusUnassignedScroll = null;
 
     async function renderFocusView() {
+      // 스크롤 위치 저장
+      const _focusRight = document.querySelector('.focus-right');
+      const _focusTimeline = document.querySelector('.focus-timeline');
+      const _savedFocusRight = _focusRight ? _focusRight.scrollTop : 0;
+      const _savedFocusTimeline = _focusTimeline ? _focusTimeline.scrollTop : 0;
+
       loadWeeklyNotes();
       const focusView = document.getElementById('focusView');
       const days = getWeekDays(focusWeekOffset);
@@ -11147,6 +11167,14 @@
           }
         });
       }
+
+      // 스크롤 위치 복원
+      requestAnimationFrame(() => {
+        const newRight = document.querySelector('.focus-right');
+        const newTimeline = document.querySelector('.focus-timeline');
+        if (newRight) newRight.scrollTop = _savedFocusRight;
+        if (newTimeline) newTimeline.scrollTop = _savedFocusTimeline;
+      });
     }
 
     // ============================================================
