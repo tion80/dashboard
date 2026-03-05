@@ -842,11 +842,30 @@
       });
       tagChips.appendChild(chip);
     });
+    // + 새 에픽
+    const addEpicChip = document.createElement('button');
+    addEpicChip.className = 'picker-chip';
+    addEpicChip.textContent = '+';
+    addEpicChip.style.cssText = 'min-width:32px;font-size:14px;';
+    addEpicChip.addEventListener('click', () => {
+      const name = prompt('새 에픽 이름 (영문 대문자)');
+      if (!name || !name.trim()) return;
+      const key = name.trim().toUpperCase();
+      if (!epicColors[key]) {
+        const presetColors = ['#7C3AED','#D97706','#2563EB','#DC2626','#059669','#6B7280','#DB2777','#0891B2'];
+        const color = presetColors[Object.keys(epicColors).length % presetColors.length];
+        epicColors[key] = { bg: color + '20', color, label: key };
+      }
+      task.tags = [key];
+      scheduleDetailSave('task', task);
+      renderTaskDetail(task);
+    });
+    tagChips.appendChild(addEpicChip);
     tagField.appendChild(tagChips);
     detailBody.appendChild(tagField);
 
     // Quest
-    if (quests.length > 0) {
+    {
       const qField = makeField('퀘스트');
       const qChips = document.createElement('div');
       qChips.className = 'detail-chips';
@@ -864,6 +883,28 @@
         });
         qChips.appendChild(chip);
       });
+      // + 새 퀘스트
+      const addQuestChip = document.createElement('button');
+      addQuestChip.className = 'picker-chip';
+      addQuestChip.textContent = '+';
+      addQuestChip.style.cssText = 'min-width:32px;font-size:14px;';
+      addQuestChip.addEventListener('click', async () => {
+        const title = prompt('새 퀘스트 이름');
+        if (!title || !title.trim()) return;
+        const epicKey = (task.tags && task.tags[0]) || null;
+        const color = epicKey && epicColors[epicKey] ? epicColors[epicKey].color : '#7C3AED';
+        const newId = 'm' + Date.now();
+        const { error } = await sb.from('quests').insert([{
+          id: newId, epic: epicKey, title: title.trim(),
+          color, show_on_compass: true, position: quests.length
+        }]);
+        if (error) { showToast('생성 실패'); return; }
+        quests.push({ id: newId, title: title.trim(), epic: epicKey, color, completed: false });
+        task.milestone_id = newId;
+        scheduleDetailSave('task', task);
+        renderTaskDetail(task);
+      });
+      qChips.appendChild(addQuestChip);
       qField.appendChild(qChips);
       detailBody.appendChild(qField);
     }

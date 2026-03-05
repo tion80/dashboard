@@ -7688,7 +7688,7 @@
         tagsRow.innerHTML = Object.entries(tagColors).map(([tag, tc]) => {
           const sel = ref.tags.includes(tag) ? ' selected' : '';
           return `<button class="plan-detail-edit-btn${sel}" data-tag="${tag}" style="${sel ? `background:${tc.bg};color:${tc.color};border-color:${tc.color};` : ''}">${tc.label}</button>`;
-        }).join('');
+        }).join('') + `<button class="plan-detail-edit-btn" data-add-epic="1" style="min-width:32px;font-size:14px;">+</button>`;
         tagsRow.querySelectorAll('[data-tag]').forEach(btn => {
           btn.addEventListener('click', () => {
             const tag = btn.dataset.tag;
@@ -7697,6 +7697,21 @@
             markChanged(false); renderDetailTags();
           });
         });
+        const addEpicBtn = tagsRow.querySelector('[data-add-epic]');
+        if (addEpicBtn) {
+          addEpicBtn.addEventListener('click', () => {
+            const name = prompt('새 에픽 이름 (영문 대문자)');
+            if (!name || !name.trim()) return;
+            const key = name.trim().toUpperCase();
+            if (!tagColors[key]) {
+              const presetColors = ['#7C3AED','#D97706','#2563EB','#DC2626','#059669','#6B7280','#DB2777','#0891B2'];
+              const color = presetColors[Object.keys(tagColors).length % presetColors.length];
+              tagColors[key] = { bg: color + '20', color, label: key };
+            }
+            if (!ref.tags.includes(key)) ref.tags.push(key);
+            markChanged(false); renderDetailTags();
+          });
+        }
       }
       renderDetailTags();
       tagsBlock.appendChild(tagsRow);
