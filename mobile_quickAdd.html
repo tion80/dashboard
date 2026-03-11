@@ -1167,19 +1167,52 @@
         if (idx >= 0) { idea.tags.splice(idx, 1); chip.classList.remove('selected'); }
         else { idea.tags = [key]; tagChips.querySelectorAll('.picker-chip').forEach(c => c.classList.remove('selected')); chip.classList.add('selected'); }
         scheduleDetailSave('idea', idea);
+        renderIdeaQuestChips(idea, questContainer);
       });
       tagChips.appendChild(chip);
+    });
+    // + 새 에픽
+    const addEpicChip = document.createElement('button');
+    addEpicChip.className = 'picker-chip';
+    addEpicChip.textContent = '+';
+    addEpicChip.style.cssText = 'min-width:32px;font-size:14px;';
+    addEpicChip.addEventListener('click', () => {
+      const name = prompt('새 에픽 이름 (영문 대문자)');
+      if (!name || !name.trim()) return;
+      const key = name.trim().toUpperCase();
+      if (!epicColors[key]) {
+        const presetColors = ['#7C3AED','#D97706','#2563EB','#DC2626','#059669','#6B7280','#DB2777','#0891B2'];
+        const color = presetColors[Object.keys(epicColors).length % presetColors.length];
+        epicColors[key] = { bg: color + '20', color, label: key };
+      }
+      idea.tags = [key];
+      scheduleDetailSave('idea', idea);
+      tagChips.querySelectorAll('.picker-chip').forEach(c => c.classList.remove('selected'));
+      const allChips = tagChips.querySelectorAll('.picker-chip[data-epic]');
+      allChips.forEach(c => { if (c.dataset.epic === key) c.classList.add('selected'); });
+      renderIdeaQuestChips(idea, questContainer);
+    });
+    tagChips.appendChild(addEpicChip);
+    // data-epic 속성 추가
+    tagChips.querySelectorAll('.picker-chip').forEach((c, i) => {
+      const keys = Object.keys(epicColors);
+      if (i < keys.length) c.dataset.epic = keys[i];
     });
     tagField.appendChild(tagChips);
     detailBody.appendChild(tagField);
 
     // Quest
-    if (quests.length > 0) {
+    const questContainer = document.createElement('div');
+    detailBody.appendChild(questContainer);
+
+    function renderIdeaQuestChips(idea, container) {
+      container.innerHTML = '';
+      const epicFilter = (idea.tags && idea.tags[0]) || null;
+      const filtered = epicFilter ? quests.filter(q => q.epic === epicFilter) : quests;
+      if (filtered.length === 0) return;
       const qField = makeField('퀘스트');
       const qChips = document.createElement('div');
       qChips.className = 'detail-chips';
-      const epicFilter = (idea.tags && idea.tags[0]) || null;
-      const filtered = epicFilter ? quests.filter(q => q.epic === epicFilter) : quests;
       filtered.forEach(q => {
         const chip = document.createElement('button');
         chip.className = 'picker-chip' + (idea.milestone_id === q.id ? ' selected' : '');
@@ -1192,9 +1225,32 @@
         });
         qChips.appendChild(chip);
       });
+      // + 새 퀘스트
+      const addQuestChip = document.createElement('button');
+      addQuestChip.className = 'picker-chip';
+      addQuestChip.textContent = '+';
+      addQuestChip.style.cssText = 'min-width:32px;font-size:14px;';
+      addQuestChip.addEventListener('click', async () => {
+        const title = prompt('새 퀘스트 이름');
+        if (!title || !title.trim()) return;
+        const epicKey = (idea.tags && idea.tags[0]) || null;
+        const color = epicKey && epicColors[epicKey] ? epicColors[epicKey].color : '#7C3AED';
+        const newId = 'm' + Date.now();
+        const { error } = await sb.from('quests').insert([{
+          id: newId, epic: epicKey, title: title.trim(),
+          color, show_on_compass: true, position: quests.length
+        }]);
+        if (error) { showToast('생성 실패'); return; }
+        quests.push({ id: newId, title: title.trim(), epic: epicKey, color, completed: false });
+        idea.milestone_id = newId;
+        scheduleDetailSave('idea', idea);
+        renderIdeaQuestChips(idea, container);
+      });
+      qChips.appendChild(addQuestChip);
       qField.appendChild(qChips);
-      detailBody.appendChild(qField);
+      container.appendChild(qField);
     }
+    renderIdeaQuestChips(idea, questContainer);
 
     // Save status
     const saveStatus = document.createElement('div');

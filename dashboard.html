@@ -1872,6 +1872,8 @@
 
     .plan-cal-cell.is-today {
       background: #FFF7ED;
+      box-shadow: inset 0 0 0 2px var(--accent);
+      border-radius: 6px;
     }
 
     .plan-cal-cell.is-other-month {
@@ -3725,6 +3727,10 @@
       background: #059669; border: 1px solid #059669; color: #fff; font-weight: 600;
     }
     .task-detail-footer .td-complete-btn:hover { background: #047857; }
+    .task-detail-footer .td-complete-next-btn {
+      background: #0284C7; border: 1px solid #0284C7; color: #fff; font-weight: 600; font-size: 12px;
+    }
+    .task-detail-footer .td-complete-next-btn:hover { background: #0369A1; }
     .task-detail-footer .td-delete-btn {
       background: none; border: 1px solid var(--border); color: #DC2626; flex: 0 0 auto; padding: 7px 12px;
     }
@@ -5306,6 +5312,7 @@
                 starred: !!t.starred,
                 plan_bucket: t.planBucket || null,
                 milestone_id: t.milestoneId || null,
+                related_task_id: t.relatedTaskId || null,
                 linked_events: t.linkedEvents || [],
                 position: i
               });
@@ -5457,6 +5464,7 @@
             starred: !!t.starred,
             planBucket: t.plan_bucket || '',
             milestoneId: t.milestone_id || null,
+            relatedTaskId: t.related_task_id || null,
             linkedEvents: t.linked_events || [],
             subtasks: subtaskMap[t.id] || []
           };
@@ -7602,7 +7610,11 @@
       const searchInput = document.getElementById('planSearchInput');
       const searchClear = document.getElementById('planSearchClear');
       if (searchInput) {
-        searchInput.focus();
+        // Skip auto-focus when triggered by hover shortcut
+        if (!window._skipSearchFocus) {
+          searchInput.focus();
+        }
+        window._skipSearchFocus = false;
         // Place cursor at end if value exists
         if (searchInput.value) {
           searchInput.selectionStart = searchInput.selectionEnd = searchInput.value.length;
@@ -7701,7 +7713,8 @@
       function renderDetailTags() {
         tagsRow.innerHTML = Object.entries(tagColors).map(([tag, tc]) => {
           const sel = ref.tags.includes(tag) ? ' selected' : '';
-          return `<button class="plan-detail-edit-btn${sel}" data-tag="${tag}" style="${sel ? `background:${tc.bg};color:${tc.color};border-color:${tc.color};` : ''}">${tc.label}</button>`;
+          const style = sel ? `background:${tc.bg};color:${tc.color};border-color:${tc.color};` : `color:${tc.color};border-color:${tc.color}40;`;
+          return `<button class="plan-detail-edit-btn${sel}" data-tag="${tag}" style="${style}">${tc.label}</button>`;
         }).join('') + `<button class="plan-detail-edit-btn" data-add-epic="1" style="min-width:32px;font-size:14px;">+</button>`;
         tagsRow.querySelectorAll('[data-tag]').forEach(btn => {
           btn.addEventListener('click', () => {
@@ -7791,134 +7804,109 @@
         renderTasks();
         switchTaskView(currentView);
         panel.classList.remove('show'); overlay.classList.remove('show');
-        setTimeout(() => { overlay.remove(); panel.remove(); }, 250);
+        setTimeout(() => { overlay.remove(); panel.remove();
+          openQuestPanel(newQuestId);
+        }, 300);
       };
 
-      // === Quest dropdown (body) ===
+      // === Quest chips (body) ===
       const questBlock = document.createElement('div');
-      questBlock.innerHTML = `<div class="plan-detail-section-label">퀘스트</div>`;
-      const questDropWrap = document.createElement('div');
-      questDropWrap.style.cssText = 'position:relative;';
+      const questChipsContainer = document.createElement('div');
+      questBlock.appendChild(questChipsContainer);
 
-      const questSelectBtn = document.createElement('button');
-      questSelectBtn.className = 'quest-dropdown-btn';
-      const questDropdown = document.createElement('div');
-      questDropdown.className = 'quest-dropdown-list';
-      questDropdown.style.display = 'none';
-      let _qdOpen = false;
-
-      function renderQuestDropdown() {
-        const currentMs = ref.milestoneId ? getMilestoneById(ref.milestoneId) : null;
-        if (currentMs) {
-          questSelectBtn.innerHTML = `<span class="quest-chip-dot" style="background:${currentMs.color};width:8px;height:8px;border-radius:50%;display:inline-block;"></span> ${currentMs.title} <span class="quest-dd-arrow">▾</span>`;
-          questSelectBtn.style.color = currentMs.color;
-        } else {
-          questSelectBtn.innerHTML = `퀘스트 선택 <span class="quest-dd-arrow">▾</span>`;
-          questSelectBtn.style.color = 'var(--text-muted)';
-        }
+      function renderDetailQuestChips() {
+        questChipsContainer.innerHTML = '';
+        const qLabel = document.createElement('div');
+        qLabel.className = 'plan-detail-section-label';
+        qLabel.textContent = '퀘스트';
+        questChipsContainer.appendChild(qLabel);
 
         const activeTags = ref.tags && ref.tags.length > 0 ? ref.tags : [];
-        const availableMs = activeTags.length > 0
+        if (activeTags.length === 0 && !ref.milestoneId) return;
+        const filtered = activeTags.length > 0
           ? compassMilestones.filter(m => activeTags.includes(m.project))
-          : compassMilestones;
+          : [];
 
-        const byEpic = {};
-        availableMs.forEach(m => {
-          if (!byEpic[m.project]) byEpic[m.project] = [];
-          byEpic[m.project].push(m);
-        });
+        const qChipsRow = document.createElement('div');
+        qChipsRow.className = 'plan-detail-edit-row';
 
-        let html = '';
-        if (ref.milestoneId) {
-          html += `<div class="quest-dd-item quest-dd-none" data-quest-id="">해제</div>`;
-        }
-        Object.keys(byEpic).forEach(ep => {
-          const tc = tagColors[ep] || { bg: '#F3F4F6', color: '#6B7280', label: ep };
-          html += `<div class="quest-dd-epic"><span style="background:${tc.bg};color:${tc.color};padding:1px 6px;border-radius:3px;font-size:10px;">${tc.label || ep}</span></div>`;
-          byEpic[ep].forEach(m => {
-            const isSel = ref.milestoneId === m.id;
-            const dateLabel = m.date ? m.date.slice(5).replace('-', '/') : '';
-            html += `<div class="quest-dd-item${isSel ? ' is-selected' : ''}" data-quest-id="${m.id}">
-              <span class="qp-dot" style="background:${m.color}"></span>
-              <span>${m.title}</span>
-              <span class="quest-dd-meta">${dateLabel}</span>
-              ${isSel ? '<span class="qp-check">✓</span>' : ''}
-            </div>`;
-          });
-        });
-
-        if (currentMs && !availableMs.find(am => am.id === currentMs.id)) {
-          html += `<div class="quest-dd-item is-selected" data-quest-id="${currentMs.id}">
-            <span class="qp-dot" style="background:${currentMs.color}"></span>
-            <span>${currentMs.title}</span>
-            <span class="quest-dd-meta">${currentMs.project}</span>
-            <span class="qp-check">✓</span>
-          </div>`;
-        }
-
-        const defaultProject = activeTags.length > 0 ? activeTags[0] : 'VD';
-        html += `<div class="quest-dd-item quest-dd-create">+ 새 퀘스트</div>`;
-        questDropdown.innerHTML = html;
-
-        questDropdown.querySelectorAll('[data-quest-id]').forEach(item => {
-          item.addEventListener('click', (e) => {
-            e.stopPropagation();
-            ref.milestoneId = item.dataset.questId || null;
-            _qdOpen = false;
-            questDropdown.style.display = 'none';
+        filtered.forEach(m => {
+          const chip = document.createElement('button');
+          const isSel = ref.milestoneId === m.id;
+          chip.className = 'plan-detail-edit-btn' + (isSel ? ' selected' : '');
+          chip.textContent = m.title;
+          if (isSel) {
+            chip.style.cssText = `background:${m.color}20;color:${m.color};border-color:${m.color};`;
+          }
+          chip.addEventListener('click', () => {
+            if (ref.milestoneId === m.id) { ref.milestoneId = null; }
+            else { ref.milestoneId = m.id; }
             markChanged(false);
-            renderQuestDropdown();
+            renderDetailQuestChips();
           });
+          qChipsRow.appendChild(chip);
         });
 
-        questDropdown.querySelector('.quest-dd-create')?.addEventListener('click', (e) => {
-          e.stopPropagation();
+        // 현재 선택된 퀘스트가 필터에 없는 경우에도 표시
+        if (ref.milestoneId) {
+          const currentMs = getMilestoneById(ref.milestoneId);
+          if (currentMs && !filtered.find(m => m.id === currentMs.id)) {
+            const chip = document.createElement('button');
+            chip.className = 'plan-detail-edit-btn selected';
+            chip.textContent = currentMs.title;
+            chip.style.cssText = `background:${currentMs.color}20;color:${currentMs.color};border-color:${currentMs.color};`;
+            chip.addEventListener('click', () => {
+              ref.milestoneId = null;
+              markChanged(false);
+              renderDetailQuestChips();
+            });
+            qChipsRow.appendChild(chip);
+          }
+        }
+
+        // + 새 퀘스트
+        const addBtn = document.createElement('button');
+        addBtn.className = 'plan-detail-edit-btn';
+        addBtn.textContent = '+';
+        addBtn.style.cssText = 'min-width:32px;font-size:14px;';
+        addBtn.addEventListener('click', async () => {
           const title = prompt('새 퀘스트 이름:');
           if (!title || !title.trim()) return;
+          const defaultProject = activeTags.length > 0 ? activeTags[0] : 'VD';
           const color = (tagColors[defaultProject]?.color) || '#7C3AED';
           const newMs = { id: 'm' + Date.now(), project: defaultProject, title: title.trim(), date: '', color, showOnCompass: false };
           compassMilestones.push(newMs);
           saveCompassData();
-          saveQuestsToSupabase(); // 즉시 DB 저장
+          saveQuestsToSupabase();
           ref.milestoneId = newMs.id;
-          _qdOpen = false;
-          questDropdown.style.display = 'none';
           markChanged(false);
-          renderQuestDropdown();
+          renderDetailQuestChips();
         });
+        qChipsRow.appendChild(addBtn);
+        questChipsContainer.appendChild(qChipsRow);
+
+        // 퀘스트 편집 버튼 (연결된 퀘스트가 있을 때만)
+        if (ref.milestoneId) {
+          const questEditBtn = document.createElement('button');
+          questEditBtn.style.cssText = 'margin-top:6px;font-size:11px;color:var(--text-muted);background:none;border:none;cursor:pointer;padding:2px 4px;';
+          questEditBtn.textContent = '퀘스트 편집 ▸';
+          questEditBtn.addEventListener('mouseenter', () => { questEditBtn.style.color = 'var(--accent)'; });
+          questEditBtn.addEventListener('mouseleave', () => { questEditBtn.style.color = 'var(--text-muted)'; });
+          questEditBtn.addEventListener('click', () => {
+            panelHistory.push({ type: 'task', id: ref.id });
+            closeDetail();
+            setTimeout(() => openQuestPanel(ref.milestoneId), 300);
+          });
+          questChipsContainer.appendChild(questEditBtn);
+        }
       }
+      renderDetailQuestChips();
 
-      questSelectBtn.addEventListener('click', () => {
-        _qdOpen = !_qdOpen;
-        questDropdown.style.display = _qdOpen ? 'block' : 'none';
-        if (_qdOpen) renderQuestDropdown();
-      });
-
-      renderQuestDropdown();
-      questDropWrap.appendChild(questSelectBtn);
-      questDropWrap.appendChild(questDropdown);
-      questBlock.appendChild(questDropWrap);
-
-      // 퀘스트 편집 버튼 (연결된 퀘스트가 있을 때만)
-      if (ref.milestoneId) {
-        const questEditBtn = document.createElement('button');
-        questEditBtn.style.cssText = 'margin-top:6px;font-size:11px;color:var(--text-muted);background:none;border:none;cursor:pointer;padding:2px 4px;';
-        questEditBtn.textContent = '퀘스트 편집 ▸';
-        questEditBtn.addEventListener('mouseenter', () => { questEditBtn.style.color = 'var(--accent)'; });
-        questEditBtn.addEventListener('mouseleave', () => { questEditBtn.style.color = 'var(--text-muted)'; });
-        questEditBtn.addEventListener('click', () => {
-          panelHistory.push({ type: 'task', id: ref.id });
-          closeDetail();
-          setTimeout(() => openQuestPanel(ref.milestoneId), 300);
-        });
-        questBlock.appendChild(questEditBtn);
-      }
-
-      // Re-render quest dropdown when tags change
+      // Re-render quest chips when tags change
       const _origRenderDetailTags = renderDetailTags;
       renderDetailTags = function() {
         _origRenderDetailTags();
-        renderQuestDropdown();
+        renderDetailQuestChips();
       };
 
       const bucketBlock = document.createElement('div');
@@ -8208,17 +8196,96 @@
         body.appendChild(meetingBlock);
       }
 
+      // --- 관련 태스크 링크 ---
+      if (ref.relatedTaskId) {
+        const relatedRef = findTaskRef(ref.relatedTaskId);
+        if (relatedRef) {
+          const relBlock = document.createElement('div');
+          relBlock.innerHTML = `<div class="plan-detail-section-label">관련 태스크</div>`;
+          const relRow = document.createElement('div');
+          relRow.className = 'td-meeting-item';
+          relRow.innerHTML = `<span class="td-mi-icon">${relatedRef.checked ? '✅' : '📌'}</span><span class="td-mi-title">${relatedRef.title}</span>`;
+          relRow.style.cursor = 'pointer';
+          relRow.addEventListener('click', () => {
+            panelHistory.push({ type: 'task', id: ref.id });
+            closeDetail();
+            setTimeout(() => openTaskDetail(relatedRef.id), 300);
+          });
+          relBlock.appendChild(relRow);
+          body.appendChild(relBlock);
+        }
+      }
+      // 이 태스크에서 파생된 태스크들
+      const derivedTasks = [];
+      for (const s of sections) {
+        (tasks[s.id] || []).forEach(t => {
+          if (t.relatedTaskId && String(t.relatedTaskId) === String(ref.id)) derivedTasks.push(t);
+        });
+      }
+      if (derivedTasks.length > 0) {
+        const derBlock = document.createElement('div');
+        derBlock.innerHTML = `<div class="plan-detail-section-label">파생 태스크</div>`;
+        derivedTasks.forEach(dt => {
+          const row = document.createElement('div');
+          row.className = 'td-meeting-item';
+          row.innerHTML = `<span class="td-mi-icon">${dt.checked ? '✅' : '📌'}</span><span class="td-mi-title">${dt.title || '(제목 없음)'}</span>`;
+          row.style.cursor = 'pointer';
+          row.addEventListener('click', () => {
+            panelHistory.push({ type: 'task', id: ref.id });
+            closeDetail();
+            setTimeout(() => openTaskDetail(dt.id), 300);
+          });
+          derBlock.appendChild(row);
+        });
+        body.appendChild(derBlock);
+      }
+
       // --- Footer (콘텐츠 끝에 배치) ---
       const footer = document.createElement('div');
       footer.className = 'task-detail-footer';
       footer.innerHTML = `
         <button class="td-complete-btn">${ref.checked ? '↩ 미완료' : '✓ 완료'}</button>
+        <button class="td-complete-next-btn">✓ 완료 & 관련 태스크</button>
         <button class="td-delete-btn" title="삭제">🗑</button>
       `;
       footer.querySelector('.td-complete-btn').addEventListener('click', () => {
         setChecked(ref);
         markChanged(ref.checked ? '완료 처리됨' : '미완료로 변경');
         closeDetail();
+      });
+      footer.querySelector('.td-complete-next-btn').addEventListener('click', () => {
+        // 현재 태스크 완료
+        if (!ref.checked) {
+          setChecked(ref, true);
+        }
+        // 새 태스크 생성 (같은 섹션/에픽/퀘스트 상속)
+        const newId = Math.round(Date.now() + Math.random() * 1000);
+        const newTask = {
+          id: newId,
+          title: '',
+          checked: false,
+          starred: false,
+          note: '',
+          tags: ref.tags ? [...ref.tags] : [],
+          url: '',
+          scheduledDate: '',
+          scheduledTime: '',
+          scheduledDuration: null,
+          planBucket: ref.planBucket || '',
+          milestoneId: ref.milestoneId || null,
+          relatedTaskId: ref.id,
+          subtasks: [],
+          linkedEvents: []
+        };
+        // 같은 섹션에 추가
+        const targetSection = refSectionId || sections[0]?.id;
+        if (!tasks[targetSection]) tasks[targetSection] = [];
+        tasks[targetSection].push(newTask);
+        logAction('완료 & 관련 태스크 생성', ref.id, ref.title);
+        markChanged('완료 & 관련 태스크 생성됨');
+        closeDetail();
+        // 새 태스크 편집 바로 열기
+        setTimeout(() => openTaskDetail(newId), 350);
       });
       footer.querySelector('.td-delete-btn').addEventListener('click', () => {
         if (!confirm(`"${ref.title}" 태스크를 삭제할까요?`)) return;
@@ -8233,6 +8300,26 @@
         setTimeout(() => { overlay.remove(); panel.remove(); }, 250);
       });
       body.appendChild(footer);
+
+      // --- 활동 로그 (footer 아래) ---
+      const taskLogs = _actionLog.filter(e => e.taskId && String(e.taskId) === String(ref.id));
+      if (taskLogs.length > 0) {
+        const logBlock = document.createElement('div');
+        logBlock.style.cssText = 'margin-top:12px;';
+        logBlock.innerHTML = `<div class="plan-detail-section-label">활동 로그 <span style="color:var(--text-muted);font-weight:400;">(${taskLogs.length})</span></div>`;
+        const logList = document.createElement('div');
+        logList.style.cssText = 'display:flex;flex-direction:column;gap:2px;font-size:12px;color:var(--text-muted);';
+        taskLogs.slice().reverse().forEach(log => {
+          const row = document.createElement('div');
+          row.style.cssText = 'display:flex;align-items:center;gap:6px;padding:2px 0;';
+          const time = log.ts.slice(5, 16).replace('T', ' ');
+          const icon = getActionIcon(log.action);
+          row.innerHTML = `<span style="opacity:0.6;font-size:11px;min-width:80px;">${time}</span><span>${icon}</span><span>${log.action}</span>`;
+          logList.appendChild(row);
+        });
+        logBlock.appendChild(logList);
+        body.appendChild(logBlock);
+      }
 
       panel.appendChild(body);
       document.body.appendChild(overlay);
@@ -10209,8 +10296,8 @@
       const active = document.activeElement;
       const isTyping = active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable);
 
-      // Q key shortcut (when not typing in an input)
-      if (e.key === 'q' && !e.metaKey && !e.ctrlKey && !e.altKey && !isTyping) {
+      // Q key shortcut (when not typing in an input) - 한글 IME에서도 동작
+      if ((e.key === 'q' || e.code === 'KeyQ') && !e.metaKey && !e.ctrlKey && !e.altKey && !isTyping) {
         e.preventDefault();
         if (qaPanel.classList.contains('show')) {
           closeQuickAdd();
@@ -10235,6 +10322,63 @@
 
     // Header + button
     document.getElementById('quickAddOpenBtn').addEventListener('click', openQuickAdd);
+
+    // ===== Plan Bucket Keyboard Shortcuts =====
+    // Hover over any task item and press a/t/s/o/m/w to assign bucket
+    let _hoveredTaskId = null;
+    document.addEventListener('mouseover', (e) => {
+      const el = e.target.closest('[data-task-id]');
+      _hoveredTaskId = el ? el.dataset.taskId : null;
+    });
+    document.addEventListener('keydown', (e) => {
+      if (!_hoveredTaskId) return;
+      const active = document.activeElement;
+      const isTyping = active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable);
+      if (isTyping || e.metaKey || e.ctrlKey || e.altKey) return;
+
+      // e.code로 물리 키 인식 (한글 IME에서도 동작)
+      const codeToKey = { KeyA:'a', KeyT:'t', KeyS:'s', KeyO:'o', KeyM:'m', KeyW:'w', KeyV:'v', KeyE:'e' };
+      const key = codeToKey[e.code] || e.key.toLowerCase();
+      const ref = findTaskRef(_hoveredTaskId);
+      if (!ref) return;
+
+      // v: 완료 토글
+      if (key === 'v') {
+        e.preventDefault();
+        setChecked(ref, !ref.checked);
+        logAction(ref.checked ? '완료' : '미완료', ref.id, ref.title);
+        markChanged(ref.checked ? '완료 처리됨' : '미완료로 변경');
+        window._skipSearchFocus = true;
+        renderTasks();
+        return;
+      }
+
+      // e: 상세 열기
+      if (key === 'e') {
+        e.preventDefault();
+        openTaskDetail(ref.id);
+        return;
+      }
+
+      const bucketMap = { a: 'asap', t: 'today', s: 'schedule', o: 'someday', m: 'maybe', w: 'waitingon' };
+      const bucket = bucketMap[key];
+      if (!bucket) return;
+      e.preventDefault();
+
+      if (bucket === 'today') {
+        ref.scheduledDate = formatDateStr(new Date());
+        ref.planBucket = ref.planBucket || '';
+        logAction('Today 배정', ref.id, ref.title);
+        markChanged('Today에 추가됨');
+      } else {
+        ref.planBucket = bucket;
+        if (bucket !== 'asap') { ref.scheduledDate = ''; ref.scheduledTime = ''; }
+        logAction(bucket.toUpperCase() + ' 배정', ref.id, ref.title);
+        markChanged(bucket.toUpperCase() + '에 추가됨');
+      }
+      window._skipSearchFocus = true;
+      renderTasks();
+    });
 
     console.log('[Quick Add] initialized successfully');
 
