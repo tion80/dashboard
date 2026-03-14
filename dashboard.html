@@ -2087,6 +2087,7 @@
     .plan-bucket-panel.bucket-someday { border-left: 4px solid #3B82F6; }
     .plan-bucket-panel.bucket-maybe { border-left: 4px solid #9CA3AF; }
     .plan-bucket-panel.bucket-waitingon { border-left: 4px solid #F97316; }
+    .plan-bucket-panel.bucket-overdue { border-left: 4px solid #EF4444; background: #FEF2F2; }
     .plan-bucket-header {
       font-size: 12px; font-weight: 700;
       display: flex; align-items: center; gap: 6px;
@@ -7266,8 +7267,20 @@
       `;
       rightPanel.appendChild(header);
 
+      // ===== OVERDUE PANEL (above ASAP) =====
+      const todayStr_plan = formatDateStr(new Date());
+      const calStartStr = formatDateStr(days[0]);
+      const overdueTasks = allTasks.filter(t => t.scheduledDate && t.scheduledDate < todayStr_plan && !t.checked && t.scheduledDate < calStartStr && matchTask(t));
+      if (overdueTasks.length > 0) {
+        overdueTasks.sort((a, b) => a.scheduledDate.localeCompare(b.scheduledDate));
+        const overduePanel = makeBucketPanel('overdue', '🔥', `지난 업무`, overdueTasks);
+        overduePanel.style.borderLeftColor = '#EF4444';
+        attachBucketDrop(overduePanel, 'asap', '오늘로 이동');
+        rightPanel.appendChild(overduePanel);
+      }
+
       // ===== ASAP PANEL (above calendar) =====
-      const asapTasks = allTasks.filter(t => t.planBucket === 'asap' && !t.scheduledDate && !t.checked);
+      const asapTasks = allTasks.filter(t => t.planBucket === 'asap' && !t.scheduledDate && !t.checked && matchTask(t));
       const asapPanel = makeBucketPanel('asap', '⚡', 'ASAP', asapTasks, '드롭 시 오늘 배정 후 사라짐');
       asapPanel.addEventListener('dragover', (e) => { e.preventDefault(); asapPanel.classList.add('drag-over'); });
       asapPanel.addEventListener('dragleave', () => asapPanel.classList.remove('drag-over'));
@@ -7351,7 +7364,7 @@
           }
 
           // Find tasks for this day (hide done)
-          const dayTasks = allTasks.filter(t => t.scheduledDate === ds && !t.checked);
+          const dayTasks = allTasks.filter(t => t.scheduledDate === ds && !t.checked && matchTask(t));
           dayTasks.forEach(t => {
             const chip = document.createElement('div');
             chip.className = 'plan-cal-task' + (t.checked ? ' is-checked' : '');
@@ -7531,22 +7544,22 @@
         });
       }
 
-      const scheduleTasks = allTasks.filter(t => t.planBucket === 'schedule' && !t.scheduledDate && !t.checked);
+      const scheduleTasks = allTasks.filter(t => t.planBucket === 'schedule' && !t.scheduledDate && !t.checked && matchTask(t));
       const schedulePanel = makeBucketPanel('schedule', '📅', 'Schedule', scheduleTasks, '이후 캘린더로 이동');
       attachBucketDrop(schedulePanel, 'schedule', 'Schedule에 추가됨');
       rightPanel.appendChild(schedulePanel);
 
-      const somedayTasks = allTasks.filter(t => t.planBucket === 'someday' && !t.checked);
+      const somedayTasks = allTasks.filter(t => t.planBucket === 'someday' && !t.checked && matchTask(t));
       const somedayPanel = makeBucketPanel('someday', '🌤️', 'Someday', somedayTasks);
       attachBucketDrop(somedayPanel, 'someday', 'Someday에 추가됨');
       rightPanel.appendChild(somedayPanel);
 
-      const maybeTasks = allTasks.filter(t => t.planBucket === 'maybe' && !t.checked);
+      const maybeTasks = allTasks.filter(t => t.planBucket === 'maybe' && !t.checked && matchTask(t));
       const maybePanel = makeBucketPanel('maybe', '💭', 'Maybe', maybeTasks, '', { collapsible: true });
       attachBucketDrop(maybePanel, 'maybe', 'Maybe에 추가됨');
       rightPanel.appendChild(maybePanel);
 
-      const waitingonTasks = allTasks.filter(t => t.planBucket === 'waitingon' && !t.checked);
+      const waitingonTasks = allTasks.filter(t => t.planBucket === 'waitingon' && !t.checked && matchTask(t));
       const waitingonPanel = makeBucketPanel('waitingon', '⏳', 'Waiting On', waitingonTasks);
       attachBucketDrop(waitingonPanel, 'waitingon', 'Waiting On에 추가됨');
       rightPanel.appendChild(waitingonPanel);
@@ -7826,6 +7839,13 @@
         const filtered = activeTags.length > 0
           ? compassMilestones.filter(m => activeTags.includes(m.project))
           : [];
+        // 데드라인 정렬: 날짜 있는 것 먼저(급한 순), 없는 것 뒤로
+        filtered.sort((a, b) => {
+          if (a.date && !b.date) return -1;
+          if (!a.date && b.date) return 1;
+          if (a.date && b.date) return a.date.localeCompare(b.date);
+          return 0;
+        });
 
         const qChipsRow = document.createElement('div');
         qChipsRow.className = 'plan-detail-edit-row';
@@ -7939,7 +7959,7 @@
       dateInput.type = 'date';
       dateInput.className = 'plan-detail-date-input';
       dateInput.value = ref.scheduledDate || '';
-      dateInput.addEventListener('change', () => { ref.scheduledDate = dateInput.value; markChanged('일정 변경됨'); });
+      dateInput.addEventListener('change', () => { ref.scheduledDate = dateInput.value; if (ref.scheduledDate && ref.planBucket === 'schedule') ref.planBucket = ''; markChanged('일정 변경됨'); });
       const dateClearBtn = document.createElement('button');
       dateClearBtn.className = 'plan-detail-edit-btn';
       dateClearBtn.textContent = '날짜 해제';
@@ -7947,6 +7967,39 @@
       dateRow.appendChild(dateInput);
       dateRow.appendChild(dateClearBtn);
       dateBlock.appendChild(dateRow);
+
+      // 날짜 단축 버튼
+      const dateShortcuts = document.createElement('div');
+      dateShortcuts.style.cssText = 'display:flex;gap:6px;margin-top:6px;';
+      const today = new Date();
+      const shortcuts = [
+        { label: '오늘', date: new Date(today) },
+        { label: '내일', date: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1) },
+      ];
+      // 이번주 토요일
+      const dayOfWeek = today.getDay();
+      const satDiff = (6 - dayOfWeek + 7) % 7 || 7;
+      shortcuts.push({ label: '토', date: new Date(today.getFullYear(), today.getMonth(), today.getDate() + satDiff) });
+      // 이번주 일요일
+      shortcuts.push({ label: '일', date: new Date(today.getFullYear(), today.getMonth(), today.getDate() + satDiff + 1) });
+
+      shortcuts.forEach(s => {
+        const btn = document.createElement('button');
+        btn.className = 'plan-detail-edit-btn';
+        const ds = formatDateStr(s.date);
+        btn.textContent = s.label;
+        if (ref.scheduledDate === ds) btn.classList.add('selected');
+        btn.addEventListener('click', () => {
+          ref.scheduledDate = ds;
+          if (ref.planBucket === 'schedule') ref.planBucket = '';
+          dateInput.value = ds;
+          markChanged('일정 변경됨');
+          dateShortcuts.querySelectorAll('.plan-detail-edit-btn').forEach(b => b.classList.remove('selected'));
+          btn.classList.add('selected');
+        });
+        dateShortcuts.appendChild(btn);
+      });
+      dateBlock.appendChild(dateShortcuts);
       body.appendChild(dateBlock);
 
 
@@ -9975,6 +10028,7 @@
         tmr.setDate(tmr.getDate() + 1);
         return formatDateStr(tmr);
       }
+      if (/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) return dateKey;
       return null;
     }
 
@@ -10025,7 +10079,8 @@
       // Date
       if (m.date) {
         const dateLabels = { today: '📅 오늘', tomorrow: '📅 내일' };
-        html += `<div class="quick-add-preview-row"><span class="label">날짜</span><span class="quick-add-chip" style="background:var(--bg-card);border:1px solid var(--border);" data-remove-date="1">${dateLabels[m.date] || m.date}<span class="chip-remove">&times;</span></span></div>`;
+        const dateDisplay = dateLabels[m.date] || `📅 ${m.date}`;
+        html += `<div class="quick-add-preview-row"><span class="label">날짜</span><span class="quick-add-chip" style="background:var(--bg-card);border:1px solid var(--border);" data-remove-date="1">${dateDisplay}<span class="chip-remove">&times;</span></span></div>`;
       }
 
       // Quest
@@ -10100,10 +10155,13 @@
 
       // Dates
       const dateList = { today: '오늘', tomorrow: '내일' };
-      qaDateBtns.innerHTML = Object.entries(dateList).map(([dt, label]) => {
+      let dateBtnsHtml = Object.entries(dateList).map(([dt, label]) => {
         const selected = m.date === dt ? ' selected' : '';
         return `<button class="quick-add-manual-btn${selected}" data-qa-date="${dt}">${label}</button>`;
       }).join('');
+      const pickerVal = m.date && /^\d{4}-\d{2}-\d{2}$/.test(m.date) ? m.date : '';
+      dateBtnsHtml += `<input type="date" id="qaDatePicker" value="${pickerVal}" style="font-size:12px;font-family:inherit;padding:4px 8px;border:1.5px solid var(--border);border-radius:8px;background:var(--bg-card);color:var(--text);cursor:pointer;">`;
+      qaDateBtns.innerHTML = dateBtnsHtml;
 
       // Quests (filtered by selected tags)
       const msTags = m.tags.length > 0 ? m.tags : null;
@@ -10147,6 +10205,14 @@
           renderManualBtns();
         });
       });
+      const qaDatePicker = document.getElementById('qaDatePicker');
+      if (qaDatePicker) {
+        qaDatePicker.addEventListener('change', () => {
+          qaManualDate = qaDatePicker.value || null;
+          renderQAPreview();
+          renderManualBtns();
+        });
+      }
 
       qaMsBtns.querySelectorAll('[data-qa-ms]').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -10342,6 +10408,8 @@
       const ref = findTaskRef(_hoveredTaskId);
       if (!ref) return;
 
+      const isFocusView = activeMainTab === 'focus';
+
       // v: 완료 토글
       if (key === 'v') {
         e.preventDefault();
@@ -10360,6 +10428,9 @@
         return;
       }
 
+      // 포커스 뷰에서는 버킷 단축키 비활성화
+      if (isFocusView) return;
+
       const bucketMap = { a: 'asap', t: 'today', s: 'schedule', o: 'someday', m: 'maybe', w: 'waitingon' };
       const bucket = bucketMap[key];
       if (!bucket) return;
@@ -10372,7 +10443,7 @@
         markChanged('Today에 추가됨');
       } else {
         ref.planBucket = bucket;
-        if (bucket !== 'asap') { ref.scheduledDate = ''; ref.scheduledTime = ''; }
+        // 버킷 변경 시 scheduledDate 유지 (포커스에서 사라지지 않게)
         logAction(bucket.toUpperCase() + ' 배정', ref.id, ref.title);
         markChanged(bucket.toUpperCase() + '에 추가됨');
       }
@@ -10611,24 +10682,7 @@
         return ((h - HOUR_START) + m / 60) * HOUR_HEIGHT;
       }
 
-      // Build gcal block HTML
-      let gcalBlocksHtml = '';
-      timedEvents.forEach(e => {
-        const st = e.start?.dateTime ? new Date(e.start.dateTime) : null;
-        const en = e.end?.dateTime ? new Date(e.end.dateTime) : null;
-        if (!st || !en) return;
-        const startTime = String(st.getHours()).padStart(2,'0') + ':' + String(st.getMinutes()).padStart(2,'0');
-        const endTime = String(en.getHours()).padStart(2,'0') + ':' + String(en.getMinutes()).padStart(2,'0');
-        const top = Math.max(0, timeToY(startTime));
-        const height = Math.max(20, timeToY(endTime) - timeToY(startTime));
-        const indicator = getMeetingIndicatorHtml(e.id);
-        gcalBlocksHtml += `<div class="focus-gcal-block" style="top:${top}px;height:${height}px;cursor:pointer;" data-event-id="${e.id}" data-date="${selectedStr}"${e.htmlLink ? ` data-href="${e.htmlLink}"` : ''}>
-          <span class="block-time">${startTime} - ${endTime}</span>
-          <span class="block-title">${e.summary || ''}${indicator}</span>
-        </div>`;
-      });
-
-      // Build task block HTML
+      // Build all timeline blocks for overlap calculation
       function focusQuestChip(t) {
         if (!t.milestoneId) return '';
         const ms = getMilestoneById(t.milestoneId);
@@ -10636,19 +10690,83 @@
         return `<span class="milestone-badge" style="color:${ms.color};background:${ms.color}14;font-size:9px;padding:1px 5px;">${ms.title}</span>`;
       }
 
-      let taskBlocksHtml = '';
+      const allBlocks = [];
+      timedEvents.forEach(e => {
+        const st = e.start?.dateTime ? new Date(e.start.dateTime) : null;
+        const en = e.end?.dateTime ? new Date(e.end.dateTime) : null;
+        if (!st || !en) return;
+        const startTime = String(st.getHours()).padStart(2,'0') + ':' + String(st.getMinutes()).padStart(2,'0');
+        const endTime = String(en.getHours()).padStart(2,'0') + ':' + String(en.getMinutes()).padStart(2,'0');
+        const sy = Math.max(0, timeToY(startTime));
+        const ey = Math.max(sy + 20, timeToY(endTime));
+        allBlocks.push({ type: 'gcal', startY: sy, endY: ey, event: e, startTime, endTime });
+      });
       scheduledTasks.forEach(t => {
-        const top = timeToY(t.scheduledTime);
+        const sy = timeToY(t.scheduledTime);
         const dur = t.scheduledDuration || 30;
-        const height = Math.max(20, (dur / 60) * HOUR_HEIGHT);
-        taskBlocksHtml += `<div class="focus-task-block${t.checked ? ' is-checked' : ''}" style="top:${top}px;height:${height}px;" data-task-id="${t.id}" draggable="true">
-          <span class="checkbox${t.checked ? ' checked' : ''}" data-task-id="${t.id}"></span>
-          ${t.starred ? '<span style="color:#EAB308;font-size:11px;flex-shrink:0;">★</span>' : ''}
-          <span class="block-title">${t.title}</span>
-          ${focusQuestChip(t)}
-          <button class="block-remove" data-task-id="${t.id}" title="시간 해제">&times;</button>
-          <div class="block-resize" data-task-id="${t.id}"></div>
-        </div>`;
+        const ey = Math.max(sy + 20, sy + (dur / 60) * HOUR_HEIGHT);
+        allBlocks.push({ type: 'task', startY: sy, endY: ey, task: t });
+      });
+
+      // Calculate overlap columns
+      allBlocks.sort((a, b) => a.startY - b.startY || a.endY - b.endY);
+      const overlapGroups = [];
+      allBlocks.forEach(block => {
+        let placed = false;
+        for (const group of overlapGroups) {
+          if (block.startY < group.endY) {
+            group.items.push(block);
+            group.endY = Math.max(group.endY, block.endY);
+            placed = true;
+            break;
+          }
+        }
+        if (!placed) overlapGroups.push({ items: [block], endY: block.endY });
+      });
+      const blockLayout = new Map();
+      overlapGroups.forEach(group => {
+        const columns = [];
+        group.items.forEach(block => {
+          let col = 0;
+          while (col < columns.length && columns[col] > block.startY) col++;
+          if (col >= columns.length) columns.push(0);
+          columns[col] = block.endY;
+          blockLayout.set(block, { col, total: 0 });
+        });
+        group.items.forEach(block => { blockLayout.get(block).total = columns.length; });
+      });
+
+      const COL_LEFT = 44, COL_RIGHT = 8;
+      let gcalBlocksHtml = '';
+      let taskBlocksHtml = '';
+      allBlocks.forEach(block => {
+        const lay = blockLayout.get(block);
+        const height = Math.max(20, block.endY - block.startY);
+        let posStyle;
+        if (lay.total <= 1) {
+          posStyle = `top:${block.startY}px;height:${height}px;`;
+        } else {
+          posStyle = `top:${block.startY}px;height:${height}px;left:calc(${COL_LEFT}px + (100% - ${COL_LEFT + COL_RIGHT}px) * ${lay.col} / ${lay.total});width:calc((100% - ${COL_LEFT + COL_RIGHT}px) / ${lay.total});right:auto;`;
+        }
+
+        if (block.type === 'gcal') {
+          const e = block.event;
+          const indicator = getMeetingIndicatorHtml(e.id);
+          gcalBlocksHtml += `<div class="focus-gcal-block" style="${posStyle}cursor:pointer;" data-event-id="${e.id}" data-date="${selectedStr}"${e.htmlLink ? ` data-href="${e.htmlLink}"` : ''}>
+            <span class="block-time">${block.startTime} - ${block.endTime}</span>
+            <span class="block-title">${e.summary || ''}${indicator}</span>
+          </div>`;
+        } else {
+          const t = block.task;
+          taskBlocksHtml += `<div class="focus-task-block${t.checked ? ' is-checked' : ''}" style="${posStyle}" data-task-id="${t.id}" draggable="true">
+            <span class="checkbox${t.checked ? ' checked' : ''}" data-task-id="${t.id}"></span>
+            ${t.starred ? '<span style="color:#EAB308;font-size:11px;flex-shrink:0;">★</span>' : ''}
+            <span class="block-title">${t.title}</span>
+            ${focusQuestChip(t)}
+            <button class="block-remove" data-task-id="${t.id}" title="시간 해제">&times;</button>
+            <div class="block-resize" data-task-id="${t.id}"></div>
+          </div>`;
+        }
       });
 
       // Time slots
@@ -10666,31 +10784,6 @@
           <span class="unassigned-title">${t.title}${overdueHtml(t)}</span>
           ${focusQuestChip(t)}
           <span class="focus-task-tags">${(t.tags || []).map(tag => `<span class="tag-badge tag-${tag}" style="font-size:10px; padding:1px 6px;">${tag}</span>`).join('')}</span>
-        </div>`;
-      });
-
-      // Overdue tasks: past scheduledDate, not checked, not today
-      const overdueTasks = allTasks.filter(t => t.scheduledDate && t.scheduledDate < todayStr && t.scheduledDate !== selectedStr && !t.checked)
-        .sort((a, b) => {
-          // starred first
-          if (a.starred && !b.starred) return -1;
-          if (!a.starred && b.starred) return 1;
-          // more overdue count = higher
-          const ac = getOverdueCount(a), bc = getOverdueCount(b);
-          if (ac !== bc) return bc - ac;
-          // most recent date first
-          return b.scheduledDate.localeCompare(a.scheduledDate);
-        });
-      let overdueHtmlStr = '';
-      overdueTasks.forEach(t => {
-        const odCount = getOverdueCount(t);
-        const dateLabel = t.scheduledDate.slice(5); // MM-DD
-        overdueHtmlStr += `<div class="focus-unassigned-item focus-overdue-item" data-task-id="${t.id}" draggable="true">
-          <span class="focus-task-star${t.starred ? ' starred' : ''}" data-task-id="${t.id}">${t.starred ? '★' : '☆'}</span>
-          <span class="checkbox${t.checked ? ' checked' : ''}" data-task-id="${t.id}"></span>
-          <span class="unassigned-title">${t.title}${overdueHtml(t)}</span>
-          ${focusQuestChip(t)}
-          <span class="focus-overdue-date">${dateLabel}</span>
         </div>`;
       });
 
@@ -10778,10 +10871,6 @@
             <div class="focus-unassigned" id="focusUnassigned">
               <div class="focus-unassigned-header">미배정 태스크 <span style="font-weight:400;color:var(--text-muted);">(${unassignedTasks.length})</span></div>
               ${unassignedHtml || '<div class="focus-no-data" style="padding:8px;">미배정 태스크가 없습니다</div>'}
-              ${overdueTasks.length > 0 ? `<div class="focus-overdue-section">
-                <div class="focus-unassigned-header" style="margin-top:12px;color:var(--accent);">지난 업무 <span style="font-weight:400;color:var(--text-muted);">(${overdueTasks.length})</span></div>
-                ${overdueHtmlStr}
-              </div>` : ''}
             </div>
             ${weekLogs.length > 0 ? `<div class="focus-done-section">
               <div class="focus-done-header">
@@ -11008,7 +11097,7 @@
         // Click on empty slot → assign task dropdown
         timeline.addEventListener('click', (e) => {
           if (e.target.closest('.focus-task-block') || e.target.closest('.focus-gcal-block')) return;
-          if (unassignedTasks.length === 0 && overdueTasks.length === 0) return;
+          if (unassignedTasks.length === 0) return;
           const rect = timeline.querySelector('.focus-timeline-inner').getBoundingClientRect();
           const y = e.clientY - rect.top + timeline.scrollTop;
           const snapped = snapToHalf(y);
@@ -11021,12 +11110,8 @@
           const dropdown = document.createElement('div');
           dropdown.className = 'focus-assign-dropdown';
           dropdown.style.cssText = `position:absolute;left:44px;top:${snapped}px;right:8px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 12px var(--shadow-hover);z-index:20;max-height:200px;overflow-y:auto;`;
-          const assignableTasks = [...unassignedTasks, ...overdueTasks];
-          if (assignableTasks.length === 0) return;
           dropdown.innerHTML = `<div style="padding:6px 10px;font-size:11px;color:var(--text-muted);border-bottom:1px solid var(--border-light);">${time}에 배정할 태스크</div>` +
-            unassignedTasks.map(t => `<div class="focus-assign-option" data-task-id="${t.id}" style="padding:8px 10px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border-light);transition:background 0.1s;">${t.title}</div>`).join('') +
-            (overdueTasks.length > 0 ? `<div style="padding:4px 10px;font-size:10px;color:var(--accent);border-bottom:1px solid var(--border-light);font-weight:600;">지난 업무</div>` +
-              overdueTasks.map(t => `<div class="focus-assign-option" data-task-id="${t.id}" style="padding:8px 10px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border-light);transition:background 0.1s;opacity:0.75;">${t.title} <span style="font-size:11px;color:var(--text-muted);">${t.scheduledDate.slice(5)}</span></div>`).join('') : '');
+            unassignedTasks.map(t => `<div class="focus-assign-option" data-task-id="${t.id}" style="padding:8px 10px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border-light);transition:background 0.1s;">${t.title}</div>`).join('');
 
           timeline.querySelector('.focus-timeline-inner').appendChild(dropdown);
 
@@ -12917,6 +13002,11 @@
     // ===== PARA VIEW =====
     // ============================================================
     let ideas = [];
+    const emotionMap = {
+      thinking: { emoji: '🤔', label: '고민' },
+      inspire: { emoji: '✨', label: '영감' },
+      idea: { emoji: '💡', label: '아이디어' },
+    };
     let paraFilterTag = null;
     let paraFilterStatus = 'active';
     let paraSelectedId = null;
@@ -12937,6 +13027,7 @@
         await sb.from('ideas').upsert({
           id: idea.id, content: idea.content, source_url: idea.source_url || '',
           tags: idea.tags || [], note: idea.note || '', status: idea.status || 'active',
+          emotion: idea.emotion || null,
         });
       } catch(e) { console.error('Idea save error:', e); }
     }
@@ -13082,7 +13173,8 @@
 
           const top = document.createElement('div');
           top.className = 'para-item-top';
-          top.innerHTML = `<span class="para-item-icon">💡</span>`;
+          const emo = idea.emotion && emotionMap[idea.emotion] ? emotionMap[idea.emotion].emoji : '💡';
+          top.innerHTML = `<span class="para-item-icon">${emo}</span>`;
 
           const content = document.createElement('span');
           content.className = 'para-item-content';
@@ -13187,6 +13279,26 @@
       });
       tagsBlock.appendChild(tagsRow);
       right.appendChild(tagsBlock);
+
+      // Emotion
+      const emotionBlock = document.createElement('div');
+      emotionBlock.innerHTML = '<div class="para-detail-label">감정</div>';
+      const emotionRow = document.createElement('div');
+      emotionRow.className = 'para-filter-chips';
+      Object.entries(emotionMap).forEach(([key, { emoji, label }]) => {
+        const chip = document.createElement('button');
+        const sel = idea.emotion === key;
+        chip.className = 'para-filter-chip' + (sel ? ' active' : '');
+        chip.textContent = `${emoji} ${label}`;
+        if (sel) { chip.style.background = 'var(--accent)'; chip.style.borderColor = 'var(--accent)'; chip.style.color = 'white'; }
+        chip.addEventListener('click', () => {
+          idea.emotion = idea.emotion === key ? null : key;
+          scheduleIdeaSave(idea); renderParaDetail(); renderParaCenter();
+        });
+        emotionRow.appendChild(chip);
+      });
+      emotionBlock.appendChild(emotionRow);
+      right.appendChild(emotionBlock);
 
       // Note
       const noteBlock = document.createElement('div');

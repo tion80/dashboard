@@ -234,9 +234,9 @@
       font-family: inherit;
       padding: 4px 10px;
       border-radius: 16px;
-      border: 1.5px solid var(--border);
+      border: 1.5px solid color-mix(in srgb, var(--chip-color, var(--border)) 40%, transparent);
       background: var(--bg-card);
-      color: var(--text-sub);
+      color: var(--chip-color, var(--text-sub));
       cursor: pointer;
       transition: all 0.15s;
       -webkit-appearance: none;
@@ -500,7 +500,6 @@
     <div class="picker-section" id="questSection" style="display:none;">
       <div class="picker-chips" id="questChips"></div>
     </div>
-
     <div class="input-row">
       <input type="text" id="taskInput" placeholder="할 일 또는 아이디어를 입력하세요" enterkeyhint="send" autocomplete="off" autofocus>
     </div>
@@ -667,7 +666,7 @@
             source: 'capture', ts, dateKey,
             type: 'idea', title: i.content,
             epic: epicLabel, quest: '',
-            id: i.id,
+            id: i.id, emotion: i.emotion || null,
           });
         });
       }
@@ -723,7 +722,8 @@
       if (item.source === 'capture') {
         row.className = 'feed-item capture';
         const isChecked = item.checked;
-        const icon = item.type === 'idea' ? '💡' : (isChecked ? '✓' : '☐');
+        const emoIcons = { thinking: '🤔', inspire: '✨', idea: '💡' };
+        const icon = item.type === 'idea' ? (item.emotion && emoIcons[item.emotion] || '💡') : (isChecked ? '✓' : '☐');
         const labels = [item.epic, item.quest].filter(Boolean).join(' / ');
         const labelHtml = labels ? `<div class="feed-labels">${escHtml(labels)}</div>` : '';
         const titleClass = isChecked ? ' done' : '';
@@ -898,7 +898,15 @@
       const qChips = document.createElement('div');
       qChips.className = 'detail-chips';
       const epicFilter = (task.tags && task.tags[0]) || null;
-      const filtered = epicFilter ? quests.filter(q => q.epic === epicFilter) : quests;
+      if (!epicFilter && !task.milestone_id) return;
+      const filtered = epicFilter ? quests.filter(q => q.epic === epicFilter) : [];
+      // 데드라인 정렬: 날짜 있는 것 먼저(급한 순), 없는 것 뒤로
+      filtered.sort((a, b) => {
+        if (a.date && !b.date) return -1;
+        if (!a.date && b.date) return 1;
+        if (a.date && b.date) return a.date.localeCompare(b.date);
+        return 0;
+      });
       filtered.forEach(q => {
         const chip = document.createElement('button');
         chip.className = 'picker-chip' + (task.milestone_id === q.id ? ' selected' : '');
@@ -1201,6 +1209,33 @@
     tagField.appendChild(tagChips);
     detailBody.appendChild(tagField);
 
+    // Emotion
+    const emoMap = {
+      thinking: { emoji: '🤔', label: '고민' },
+      inspire: { emoji: '✨', label: '영감' },
+      idea: { emoji: '💡', label: '아이디어' },
+    };
+    const emoField = makeField('감정');
+    const emoChips = document.createElement('div');
+    emoChips.className = 'detail-chips';
+    Object.entries(emoMap).forEach(([key, { emoji, label }]) => {
+      const chip = document.createElement('button');
+      chip.className = 'picker-chip' + (idea.emotion === key ? ' selected' : '');
+      chip.textContent = `${emoji} ${label}`;
+      chip.addEventListener('click', () => {
+        idea.emotion = idea.emotion === key ? null : key;
+        emoChips.querySelectorAll('.picker-chip').forEach(c => c.classList.remove('selected'));
+        if (idea.emotion === key) chip.classList.add('selected');
+        const fi = feedItems.find(f => f.id === idea.id);
+        if (fi) fi.emotion = idea.emotion;
+        renderFeed(false);
+        scheduleDetailSave('idea', idea);
+      });
+      emoChips.appendChild(chip);
+    });
+    emoField.appendChild(emoChips);
+    detailBody.appendChild(emoField);
+
     // Quest
     const questContainer = document.createElement('div');
     detailBody.appendChild(questContainer);
@@ -1208,8 +1243,15 @@
     function renderIdeaQuestChips(idea, container) {
       container.innerHTML = '';
       const epicFilter = (idea.tags && idea.tags[0]) || null;
-      const filtered = epicFilter ? quests.filter(q => q.epic === epicFilter) : quests;
-      if (filtered.length === 0) return;
+      if (!epicFilter && !idea.milestone_id) return;
+      const filtered = epicFilter ? quests.filter(q => q.epic === epicFilter) : [];
+      filtered.sort((a, b) => {
+        if (a.date && !b.date) return -1;
+        if (!a.date && b.date) return 1;
+        if (a.date && b.date) return a.date.localeCompare(b.date);
+        return 0;
+      });
+      if (filtered.length === 0 && !idea.milestone_id) return;
       const qField = makeField('퀘스트');
       const qChips = document.createElement('div');
       qChips.className = 'detail-chips';
@@ -1314,7 +1356,7 @@
           }).eq('id', data.id);
         } else {
           await sb.from('ideas').update({
-            content: data.content, source_url: data.source_url, note: data.note, tags: data.tags, milestone_id: data.milestone_id
+            content: data.content, source_url: data.source_url, note: data.note, tags: data.tags, milestone_id: data.milestone_id, emotion: data.emotion || null
           }).eq('id', data.id);
         }
         const ss = document.getElementById('detailSaveStatus');
@@ -1371,7 +1413,7 @@
     }
 
     try {
-      const { data: qData } = await sb.from('quests').select('id, title, epic, color, completed').order('position');
+      const { data: qData } = await sb.from('quests').select('id, title, epic, color, completed, date').order('position');
       if (qData) {
         quests = qData.filter(q => !q.completed);
         renderEpicChips();
@@ -1416,6 +1458,12 @@
     questChipsEl.innerHTML = '';
     const filtered = quests.filter(q => q.epic === epic);
     if (filtered.length === 0) { questSection.style.display = 'none'; return; }
+    filtered.sort((a, b) => {
+      if (a.date && !b.date) return -1;
+      if (!a.date && b.date) return 1;
+      if (a.date && b.date) return a.date.localeCompare(b.date);
+      return 0;
+    });
     questSection.style.display = 'block';
     filtered.forEach(q => {
       const chip = document.createElement('button');
